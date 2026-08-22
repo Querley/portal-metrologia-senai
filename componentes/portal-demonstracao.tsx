@@ -1,0 +1,95 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, CheckCircle2, ChevronRight, Clock3, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { calcularProposta, formatarDinheiro } from '../lib/calculos';
+import { casosDemonstracao, equipamentosDemonstracao } from '../lib/dados-demonstracao';
+import { recomendarHoras } from '../lib/recomendacao';
+import { sanitizarParaIa } from '../lib/seguranca-ia';
+import { MarcaOficial } from './marca-oficial';
+
+const menu = [
+  { id: 'visao', rotulo: 'Visão geral', icone: LayoutDashboard },
+  { id: 'solicitacoes', rotulo: 'Solicitações', icone: BriefcaseBusiness },
+  { id: 'orcamentos', rotulo: 'Orçamentos', icone: Calculator },
+  { id: 'servicos', rotulo: 'Execução', icone: Activity },
+  { id: 'conhecimento', rotulo: 'Conhecimento', icone: BookOpenCheck },
+  { id: 'mensagens', rotulo: 'Mensagens', icone: MessageSquareText },
+  { id: 'conteudo', rotulo: 'Conteúdo público', icone: FileCheck2 },
+];
+
+const solicitacoes = [
+  { id: 'SOL-0284', empresa: 'Indústria Horizonte', servico: 'Medição tridimensional', data: 'Hoje, 09:42', estado: 'Nova' },
+  { id: 'SOL-0283', empresa: 'Metalúrgica Aurora', servico: 'Digitalização óptica', data: 'Ontem, 16:18', estado: 'Em análise' },
+  { id: 'SOL-0282', empresa: 'Fábrica Vetor', servico: 'Tomografia industrial', data: '20 ago, 11:05', estado: 'Orçada' },
+];
+
+export function PortalDemonstracao() {
+  const [secao, setSecao] = useState('visao');
+  const [horas, setHoras] = useState(12);
+  const [lucro, setLucro] = useState(25);
+  const [assistenteAberto, setAssistenteAberto] = useState(false);
+  const [hidratado, setHidratado] = useState(false);
+  useEffect(() => setHidratado(true), []);
+
+  const item = useMemo(() => calcularProposta([{ servicoId: 'medicao-tridimensional', descricao: 'Inspeção dimensional de lote', quantidade: '20', usos: [{ maquinaId: 'duramax', horas: String(horas), custoHora: equipamentosDemonstracao[0].custoHora }], custosExtras: '280', percentualLucro: String(lucro) }])[0], [horas, lucro]);
+  const recomendacao = useMemo(() => recomendarHoras({ origem: 'demonstracao', servicoId: 'medicao-tridimensional', quantidade: 20, caracteristicas: ['aco', 'geometria-complexa'], recursos: ['duramax'] }, casosDemonstracao), []);
+  const previaIa = sanitizarParaIa({ tipoServico: 'Medição tridimensional', calculo: { horas, custoTecnico: 'removido antes do envio' }, licoes: ['Revisar fixação antes de programar a sequência de medição.'] });
+
+  return (
+    <div className="aplicacao" data-hidratado={hidratado ? 'sim' : 'nao'}>
+      <aside className="barra-lateral">
+        <Link className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /></Link>
+        <div className="faixa-demo"><span>DEMONSTRAÇÃO</span><small>Dados sintéticos isolados</small></div>
+        <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" />{rotulo}{id === 'mensagens' && <b>2</b>}</button>)}</nav>
+        <div className="atalhos"><button type="button"><Settings size={17} />Configurações</button><button type="button"><LogOut size={17} />Sair</button></div>
+        <div className="usuario"><span>QR</span><div><strong>Quérlin</strong><small>Administrador</small></div></div>
+      </aside>
+
+      <main className="conteudo-interno">
+        <header className="cabecalho-interno">
+          <div><p>AMBIENTE DE HOMOLOGAÇÃO</p><h1>{menu.find((itemMenu) => itemMenu.id === secao)?.rotulo}</h1></div>
+          <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button"><Plus size={17} /> Novo orçamento</button></div>
+        </header>
+
+        {secao === 'visao' && <VisaoGeral setSecao={setSecao} />}
+        {secao === 'solicitacoes' && <TabelaSolicitacoes />}
+        {secao === 'orcamentos' && <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />}
+        {secao === 'servicos' && <Execucao />}
+        {secao === 'conhecimento' && <Conhecimento recomendacao={recomendacao} />}
+        {secao === 'mensagens' && <Mensagens />}
+        {secao === 'conteudo' && <ConteudoPublico />}
+      </main>
+
+      <button className="assistente-atalho" type="button" onClick={() => setAssistenteAberto(!assistenteAberto)} aria-expanded={assistenteAberto}><Sparkles size={19} /> Assistente interno</button>
+      {assistenteAberto && <aside className="assistente" aria-label="Assistente interno"><header><span><Bot size={19} /> Assistente interno</span><button type="button" onClick={() => setAssistenteAberto(false)} aria-label="Fechar">×</button></header><div className="mensagem-ia"><small>PRÉVIA SANITIZADA</small><p>{JSON.stringify(previaIa.conteudo)}</p><span><ShieldCheck size={14} /> Campos sensíveis removidos antes do envio</span></div><div className="resposta-ia"><p>O preço exibido foi calculado de forma determinística: custo da DuraMax pelas horas informadas, mais extras e o lucro definido. Eu apenas explico o resultado; não altero o cálculo.</p><small>Fonte: orçamento atual · cálculo local</small></div><form onSubmit={(evento) => evento.preventDefault()}><label htmlFor="mensagem-assistente">Pergunte sobre esta tela</label><div><input id="mensagem-assistente" placeholder="Como este valor foi calculado?" /><button type="submit" aria-label="Enviar"><ChevronRight size={18} /></button></div></form></aside>}
+    </div>
+  );
+}
+
+function VisaoGeral({ setSecao }: { setSecao: (secao: string) => void }) {
+  const cards = [
+    { rotulo: 'Solicitações abertas', valor: '12', detalhe: '3 novas hoje', icone: BriefcaseBusiness, cor: 'azul' },
+    { rotulo: 'Em execução', valor: '8', detalhe: '7 dentro do prazo', icone: Activity, cor: 'ciano' },
+    { rotulo: 'Propostas aguardando', valor: '5', detalhe: 'R$ 48,7 mil', icone: FileCheck2, cor: 'amarelo' },
+    { rotulo: 'Assertividade mensal', valor: '87%', detalhe: '+6 p.p. vs. julho', icone: Gauge, cor: 'verde' },
+  ];
+  return <div className="painel"><section className="cards-kpi" aria-label="Indicadores principais">{cards.map(({ rotulo, valor, detalhe, icone: Icone, cor }) => <article key={rotulo}><span className={`icone-kpi ${cor}`}><Icone size={20} /></span><small>{rotulo}</small><strong>{valor}</strong><p>{detalhe}</p></article>)}</section><div className="grade-painel"><section className="bloco"><header><div><h2>Solicitações recentes</h2><p>Priorize as entradas que aguardam triagem.</p></div><button type="button" onClick={() => setSecao('solicitacoes')}>Ver todas <ChevronRight size={15} /></button></header><TabelaSolicitacoes compacta /></section><section className="bloco fluxo"><header><div><h2>Ciclo de valor</h2><p>Distribuição dos serviços ativos.</p></div></header><div className="anel" aria-label="72% do ciclo concluído"><span><strong>72%</strong><small>no fluxo</small></span></div><ul><li><i className="cor-1" />Orçar <b>12</b></li><li><i className="cor-2" />Executar <b>8</b></li><li><i className="cor-3" />Validar lição <b>4</b></li><li><i className="cor-4" />Concluído <b>23</b></li></ul></section></div><section className="alerta-conhecimento"><BookOpenCheck size={23} /><div><strong>4 lições aguardam validação</strong><p>Formalizá-las pode melhorar a confiança das próximas recomendações.</p></div><button type="button" onClick={() => setSecao('conhecimento')}>Revisar lições</button></section></div>;
+}
+
+function TabelaSolicitacoes({ compacta = false }: { compacta?: boolean }) {
+  return <div className={`tabela-wrap ${compacta ? 'compacta' : 'pagina-tabela'}`}><table><thead><tr><th>Solicitação</th><th>Empresa</th><th>Serviço</th><th>Recebida</th><th>Estado</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{solicitacoes.map((solicitacao) => <tr key={solicitacao.id}><td><strong>{solicitacao.id}</strong></td><td>{solicitacao.empresa}</td><td>{solicitacao.servico}</td><td>{solicitacao.data}</td><td><span className={`estado estado-${solicitacao.estado.toLowerCase().replace(' ', '-')}`}>{solicitacao.estado}</span></td><td><button type="button" aria-label={`Abrir ${solicitacao.id}`}><ChevronRight size={17} /></button></td></tr>)}</tbody></table>{!compacta && <div className="estado-vazio"><ShieldCheck size={18} /><span>Todos estes registros têm origem <b>demonstracao</b>.</span></div>}</div>;
+}
+
+function Calculadora({ horas, setHoras, lucro, setLucro, item, recomendacao }: { horas: number; setHoras: (valor: number) => void; lucro: number; setLucro: (valor: number) => void; item: ReturnType<typeof calcularProposta>[number]; recomendacao: ReturnType<typeof recomendarHoras> }) {
+  return <div className="painel orcamento"><section className="bloco editor-orcamento"><header><div><p className="passo">ORÇAMENTO DEMONSTRATIVO · RASCUNHO</p><h2>Inspeção dimensional de lote</h2></div><span className="estado estado-rascunho">Rascunho</span></header><div className="campos"><label>Equipamento<select defaultValue="duramax">{equipamentosDemonstracao.map((equipamento) => <option key={equipamento.id} value={equipamento.id}>{equipamento.nome}</option>)}</select></label><label>Horas estimadas<input type="number" min="0" step="0.5" value={horas} onChange={(evento) => setHoras(Number(evento.target.value))} /></label><label>Custos extras (BRL)<input type="number" min="0" defaultValue="280" /></label><label>Lucro (%)<input type="number" min="0" value={lucro} onChange={(evento) => setLucro(Number(evento.target.value))} /></label></div><div className="recomendacao-inline"><Sparkles size={20} /><div><strong>Assistente estatístico: {recomendacao.horasSugeridas?.toDecimalPlaces(1).toString()} h sugeridas</strong><p>{recomendacao.quantidadeCasos} casos comparáveis · confiança {recomendacao.confianca} · faixa {recomendacao.q1?.toDecimalPlaces(1).toString()}–{recomendacao.q3?.toDecimalPlaces(1).toString()} h</p></div><button type="button" onClick={() => setHoras(recomendacao.horasSugeridas?.toDecimalPlaces(1).toNumber() ?? horas)}>Aplicar</button></div></section><aside className="bloco resumo-orcamento"><p>RESUMO DO ITEM</p><dl><div><dt>Custo das máquinas</dt><dd>{formatarDinheiro(item.custo.minus(280))}</dd></div><div><dt>Custos extras</dt><dd>R$ 280,00</dd></div><div><dt>Custo total</dt><dd>{formatarDinheiro(item.custo)}</dd></div><div><dt>Lucro ({lucro}%)</dt><dd>{formatarDinheiro(item.precoAntesAjuste.minus(item.custo))}</dd></div><div className="total"><dt>Preço antes do ajuste</dt><dd>{formatarDinheiro(item.precoFinal)}</dd></div></dl><small><ShieldCheck size={13} /> Valores congelados somente após publicação</small><button className="botao-interno" type="button"><FileCheck2 size={17} /> Enviar para validação</button></aside></div>;
+}
+
+function Execucao() { return <div className="painel"><section className="bloco execucao-card"><header><div><p className="passo">SRV-0198 · EM EXECUÇÃO</p><h2>Inspeção dimensional — Indústria Horizonte</h2></div><span className="estado estado-em-execucao">Em execução</span></header><div className="linha-tempo"><div className="feito"><CheckCircle2 /><span>Planejado<small>20 ago · 09:10</small></span></div><div className="feito"><CheckCircle2 /><span>Iniciado<small>21 ago · 08:35</small></span></div><div className="atual"><Clock3 /><span>Medição<small>72% concluído</small></span></div><div><span className="bolinha" /><span>Fechamento<small>Prev. 28 ago</small></span></div></div><div className="execucao-dados"><article><small>Horas estimadas</small><strong>12,0 h</strong></article><article><small>Horas registradas</small><strong>8,6 h</strong></article><article><small>Prazo estimado</small><strong>7 dias</strong></article><article><small>Retrabalho</small><strong>Não</strong></article></div><button className="botao-interno" type="button">Registrar fechamento</button></section></div>; }
+
+function Conhecimento({ recomendacao }: { recomendacao: ReturnType<typeof recomendarHoras> }) { return <div className="painel"><section className="cards-kpi conhecimento-kpi"><article><span className="icone-kpi azul"><BookOpenCheck /></span><small>Lições formalizadas</small><strong>23</strong><p>4 aguardam validação</p></article><article><span className="icone-kpi verde"><Gauge /></span><small>Confiança atual</small><strong>{recomendacao.confianca}</strong><p>{recomendacao.quantidadeCasos} casos elegíveis</p></article><article><span className="icone-kpi ciano"><Activity /></span><small>Fator de correção</small><strong>{recomendacao.fatorCorrecao?.toDecimalPlaces(2).toString()}×</strong><p>mediana realizado ÷ estimado</p></article></section><section className="bloco tabela-licoes"><header><div><h2>Conhecimento validado</h2><p>Apenas estas lições influenciam recomendações.</p></div><button type="button"><Plus size={15} /> Nova lição</button></header>{['Revisar estratégia de fixação antes da programação', 'Validar qualidade do CAD no recebimento', 'Reservar tempo para estabilização térmica'].map((titulo, indice) => <article key={titulo}><span className="numero-licao">L{23 - indice}</span><div><strong>{titulo}</strong><p>Medição tridimensional · Revisão {indice + 1} · 18–20 ago</p></div><span className="estado estado-formalizada">Formalizada</span><button type="button" aria-label={`Abrir lição ${titulo}`}><ChevronRight size={17} /></button></article>)}</section></div>; }
+
+function Mensagens() { return <div className="painel"><section className="bloco mensagens"><aside><h2>Conversas</h2>{solicitacoes.slice(0,2).map((item, indice) => <button className={indice === 0 ? 'ativo' : ''} type="button" key={item.id}><span>{item.empresa.slice(0,2).toUpperCase()}</span><div><strong>{item.empresa}</strong><small>{item.id} · {indice ? 'Enviei os arquivos...' : 'Podemos confirmar...'}</small></div>{indice === 0 && <b>2</b>}</button>)}</aside><div className="conversa"><header><div><strong>Indústria Horizonte</strong><small>SOL-0284 · Canal persistente</small></div><span className="estado estado-em-analise">Em análise</span></header><div className="baloes"><p className="recebida">Olá! Podemos confirmar a tolerância indicada no desenho?<small>09:58</small></p><p className="enviada">Sim, a tolerância crítica é de 0,01 mm. O arquivo da solicitação é a versão atual.<small>10:04</small></p><p className="recebida">Perfeito. Vamos considerar essa informação na proposta.<small>10:07</small></p></div><form onSubmit={(evento) => evento.preventDefault()}><input aria-label="Mensagem" placeholder="Escreva uma mensagem..." /><button type="submit">Enviar</button></form></div></section></div>; }
+
+function ConteudoPublico() { return <div className="painel"><section className="bloco tabela-licoes"><header><div><h2>Páginas e catálogo</h2><p>Português é canônico; traduções ausentes usam fallback sinalizado.</p></div><button type="button"><Plus size={15} /> Novo conteúdo</button></header>{[['Início','PT · EN · DE','Publicado'],['Medição tridimensional','PT · EN · DE','Publicado'],['Tomografia industrial','PT · EN (DE usa fallback)','Rascunho'],['Política de privacidade','PT · EN · DE','Em validação']].map(([titulo,idiomas,estado]) => <article key={titulo}><span className="numero-licao"><FileCheck2 size={17} /></span><div><strong>{titulo}</strong><p>{idiomas}</p></div><span className={`estado estado-${estado.toLowerCase().replace(' ', '-')}`}>{estado}</span><button type="button" aria-label={`Abrir ${titulo}`}><ChevronRight size={17} /></button></article>)}</section></div>; }
