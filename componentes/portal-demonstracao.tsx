@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, CheckCircle2, ChevronRight, Clock3, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { calcularProposta, formatarDinheiro } from '../lib/calculos';
@@ -30,8 +30,7 @@ export function PortalDemonstracao() {
   const [horas, setHoras] = useState(12);
   const [lucro, setLucro] = useState(25);
   const [assistenteAberto, setAssistenteAberto] = useState(false);
-  const [hidratado, setHidratado] = useState(false);
-  useEffect(() => setHidratado(true), []);
+  const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
 
   const item = useMemo(() => calcularProposta([{ servicoId: 'medicao-tridimensional', descricao: 'Inspeção dimensional de lote', quantidade: '20', usos: [{ maquinaId: 'duramax', horas: String(horas), custoHora: equipamentosDemonstracao[0].custoHora }], custosExtras: '280', percentualLucro: String(lucro) }])[0], [horas, lucro]);
   const recomendacao = useMemo(() => recomendarHoras({ origem: 'demonstracao', servicoId: 'medicao-tridimensional', quantidade: 20, caracteristicas: ['aco', 'geometria-complexa'], recursos: ['duramax'] }, casosDemonstracao), []);
