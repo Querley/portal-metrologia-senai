@@ -1,0 +1,31 @@
+# Requisitos
+
+## Funcionais prioritários
+
+1. Publicar catálogo, equipamentos, institucional, contato, privacidade e solicitação em três idiomas, com português como conteúdo canônico e fallback.
+2. Manter conteúdo estruturado com rascunho, prévia, publicação, arquivo, histórico e restauração.
+3. Permitir cadastro verificado, vínculo aprovado com empresa e múltiplos contatos convidados.
+4. Receber respostas configuráveis e até cinco arquivos por solicitação: PDF/imagem até 10 MB; CAD até 50 MB; armazenamento privado e somente download.
+5. Criar propostas com vários itens, versões e PDF imutável; aceitar/recusar a versão inteira e solicitar revisão.
+6. Registrar aceite autenticado com pessoa, empresa, versão, data e endereço de rede.
+7. Registrar execução, fechamento, realizado, causas, retrabalho, mudança de escopo e lição.
+8. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; exigir justificativa fora de Q1–Q3.
+9. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
+10. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
+
+## IA
+
+Gerar rascunho de lição, responder publicamente apenas com conteúdo publicado e explicar cálculos/resumir lições autorizadas internamente. Todo envio interno exige sanitização e prévia. A IA nunca calcula valor, esforço, quartil, confiança ou fator.
+
+## Não funcionais
+
+- WCAG AA, navegação por teclado, foco visível e movimento reduzido.
+- RLS e negação por padrão; auditoria de transições sensíveis.
+- Precisão decimal, congelamento de valores e documentos imutáveis.
+- Chrome, Edge, Firefox e Safari atuais em celular, tablet e desktop.
+- Backups criptografados: 14 diários e quatro semanais; restauração ensaiada.
+- Alertas de erro e disponibilidade; limites de uso e Turnstile nos pontos públicos.
+
+## Critérios críticos de aceite
+
+Devem falhar com segurança: exclusão de dado real por reset, acesso entre empresas, aceite sem autorização, proposta expirada, arquivo inválido, lição não formalizada na recomendação, mistura de origens e vazamento de dado proibido para IA.
