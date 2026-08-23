@@ -7,9 +7,9 @@ import type { MidiaEquipamento } from '../lib/equipamentos';
 import './publico.css';
 
 const servicos = [
-  { sigla: 'CMM', titulo: 'Medição tridimensional', texto: 'Inspeção dimensional com máquinas de alta precisão para peças e conjuntos.' },
-  { sigla: 'RX', titulo: 'Raios X industrial', texto: 'Inspeção não destrutiva de estruturas internas e descontinuidades sem cortar a peça.' },
-  { sigla: '3D', titulo: 'Digitalização óptica', texto: 'Captura de superfícies para inspeção, engenharia reversa e comparação com CAD.' },
+  { sigla: '3D', titulo: 'Escaneamento 3D e digitalização de peças', texto: 'Captura de superfícies para inspeção, documentação, comparação com CAD e engenharia reversa.' },
+  { sigla: 'CMM', titulo: 'Metrologia avançada ZEISS e inspeção dimensional', texto: 'Medição de dimensões, forma, posição e geometrias complexas com relatórios técnicos.' },
+  { sigla: 'CT', titulo: 'Tomografia industrial', texto: 'Inspeção interna não destrutiva conforme a viabilidade técnica do material e da geometria.' },
 ];
 
 const etapas = [

@@ -2,16 +2,17 @@
 
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import type { MidiaEquipamento } from '../lib/equipamentos';
 
 export function CarrosselMidia({ midias, rotulo }: { midias: MidiaEquipamento[]; rotulo: string }) {
   const [indice, setIndice] = useState(0);
+  const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const atual = midias[indice];
   const navegar = (direcao: number) => setIndice((indiceAtual) => (indiceAtual + direcao + midias.length) % midias.length);
 
   return (
-    <section className="carrossel" aria-roledescription="carrossel" aria-label={rotulo} onKeyDown={(evento) => {
+    <section className="carrossel" data-hidratado={hidratado ? 'sim' : 'nao'} aria-roledescription="carrossel" aria-label={rotulo} onKeyDown={(evento) => {
       if (evento.key === 'ArrowLeft') navegar(-1);
       if (evento.key === 'ArrowRight') navegar(1);
     }} tabIndex={0}>

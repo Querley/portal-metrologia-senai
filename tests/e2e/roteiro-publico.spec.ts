@@ -4,7 +4,7 @@ test('visitante navega da página inicial ao catálogo e à solicitação', asyn
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Precisão para medir/i })).toBeVisible();
   await page.getByRole('link', { name: 'Conhecer serviços' }).click();
-  await page.getByRole('link', { name: /Saiba mais sobre Medição tridimensional/i }).click();
+  await page.getByRole('link', { name: /Saiba mais sobre Escaneamento 3D/i }).click();
   await expect(page.getByRole('heading', { name: 'Serviços e equipamentos' })).toBeVisible();
   await page.getByRole('link', { name: /Solicitar análise/i }).first().click();
   await expect(page.getByRole('heading', { name: 'Solicite uma análise' })).toBeVisible();
@@ -18,6 +18,7 @@ test('catálogo apresenta o parque atual e abre a página detalhada', async ({ p
   await page.getByRole('link', { name: 'ZEISS DuraMax HTG' }).first().click();
   await expect(page.getByRole('heading', { name: 'ZEISS DuraMax HTG' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Aplicações frequentes' })).toBeVisible();
+  await expect(page.locator('.carrossel')).toHaveAttribute('data-hidratado', 'sim');
   await page.getByRole('button', { name: 'Próxima mídia' }).click();
   await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento instalado no Centro');
 });
@@ -26,6 +27,14 @@ test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
   await page.goto('/solicitar?servico=outro');
   await expect(page.getByLabel('Serviço desejado')).toHaveValue('outro');
   await expect(page.getByLabel(/Qual serviço, equipamento ou resultado/i)).toBeVisible();
+});
+
+test('serviço oficial abre uma solicitação já classificada', async ({ page }) => {
+  await page.goto('/catalogo');
+  await expect(page.locator('.grade-servicos-oficiais article')).toHaveCount(10);
+  await page.getByRole('link', { name: 'Solicitar este serviço' }).last().click();
+  await expect(page.getByLabel('Serviço desejado')).toHaveValue('almoxarifado-virtual-biblioteca-digital');
+  await expect(page.getByRole('option', { name: /Tomografia industrial/i })).toHaveCount(1);
 });
 
 test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }) => {
