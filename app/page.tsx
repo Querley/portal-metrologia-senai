@@ -1,10 +1,15 @@
 import Image from 'next/image';
+import { CarrosselMidia } from '../componentes/carrossel-midia';
 import { MarcaOficial } from '../componentes/marca-oficial';
+import { MenuMovel } from '../componentes/menu-movel';
+import { RodapePublico } from '../componentes/rodape-publico';
+import type { MidiaEquipamento } from '../lib/equipamentos';
+import './publico.css';
 
 const servicos = [
-  { sigla: 'CMM', titulo: 'Medição tridimensional', texto: 'Inspeção dimensional com máquinas de alta precisão para peças e conjuntos.' },
-  { sigla: 'CT', titulo: 'Tomografia industrial', texto: 'Análise não destrutiva de geometrias internas e falhas sem cortar a peça.' },
-  { sigla: '3D', titulo: 'Digitalização óptica', texto: 'Captura de superfícies para inspeção, engenharia reversa e comparação com CAD.' },
+  { sigla: '3D', titulo: 'Escaneamento 3D e digitalização de peças', texto: 'Captura de superfícies para inspeção, documentação, comparação com CAD e engenharia reversa.' },
+  { sigla: 'CMM', titulo: 'Metrologia avançada ZEISS e inspeção dimensional', texto: 'Medição de dimensões, forma, posição e geometrias complexas com relatórios técnicos.' },
+  { sigla: 'CT', titulo: 'Tomografia industrial', texto: 'Inspeção interna não destrutiva conforme a viabilidade técnica do material e da geometria.' },
 ];
 
 const etapas = [
@@ -13,6 +18,15 @@ const etapas = [
   ['03', 'Comparar', 'Indicadores revelam desvios de custo, prazo e esforço.'],
   ['04', 'Aprender', 'Lições validadas passam a orientar novos orçamentos.'],
 ];
+
+const midiasLaboratorio = [
+  { tipo: 'imagem', src: '/imagens/laboratorio-prismo.jpeg', alt: 'ZEISS PRISMO instalada no Centro', legenda: 'ZEISS PRISMO no Centro' },
+  { tipo: 'imagem', src: '/imagens/laboratorio-o-inspect.jpeg', alt: 'ZEISS O-INSPECT instalada no Centro', legenda: 'ZEISS O-INSPECT no Centro' },
+  { tipo: 'imagem', src: '/imagens/laboratorio-duramax.jpeg', alt: 'ZEISS DuraMax instalada no Centro', legenda: 'ZEISS DuraMax no Centro' },
+  { tipo: 'imagem', src: '/imagens/laboratorio-bosello.jpeg', alt: 'ZEISS BOSELLO MAX instalada no Centro', legenda: 'ZEISS BOSELLO MAX no Centro' },
+  { tipo: 'imagem', src: '/imagens/laboratorio-atos-q.jpeg', alt: 'ZEISS ATOS Q instalada no Centro', legenda: 'ZEISS ATOS Q no Centro' },
+  { tipo: 'imagem', src: '/imagens/laboratorio-fachada-interna.jpeg', alt: 'Vista externa do Centro de Excelência em Metrologia', legenda: 'Centro de Excelência em Metrologia' },
+] satisfies MidiaEquipamento[];
 
 export default function Home() {
   return (
@@ -26,6 +40,7 @@ export default function Home() {
           <button className="idioma" type="button" aria-label="Selecionar idioma">PT <span aria-hidden="true">⌄</span></button>
           <a className="entrar" href="/portal">Entrar</a><a className="botao botao-menor" href="/solicitar">Solicitar orçamento</a>
         </div>
+        <MenuMovel />
       </header>
 
       <section className="hero" id="inicio">
@@ -38,27 +53,17 @@ export default function Home() {
             <a className="link-seta" href="#servicos">Conhecer serviços <span aria-hidden="true">↘</span></a>
           </div>
           <div className="selos" aria-label="Diferenciais">
-            <span><b>7</b> equipamentos especializados</span><span><b>3</b> idiomas disponíveis</span><span><b>100%</b> acompanhamento digital</span>
+            <span><b>6</b> equipamentos disponíveis</span><span><b>3</b> idiomas planejados</span><span><b>100%</b> acompanhamento digital</span>
           </div>
         </div>
-        <div className="hero-visual" aria-label="Painel ilustrativo de acompanhamento de serviço">
+        <div className="hero-visual" aria-label="Centro de Excelência em Metrologia SENAI ZEISS">
           <Image className="foto-hero" src="/imagens/laboratorio-centro-excelencia.jpeg" fill sizes="(max-width: 980px) 100vw, 50vw" alt="Centro de Excelência em Metrologia SENAI ZEISS visto de frente" priority />
-          <div className="hero-velatura" />
-          <div className="medicao">
-            <div className="medicao-topo"><span>INSPEÇÃO DIMENSIONAL</span><b>Em execução</b></div>
-            <div className="peca" aria-hidden="true">
-              <span className="eixo eixo-x">X</span><span className="eixo eixo-y">Y</span><div className="forma forma-a" /><div className="forma forma-b" /><i className="ponto ponto-a" /><i className="ponto ponto-b" /><i className="ponto ponto-c" />
-            </div>
-            <div className="progresso"><span><b>Progresso do serviço</b><small>72%</small></span><i><b /></i></div>
-          </div>
-          <div className="cartao-flutuante cartao-prazo"><small>PREVISÃO DE ENTREGA</small><strong>28 AGO</strong><span>No prazo</span></div>
-          <div className="cartao-flutuante cartao-precisao"><small>PRECISÃO</small><strong>0,003 <i>mm</i></strong><span>Dentro da tolerância</span></div>
         </div>
       </section>
 
       <section className="laboratorio-real" id="equipamentos">
-        <div className="laboratorio-texto"><p className="sobrelinha"><span /> ESTRUTURA REAL</p><h2>Um centro de excelência preparado para medir o que importa.</h2><p>O laboratório reúne medição por coordenadas, tomografia industrial e digitalização óptica em um ambiente dedicado à precisão.</p><a className="link-seta" href="/catalogo#equipamentos">Conheça os equipamentos <span aria-hidden="true">→</span></a></div>
-        <div className="mosaico-laboratorio"><figure><Image src="/imagens/laboratorio-prismo.jpeg" fill sizes="40vw" alt="Máquina ZEISS PRISMO instalada no laboratório" /><figcaption>ZEISS PRISMO</figcaption></figure><figure><Image src="/imagens/laboratorio-atos-q.jpeg" fill sizes="25vw" alt="Scanner óptico ZEISS ATOS Q instalado no laboratório" /><figcaption>ZEISS ATOS Q</figcaption></figure><figure><Image src="/imagens/laboratorio-bosello.jpeg" fill sizes="25vw" alt="Tomógrafo ZEISS BOSELLO MAX instalado no laboratório" /><figcaption>ZEISS BOSELLO MAX</figcaption></figure></div>
+        <div className="laboratorio-texto"><p className="sobrelinha"><span /> ESTRUTURA REAL</p><h2>Um centro de excelência preparado para medir o que importa.</h2><p>O laboratório reúne medição por coordenadas, inspeção por raios X e digitalização óptica em um ambiente dedicado à precisão.</p><a className="link-seta" href="/catalogo#equipamentos">Conheça os equipamentos <span aria-hidden="true">→</span></a></div>
+        <CarrosselMidia midias={midiasLaboratorio} rotulo="Galeria do Centro de Excelência em Metrologia" />
       </section>
 
       <section className="secao" id="servicos">
@@ -79,7 +84,7 @@ export default function Home() {
       <section className="chamada" id="solicitar">
         <p className="sobrelinha"><span /> COMECE AGORA</p><h2>Tem um desafio de medição?</h2><p>Conte o que você precisa. Nossa equipe analisa os dados e prepara uma proposta sob medida.</p><a className="botao" href="/solicitar">Solicitar orçamento <span aria-hidden="true">→</span></a><small>Ambiente de demonstração — nenhum dado real é exibido nesta versão.</small>
       </section>
-      <footer id="institucional"><MarcaOficial classe="marca-rodape" /><p>Portal para gestão de serviços e conhecimento em orçamentação.</p><nav aria-label="Links do rodapé"><a href="/privacidade">Privacidade</a><a href="#inicio">Acessibilidade</a><a href="/solicitar">Contato</a></nav></footer>
+      <div id="institucional"><RodapePublico /></div>
     </main>
   );
 }

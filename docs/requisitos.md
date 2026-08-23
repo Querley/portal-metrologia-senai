@@ -3,15 +3,16 @@
 ## Funcionais prioritários
 
 1. Publicar catálogo, equipamentos, institucional, contato, privacidade e solicitação em três idiomas, com português como conteúdo canônico e fallback.
-2. Manter conteúdo estruturado com rascunho, prévia, publicação, arquivo, histórico e restauração.
-3. Permitir cadastro verificado, vínculo aprovado com empresa e múltiplos contatos convidados.
-4. Receber respostas configuráveis e até cinco arquivos por solicitação: PDF/imagem até 10 MB; CAD até 50 MB; armazenamento privado e somente download.
-5. Criar propostas com vários itens, versões e PDF imutável; aceitar/recusar a versão inteira e solicitar revisão.
-6. Registrar aceite autenticado com pessoa, empresa, versão, data e endereço de rede.
-7. Registrar execução, fechamento, realizado, causas, retrabalho, mudança de escopo e lição.
-8. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; exigir justificativa fora de Q1–Q3.
-9. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
-10. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
+2. Permitir solicitação personalizada quando a necessidade não estiver classificada no catálogo, sem obrigar o cliente a escolher uma categoria incorreta.
+3. Manter conteúdo estruturado com rascunho, prévia, publicação, arquivo, histórico e restauração.
+4. Permitir cadastro verificado, vínculo aprovado com empresa e múltiplos contatos convidados.
+5. Receber respostas configuráveis e até cinco arquivos por solicitação: PDF/imagem até 10 MB; CAD até 50 MB; armazenamento privado e somente download.
+6. Criar propostas com vários itens, versões e PDF imutável; aceitar/recusar a versão inteira e solicitar revisão.
+7. Registrar aceite autenticado com pessoa, empresa, versão, data e endereço de rede.
+8. Registrar execução, fechamento, realizado, causas, retrabalho, mudança de escopo e lição.
+9. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; exigir justificativa fora de Q1–Q3.
+10. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
+11. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
 
 ## IA
 

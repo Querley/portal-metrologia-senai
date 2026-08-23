@@ -1,7 +1,13 @@
+import { CabecalhoPublico } from '../../componentes/cabecalho-publico';
 import { FormularioSolicitacao } from '../../componentes/formulario-solicitacao';
-import { MarcaOficial } from '../../componentes/marca-oficial';
-import Link from 'next/link';
+import { RodapePublico } from '../../componentes/rodape-publico';
+import { servicosOficiais } from '../../lib/servicos';
 import '../publico.css';
 
-export const metadata = { title:'Solicitar orçamento — Portal de Metrologia SENAI' };
-export default function Solicitar() { return <main><header className="cabecalho-publico"><div className="navegacao-simples"><Link className="marca marca-fundo-claro" href="/"><MarcaOficial /></Link><nav><Link href="/">Início</Link><a href="/catalogo">Serviços</a><a href="/privacidade">Privacidade</a><a href="/portal">Entrar</a></nav></div><h1>Solicite uma análise</h1><p>Compartilhe os dados essenciais do desafio. Nesta prévia, o envio é demonstrativo e não persiste informações.</p></header><section className="conteudo-publico pagina-form"><FormularioSolicitacao /></section></main>; }
+export const metadata = { title: 'Solicitar orçamento — Portal de Metrologia SENAI' };
+export default async function Solicitar({ searchParams }: { searchParams: Promise<{ servico?: string; equipamento?: string }> }) {
+  const parametros = await searchParams;
+  const servicoInformado = parametros.servico && servicosOficiais.some(({ slug }) => slug === parametros.servico) ? parametros.servico : '';
+  const servicoInicial = parametros.equipamento ? 'avaliacao-equipamento' : parametros.servico === 'outro' ? 'outro' : servicoInformado;
+  return <main><CabecalhoPublico titulo="Solicite uma análise" texto="Escolha uma capacidade do catálogo ou descreva uma necessidade personalizada. Nesta prévia, o envio é demonstrativo e não persiste informações." /><section className="conteudo-publico pagina-form"><FormularioSolicitacao servicoInicial={servicoInicial} /></section><RodapePublico /></main>;
+}

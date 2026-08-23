@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, CheckCircle2, ChevronRight, Clock3, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
-import Link from 'next/link';
 import { calcularProposta, formatarDinheiro } from '../lib/calculos';
 import { casosDemonstracao, equipamentosDemonstracao } from '../lib/dados-demonstracao';
 import { recomendarHoras } from '../lib/recomendacao';
@@ -22,7 +21,7 @@ const menu = [
 const solicitacoes = [
   { id: 'SOL-0284', empresa: 'Indústria Horizonte', servico: 'Medição tridimensional', data: 'Hoje, 09:42', estado: 'Nova' },
   { id: 'SOL-0283', empresa: 'Metalúrgica Aurora', servico: 'Digitalização óptica', data: 'Ontem, 16:18', estado: 'Em análise' },
-  { id: 'SOL-0282', empresa: 'Fábrica Vetor', servico: 'Tomografia industrial', data: '20 ago, 11:05', estado: 'Orçada' },
+  { id: 'SOL-0282', empresa: 'Fábrica Vetor', servico: 'Raios X industrial', data: '20 ago, 11:05', estado: 'Orçada' },
 ];
 
 export function PortalDemonstracao() {
@@ -39,7 +38,7 @@ export function PortalDemonstracao() {
   return (
     <div className="aplicacao" data-hidratado={hidratado ? 'sim' : 'nao'}>
       <aside className="barra-lateral">
-        <Link className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /></Link>
+        <a className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /><span className="marca-interna-legenda">Gestão de serviços e conhecimento</span></a>
         <div className="faixa-demo"><span>DEMONSTRAÇÃO</span><small>Dados sintéticos isolados</small></div>
         <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" />{rotulo}{id === 'mensagens' && <b>2</b>}</button>)}</nav>
         <div className="atalhos"><button type="button"><Settings size={17} />Configurações</button><button type="button"><LogOut size={17} />Sair</button></div>
@@ -91,4 +90,4 @@ function Conhecimento({ recomendacao }: { recomendacao: ReturnType<typeof recome
 
 function Mensagens() { return <div className="painel"><section className="bloco mensagens"><aside><h2>Conversas</h2>{solicitacoes.slice(0,2).map((item, indice) => <button className={indice === 0 ? 'ativo' : ''} type="button" key={item.id}><span>{item.empresa.slice(0,2).toUpperCase()}</span><div><strong>{item.empresa}</strong><small>{item.id} · {indice ? 'Enviei os arquivos...' : 'Podemos confirmar...'}</small></div>{indice === 0 && <b>2</b>}</button>)}</aside><div className="conversa"><header><div><strong>Indústria Horizonte</strong><small>SOL-0284 · Canal persistente</small></div><span className="estado estado-em-analise">Em análise</span></header><div className="baloes"><p className="recebida">Olá! Podemos confirmar a tolerância indicada no desenho?<small>09:58</small></p><p className="enviada">Sim, a tolerância crítica é de 0,01 mm. O arquivo da solicitação é a versão atual.<small>10:04</small></p><p className="recebida">Perfeito. Vamos considerar essa informação na proposta.<small>10:07</small></p></div><form onSubmit={(evento) => evento.preventDefault()}><input aria-label="Mensagem" placeholder="Escreva uma mensagem..." /><button type="submit">Enviar</button></form></div></section></div>; }
 
-function ConteudoPublico() { return <div className="painel"><section className="bloco tabela-licoes"><header><div><h2>Páginas e catálogo</h2><p>Português é canônico; traduções ausentes usam fallback sinalizado.</p></div><button type="button"><Plus size={15} /> Novo conteúdo</button></header>{[['Início','PT · EN · DE','Publicado'],['Medição tridimensional','PT · EN · DE','Publicado'],['Tomografia industrial','PT · EN (DE usa fallback)','Rascunho'],['Política de privacidade','PT · EN · DE','Em validação']].map(([titulo,idiomas,estado]) => <article key={titulo}><span className="numero-licao"><FileCheck2 size={17} /></span><div><strong>{titulo}</strong><p>{idiomas}</p></div><span className={`estado estado-${estado.toLowerCase().replace(' ', '-')}`}>{estado}</span><button type="button" aria-label={`Abrir ${titulo}`}><ChevronRight size={17} /></button></article>)}</section></div>; }
+function ConteudoPublico() { return <div className="painel"><section className="bloco tabela-licoes"><header><div><h2>Páginas e catálogo</h2><p>Português é canônico; traduções ausentes usam fallback sinalizado.</p></div><button type="button"><Plus size={15} /> Novo conteúdo</button></header>{[['Início','PT · tradução pendente','Publicado'],['Medição tridimensional','PT · tradução pendente','Publicado'],['Raios X industrial','PT · tradução pendente','Rascunho'],['Política de privacidade','PT · tradução pendente','Em validação']].map(([titulo,idiomas,estado]) => <article key={titulo}><span className="numero-licao"><FileCheck2 size={17} /></span><div><strong>{titulo}</strong><p>{idiomas}</p></div><span className={`estado estado-${estado.toLowerCase().replace(' ', '-')}`}>{estado}</span><button type="button" aria-label={`Abrir ${titulo}`}><ChevronRight size={17} /></button></article>)}</section></div>; }
