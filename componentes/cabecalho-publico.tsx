@@ -5,12 +5,15 @@ export function CabecalhoPublico({ titulo, texto }: { titulo: string; texto: str
   return (
     <header className="cabecalho-publico">
       <div className="navegacao-simples">
-        <a className="marca marca-fundo-claro" href="/" aria-label="Centro de Excelência em Metrologia — início"><MarcaOficial /></a>
-        <nav aria-label="Navegação principal"><a href="/">Início</a><a href="/catalogo">Serviços e equipamentos</a><a href="/solicitar">Contato</a><a href="/portal">Entrar</a></nav>
+        <a className="marca" href="/" aria-label="Centro de Excelência em Metrologia — início"><MarcaOficial /></a>
+        <nav aria-label="Navegação principal"><a href="/">Início</a><a href="/catalogo">Serviços</a><a href="/catalogo#equipamentos">Equipamentos</a><a href="/#institucional">Institucional</a></nav>
+        <div className="acoes-cabecalho-publico"><a className="entrar" href="/portal">Entrar</a><a className="botao botao-menor" href="/solicitar">Solicitar orçamento</a></div>
         <MenuMovel />
       </div>
-      <h1>{titulo}</h1>
-      <p>{texto}</p>
+      <div className="cabecalho-publico-conteudo">
+        <h1>{titulo}</h1>
+        <p>{texto}</p>
+      </div>
     </header>
   );
 }

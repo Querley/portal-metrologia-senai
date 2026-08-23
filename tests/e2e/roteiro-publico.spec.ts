@@ -3,12 +3,16 @@ import { expect, test } from '@playwright/test';
 test('visitante navega da página inicial ao catálogo e à solicitação', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Precisão para medir/i })).toBeVisible();
+  await expect(page.locator('.medicao, .cartao-flutuante')).toHaveCount(0);
   await page.getByRole('link', { name: 'Conhecer serviços' }).click();
   await page.getByRole('link', { name: /Saiba mais sobre Escaneamento 3D/i }).click();
   await expect(page.getByRole('heading', { name: 'Serviços e equipamentos' })).toBeVisible();
   await page.getByRole('link', { name: /Solicitar análise/i }).first().click();
   await expect(page.getByRole('heading', { name: 'Solicite uma análise' })).toBeVisible();
   await expect(page.getByText('Ambiente de demonstração.')).toBeVisible();
+  await expect(page.locator('.navegacao-simples')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  const larguraFormulario = (await page.locator('.pagina-form').boundingBox())?.width ?? 0;
+  expect(larguraFormulario).toBeGreaterThan((page.viewportSize()?.width ?? 400) > 700 ? 800 : 340);
 });
 
 test('catálogo apresenta o parque atual e abre a página detalhada', async ({ page }) => {
@@ -18,6 +22,8 @@ test('catálogo apresenta o parque atual e abre a página detalhada', async ({ p
   await page.getByRole('link', { name: 'ZEISS DuraMax HTG' }).first().click();
   await expect(page.getByRole('heading', { name: 'ZEISS DuraMax HTG' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Aplicações frequentes' })).toBeVisible();
+  await expect(page.locator('.carrossel-palco img')).toHaveAttribute('src', /recorte-zeiss-duramax-v1\.png/);
+  await expect(page.getByText('1. equipamento sem fundo')).toBeVisible();
   await expect(page.locator('.carrossel')).toHaveAttribute('data-hidratado', 'sim');
   await page.getByRole('button', { name: 'Próxima mídia' }).click();
   await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento instalado no Centro');

@@ -56,18 +56,8 @@ export default function Home() {
             <span><b>6</b> equipamentos disponíveis</span><span><b>3</b> idiomas planejados</span><span><b>100%</b> acompanhamento digital</span>
           </div>
         </div>
-        <div className="hero-visual" aria-label="Painel ilustrativo de acompanhamento de serviço">
+        <div className="hero-visual" aria-label="Centro de Excelência em Metrologia SENAI ZEISS">
           <Image className="foto-hero" src="/imagens/laboratorio-centro-excelencia.jpeg" fill sizes="(max-width: 980px) 100vw, 50vw" alt="Centro de Excelência em Metrologia SENAI ZEISS visto de frente" priority />
-          <div className="hero-velatura" />
-          <div className="medicao">
-            <div className="medicao-topo"><span>INSPEÇÃO DIMENSIONAL</span><b>Em execução</b></div>
-            <div className="peca" aria-hidden="true">
-              <span className="eixo eixo-x">X</span><span className="eixo eixo-y">Y</span><div className="forma forma-a" /><div className="forma forma-b" /><i className="ponto ponto-a" /><i className="ponto ponto-b" /><i className="ponto ponto-c" />
-            </div>
-            <div className="progresso"><span><b>Progresso do serviço</b><small>72%</small></span><i><b /></i></div>
-          </div>
-          <div className="cartao-flutuante cartao-prazo"><small>PREVISÃO DE ENTREGA</small><strong>28 AGO</strong><span>No prazo</span></div>
-          <div className="cartao-flutuante cartao-precisao"><small>PRECISÃO</small><strong>0,003 <i>mm</i></strong><span>Dentro da tolerância</span></div>
         </div>
       </section>
 
