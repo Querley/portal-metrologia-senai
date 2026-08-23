@@ -6,9 +6,9 @@ import { servicosOficiais } from '../../lib/servicos';
 import '../publico.css';
 
 const servicos = [
-  { titulo: 'Medição tridimensional', imagem: '/imagens/recorte-zeiss-prismo-v1.png', texto: 'Inspeção tátil ou multissensor de dimensões, forma e posição, com programação e relatórios técnicos.', itens: ['CMM DuraMax HTG', 'ZEISS O-INSPECT', 'ZEISS PRISMO'] },
-  { titulo: 'Raios X industrial', imagem: '/imagens/recorte-zeiss-bosello-max-v1.png', texto: 'Investigação não destrutiva de estruturas internas, montagem, porosidade e outras descontinuidades.', itens: ['ZEISS BOSELLO MAX 80', 'Inspeção radiográfica 2D', 'Análise técnica de falhas'] },
-  { titulo: 'Digitalização óptica 3D', imagem: '/imagens/recorte-zeiss-atos-q-v1.png', texto: 'Captura de superfícies para inspeção, comparação nominal-real e reconstrução geométrica.', itens: ['ZEISS ATOS Q 8M', 'ZEISS T-SCAN hawk 2', 'Engenharia reversa e comparação CAD'] },
+  { titulo: 'Medição tridimensional', imagem: '/imagens/recorte-zeiss-prismo-v2.png', texto: 'Inspeção tátil ou multissensor de dimensões, forma e posição, com programação e relatórios técnicos.', itens: ['CMM DuraMax HTG', 'ZEISS O-INSPECT', 'ZEISS PRISMO'] },
+  { titulo: 'Raios X industrial', imagem: '/imagens/recorte-zeiss-bosello-max-v2.png', texto: 'Investigação não destrutiva de estruturas internas, montagem, porosidade e outras descontinuidades.', itens: ['ZEISS BOSELLO MAX 80', 'Inspeção radiográfica 2D', 'Análise técnica de falhas'] },
+  { titulo: 'Digitalização óptica 3D', imagem: '/imagens/recorte-zeiss-atos-q-v2.png', texto: 'Captura de superfícies para inspeção, comparação nominal-real e reconstrução geométrica.', itens: ['ZEISS ATOS Q 8M', 'ZEISS T-SCAN hawk 2', 'Engenharia reversa e comparação CAD'] },
 ];
 
 export const metadata = { title: 'Serviços e equipamentos — Portal de Metrologia SENAI' };

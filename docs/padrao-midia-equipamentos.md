@@ -2,7 +2,7 @@
 
 Cada página de equipamento adota esta sequência:
 
-1. imagem do equipamento isolado, em PNG com transparência real;
+1. imagem do equipamento isolado, em PNG com fundo branco sólido;
 2. fotografia do mesmo equipamento instalado no Centro;
 3. vídeo do equipamento em operação.
 
@@ -10,7 +10,7 @@ Uma posição só é publicada quando existir uma mídia correspondente e autori
 
 ## Situação atual
 
-| Equipamento | Recorte sem fundo | Foto no Centro | Vídeo em operação |
+| Equipamento | Imagem em fundo branco | Foto no Centro | Vídeo em operação |
 |---|---|---|---|
 | ZEISS DuraMax HTG | disponível | disponível | pendente |
 | ZEISS O-INSPECT | disponível | disponível | pendente |

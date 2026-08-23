@@ -7,13 +7,13 @@ describe('catálogo público de equipamentos', () => {
     expect(equipamentosPublicos.some(({ nome }) => nome.toLowerCase().includes('contura'))).toBe(false);
   });
 
-  it('mantém página, recorte sem fundo e referência técnica para cada equipamento', () => {
+  it('mantém página, imagem em fundo branco e referência técnica para cada equipamento', () => {
     for (const equipamento of equipamentosPublicos) {
       expect(encontrarEquipamento(equipamento.slug)).toBe(equipamento);
       expect(equipamento.midias.length).toBeGreaterThanOrEqual(1);
-      expect(equipamento.imagemPrincipal).toMatch(/^\/imagens\/recorte-.+-v1\.png$/);
+      expect(equipamento.imagemPrincipal).toMatch(/^\/imagens\/recorte-.+-v2\.png$/);
       expect(equipamento.midias[0].src).toBe(equipamento.imagemPrincipal);
-      expect(equipamento.midias[0].legenda).toBe('Equipamento sem fundo');
+      expect(equipamento.midias[0].legenda).toBe('Equipamento em fundo branco');
       expect(equipamento.fonteFabricante).toMatch(/^https:\/\/www\.zeiss\.com\//);
       expect(equipamento.aplicacoes.length).toBeGreaterThanOrEqual(4);
     }

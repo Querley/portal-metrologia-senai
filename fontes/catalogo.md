@@ -10,7 +10,7 @@ Os originais foram copiados em 22 de agosto de 2026 para `fontes/originais/`, pa
 
 Os hashes permitem confirmar que uma cópia continua idêntica ao original. Fontes locais não devem ser publicadas, anexadas a issues ou incluídas em commits.
 
-Os arquivos `public/imagens/recorte-*-v1.png` são derivados visuais gerados em 23 de agosto de 2026 a partir das fontes autorizadas. Eles não substituem os originais: apenas removem o fundo para apresentação no catálogo e devem ser revisados visualmente sempre que houver uma nova versão.
+Os arquivos `public/imagens/recorte-*-v2.png` são derivados visuais gerados em 23 de agosto de 2026 a partir das fontes autorizadas. Eles não substituem os originais: isolam os equipamentos sobre fundo branco sólido para apresentação no catálogo e devem ser revisados visualmente sempre que houver uma nova versão. A versão `v1` permanece apenas como histórico e não é consumida pelo portal porque incorporou um padrão xadrez ao fundo.
 
 ## Marca e acervo fotográfico autorizado
 
