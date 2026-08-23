@@ -11,6 +11,7 @@ test('visitante navega da página inicial ao catálogo e à solicitação', asyn
   await expect(page.getByRole('heading', { name: 'Solicite uma análise' })).toBeVisible();
   await expect(page.getByText('Ambiente de demonstração.')).toBeVisible();
   await expect(page.locator('.navegacao-simples')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('.cabecalho-publico-conteudo')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   const larguraFormulario = (await page.locator('.pagina-form').boundingBox())?.width ?? 0;
   expect(larguraFormulario).toBeGreaterThan((page.viewportSize()?.width ?? 400) > 700 ? 800 : 340);
 });

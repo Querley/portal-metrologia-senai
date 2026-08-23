@@ -6,7 +6,7 @@
 .navegacao-simples nav { display:flex; align-items:center; gap:30px; color:#405968; font-size:13px; font-weight:600; }
 .navegacao-simples nav a:hover { color:var(--azul); }
 .acoes-cabecalho-publico { display:flex; align-items:center; gap:16px; font-size:13px; font-weight:650; }
-.cabecalho-publico-conteudo { padding:58px max(6vw,calc((100vw - 1200px)/2)) 62px; background:#f4f8fa; }
+.cabecalho-publico-conteudo { padding:58px max(6vw,calc((100vw - 1200px)/2)) 62px; background:white; border-top:1px solid var(--borda); }
 .cabecalho-publico h1 { max-width:950px; margin:0; color:var(--azul-escuro); font-size:clamp(38px,5vw,62px); }
 .cabecalho-publico-conteudo > p { max-width:760px; margin:20px 0 0; color:var(--muted); font-size:15px; line-height:1.7; }
 .conteudo-publico { padding:76px max(6vw,calc((100vw - 1200px)/2)); }
