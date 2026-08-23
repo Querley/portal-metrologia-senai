@@ -4,14 +4,14 @@ insert into servicos_catalogo (id, slug, perguntas) values
   ('10000000-0000-0000-0000-000000000003','digitalizacao-optica','[{"chave":"finalidade","rotulo":"Finalidade da digitalização","obrigatoria":true}]')
 on conflict (slug) do nothing;
 
-insert into equipamentos (id, codigo, nome) values
-  ('20000000-0000-0000-0000-000000000001','duramax','CMM DuraMax'),
-  ('20000000-0000-0000-0000-000000000002','o-inspect','CMM O-INSPECT'),
-  ('20000000-0000-0000-0000-000000000003','prismo','CMM PRISMO'),
-  ('20000000-0000-0000-0000-000000000004','contura','CMM CONTURA'),
-  ('20000000-0000-0000-0000-000000000005','max-80','BOSELLO MAX 80'),
-  ('20000000-0000-0000-0000-000000000006','atos-q','ATOS Q 8M'),
-  ('20000000-0000-0000-0000-000000000007','t-scan-hawk-2','T-SCAN hawk 2')
+insert into equipamentos (id, codigo, nome, ativo) values
+  ('20000000-0000-0000-0000-000000000001','duramax','CMM DuraMax',true),
+  ('20000000-0000-0000-0000-000000000002','o-inspect','CMM O-INSPECT',true),
+  ('20000000-0000-0000-0000-000000000003','prismo','CMM PRISMO',true),
+  ('20000000-0000-0000-0000-000000000004','contura','CMM CONTURA',false),
+  ('20000000-0000-0000-0000-000000000005','max-80','BOSELLO MAX 80',true),
+  ('20000000-0000-0000-0000-000000000006','atos-q','ATOS Q 8M',true),
+  ('20000000-0000-0000-0000-000000000007','t-scan-hawk-2','T-SCAN hawk 2',true)
 on conflict (codigo) do nothing;
 
 insert into custos_equipamento (equipamento_id,custo_hora,vigente_desde,origem_fonte) values

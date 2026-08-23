@@ -6,7 +6,7 @@ Os originais foram copiados em 22 de agosto de 2026 para `fontes/originais/`, pa
 |---|---|---|---|
 | Proposta de desafio técnico (PDF, 114.781 bytes) | referência local | `3FA1F846AB0B1C6A24BFF853A9D63F29B1ED6562AEAFC02980363EE24E688504` | objetivo, portal público e critérios originais |
 | Complemento ao desafio técnico (PDF, 29.524 bytes) | referência local | `BC25603685E9CED69B347CA2B9C74A954E5322A2E0440C0E3955B082E3D6ED18` | módulo obrigatório de conhecimento em orçamentação |
-| Hora_custos_máquina.xls (49.664 bytes) | **restrita** | `645327C204401544F7440BE20F345302E213B1EAEE399C3AFE6169EB568A067F` | carga inicial dos sete equipamentos e custos administrativos |
+| Hora_custos_máquina.xls (49.664 bytes) | **restrita** | `645327C204401544F7440BE20F345302E213B1EAEE399C3AFE6169EB568A067F` | carga histórica de custos; seis equipamentos estão ativos e a CONTURA permanece apenas como registro inativo |
 
 Os hashes permitem confirmar que uma cópia continua idêntica ao original. Fontes locais não devem ser publicadas, anexadas a issues ou incluídas em commits.
 
@@ -36,3 +36,15 @@ Recebidos em 22 de agosto de 2026. Os originais permanecem em `fontes/originais/
 | `WhatsApp Image 2026-08-19 at 08.54.00 (3).jpeg` | `42E8995F0193CEEAF3528130D4750C67FE2BA99CA22C9020C6CF73BE506B1837` | 156.347 |
 | `WhatsApp Image 2026-08-19 at 08.54.00.jpeg` | `6ABD65182E1868F12C2424A6EEA932716E2E421434A365C9A0A1DE4D3CC5BC2E` | 119.829 |
 | `WhatsApp Image 2026-08-19 at 08.54.01.jpeg` | `01D50A670600C90873217B6ACCE17A292806A543186243BAC568F226F1B4553C` | 150.336 |
+| `ZEISS-DuraMax-HTG_1.webp` | `ABC245271F38DF8321F64ECE2A8770FCF5B09F2638352B4E3F2788A15AF215FA` | 14.794 |
+
+## Referências técnicas públicas
+
+Consultadas em 23 de agosto de 2026 para contextualizar as páginas dos equipamentos. As capacidades exatas do parque instalado continuam sujeitas à validação da equipe.
+
+- [ZEISS DuraMax](https://www.zeiss.com/metrology/en/systems/cmms/shop-floor-cmms/duramax.html)
+- [ZEISS O-INSPECT](https://www.zeiss.com/metrology/en/systems/cmms/vmms/o-inspect.html)
+- [Família ZEISS PRISMO](https://www.zeiss.com/metrology/en/systems/cmms/bridge-type-cmms/prismo-family.html)
+- [ZEISS BOSELLO MAX](https://www.zeiss.com/metrology/us/systems/ct_x-ray/2d-x-ray/bosello-max.html)
+- [ZEISS ATOS Q](https://www.zeiss.com/metrology/us/systems/optical-3d/3d-scanning/atos/atos-q.html)
+- [ZEISS T-SCAN hawk 2](https://www.zeiss.com/metrology/en/about-us/newsroom/2023/t-scan-hawk-2.html)

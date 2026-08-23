@@ -5,10 +5,27 @@ test('visitante navega da página inicial ao catálogo e à solicitação', asyn
   await expect(page.getByRole('heading', { name: /Precisão para medir/i })).toBeVisible();
   await page.getByRole('link', { name: 'Conhecer serviços' }).click();
   await page.getByRole('link', { name: /Saiba mais sobre Medição tridimensional/i }).click();
-  await expect(page.getByRole('heading', { name: 'Catálogo de serviços' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Serviços e equipamentos' })).toBeVisible();
   await page.getByRole('link', { name: /Solicitar análise/i }).first().click();
   await expect(page.getByRole('heading', { name: 'Solicite uma análise' })).toBeVisible();
   await expect(page.getByText('Ambiente de demonstração.')).toBeVisible();
+});
+
+test('catálogo apresenta o parque atual e abre a página detalhada', async ({ page }) => {
+  await page.goto('/catalogo#equipamentos');
+  await expect(page.getByRole('heading', { name: /Seis equipamentos/i })).toBeVisible();
+  await expect(page.getByText('CMM CONTURA', { exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'ZEISS DuraMax HTG' }).first().click();
+  await expect(page.getByRole('heading', { name: 'ZEISS DuraMax HTG' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Aplicações frequentes' })).toBeVisible();
+  await page.getByRole('button', { name: 'Próxima mídia' }).click();
+  await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento instalado no Centro');
+});
+
+test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
+  await page.goto('/solicitar?servico=outro');
+  await expect(page.getByLabel('Serviço desejado')).toHaveValue('outro');
+  await expect(page.getByLabel(/Qual serviço, equipamento ou resultado/i)).toBeVisible();
 });
 
 test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }) => {
