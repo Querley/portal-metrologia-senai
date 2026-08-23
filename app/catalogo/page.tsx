@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import { CabecalhoPublico } from '../../componentes/cabecalho-publico';
 import { RodapePublico } from '../../componentes/rodape-publico';
 import { equipamentosPublicos } from '../../lib/equipamentos';
@@ -19,20 +18,20 @@ export default function Catalogo() {
       <CabecalhoPublico titulo="Serviços e equipamentos" texto="Conheça as tecnologias disponíveis no Centro e encontre o caminho mais adequado para o seu desafio de medição." />
       <section className="conteudo-publico">
         <div className="catalogo-grade">
-          {servicos.map((servico) => <article key={servico.titulo}><div className="imagem-servico"><Image src={servico.imagem} fill sizes="(max-width: 800px) 100vw, 33vw" alt={`Equipamento usado em ${servico.titulo}`} /></div><div className="conteudo-card-servico"><p className="sobrelinha"><span /> CAPACIDADE</p><h2>{servico.titulo}</h2><p>{servico.texto}</p><ul>{servico.itens.map((item) => <li key={item}>{item}</li>)}</ul><Link className="botao" href="/solicitar">Solicitar análise <span aria-hidden="true">→</span></Link></div></article>)}
+          {servicos.map((servico) => <article key={servico.titulo}><div className="imagem-servico"><Image src={servico.imagem} fill sizes="(max-width: 800px) 100vw, 33vw" alt={`Equipamento usado em ${servico.titulo}`} /></div><div className="conteudo-card-servico"><p className="sobrelinha"><span /> CAPACIDADE</p><h2>{servico.titulo}</h2><p>{servico.texto}</p><ul>{servico.itens.map((item) => <li key={item}>{item}</li>)}</ul><a className="botao" href="/solicitar">Solicitar análise <span aria-hidden="true">→</span></a></div></article>)}
         </div>
 
         <section className="equipamentos" id="equipamentos">
           <div className="titulo-equipamentos"><div><p className="sobrelinha"><span /> INFRAESTRUTURA ATUAL</p><h2>Seis equipamentos, páginas próprias e aplicações complementares.</h2></div><p>A CONTURA não integra o parque atual. Capacidades e disponibilidade de cada equipamento são confirmadas pela equipe antes da proposta.</p></div>
           <div className="grade-equipamentos-detalhada">
-            {equipamentosPublicos.map((equipamento) => <article key={equipamento.slug}><Link className="foto-card-equipamento" href={`/equipamentos/${equipamento.slug}`}><Image src={equipamento.imagemPrincipal} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" alt={equipamento.nome} /></Link><div><p>{equipamento.categoria}</p><h3><Link href={`/equipamentos/${equipamento.slug}`}>{equipamento.nome}</Link></h3><span>{equipamento.resumo}</span><Link className="link-equipamento" href={`/equipamentos/${equipamento.slug}`}>Conhecer equipamento <b aria-hidden="true">→</b></Link></div></article>)}
+            {equipamentosPublicos.map((equipamento) => <article key={equipamento.slug}><a className="foto-card-equipamento" href={`/equipamentos/${equipamento.slug}`}><Image src={equipamento.imagemPrincipal} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" alt={equipamento.nome} /></a><div><p>{equipamento.categoria}</p><h3><a href={`/equipamentos/${equipamento.slug}`}>{equipamento.nome}</a></h3><span>{equipamento.resumo}</span><a className="link-equipamento" href={`/equipamentos/${equipamento.slug}`}>Conhecer equipamento <b aria-hidden="true">→</b></a></div></article>)}
           </div>
           <figure className="foto-equipamentos"><Image src="/imagens/laboratorio-fachada-interna.jpeg" fill sizes="100vw" alt="Visão geral dos equipamentos do Centro de Excelência em Metrologia" /><figcaption>Estrutura atual do Centro de Excelência em Metrologia SENAI ZEISS</figcaption></figure>
         </section>
 
         <section className="servico-personalizado">
           <div><p className="sobrelinha"><span /> DEMANDA ABERTA</p><h2>Seu serviço não aparece nesta lista?</h2><p>O catálogo continuará crescendo. Enquanto a relação completa de serviços é validada, você pode descrever livremente a necessidade, a peça, o objetivo e o resultado esperado.</p></div>
-          <Link className="botao" href="/solicitar?servico=outro">Criar solicitação personalizada <span aria-hidden="true">→</span></Link>
+          <a className="botao" href="/solicitar?servico=outro">Criar solicitação personalizada <span aria-hidden="true">→</span></a>
         </section>
       </section>
       <RodapePublico />

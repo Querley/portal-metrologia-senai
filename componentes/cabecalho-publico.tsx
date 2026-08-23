@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { MarcaOficial } from './marca-oficial';
 import { MenuMovel } from './menu-movel';
 
@@ -6,8 +5,8 @@ export function CabecalhoPublico({ titulo, texto }: { titulo: string; texto: str
   return (
     <header className="cabecalho-publico">
       <div className="navegacao-simples">
-        <Link className="marca marca-fundo-claro" href="/" aria-label="Centro de Excelência em Metrologia — início"><MarcaOficial /></Link>
-        <nav aria-label="Navegação principal"><Link href="/">Início</Link><Link href="/catalogo">Serviços e equipamentos</Link><Link href="/solicitar">Contato</Link><Link href="/portal">Entrar</Link></nav>
+        <a className="marca marca-fundo-claro" href="/" aria-label="Centro de Excelência em Metrologia — início"><MarcaOficial /></a>
+        <nav aria-label="Navegação principal"><a href="/">Início</a><a href="/catalogo">Serviços e equipamentos</a><a href="/solicitar">Contato</a><a href="/portal">Entrar</a></nav>
         <MenuMovel />
       </div>
       <h1>{titulo}</h1>

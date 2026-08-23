@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, CheckCircle2, ChevronRight, Clock3, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
-import Link from 'next/link';
 import { calcularProposta, formatarDinheiro } from '../lib/calculos';
 import { casosDemonstracao, equipamentosDemonstracao } from '../lib/dados-demonstracao';
 import { recomendarHoras } from '../lib/recomendacao';
@@ -39,7 +38,7 @@ export function PortalDemonstracao() {
   return (
     <div className="aplicacao" data-hidratado={hidratado ? 'sim' : 'nao'}>
       <aside className="barra-lateral">
-        <Link className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /><span className="marca-interna-legenda">Gestão de serviços e conhecimento</span></Link>
+        <a className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /><span className="marca-interna-legenda">Gestão de serviços e conhecimento</span></a>
         <div className="faixa-demo"><span>DEMONSTRAÇÃO</span><small>Dados sintéticos isolados</small></div>
         <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" />{rotulo}{id === 'mensagens' && <b>2</b>}</button>)}</nav>
         <div className="atalhos"><button type="button"><Settings size={17} />Configurações</button><button type="button"><LogOut size={17} />Sair</button></div>

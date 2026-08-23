@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CabecalhoPublico } from '../../../componentes/cabecalho-publico';
 import { CarrosselMidia } from '../../../componentes/carrossel-midia';
@@ -27,7 +26,7 @@ export default async function PaginaEquipamento({ params }: Propriedades) {
     <main>
       <CabecalhoPublico titulo={equipamento.nome} texto={equipamento.resumo} />
       <article className="pagina-equipamento">
-        <nav className="migalhas" aria-label="Caminho"><Link href="/">Início</Link><span>/</span><Link href="/catalogo#equipamentos">Equipamentos</Link><span>/</span><strong>{equipamento.nome}</strong></nav>
+        <nav className="migalhas" aria-label="Caminho"><a href="/">Início</a><span>/</span><a href="/catalogo#equipamentos">Equipamentos</a><span>/</span><strong>{equipamento.nome}</strong></nav>
         <div className="introducao-equipamento">
           <div><p className="sobrelinha"><span /> {equipamento.categoria.toUpperCase()}</p><h2>O equipamento e seu papel no Centro</h2>{equipamento.descricao.map((paragrafo) => <p key={paragrafo}>{paragrafo}</p>)}</div>
           <aside><strong>Antes de solicitar</strong><p>{equipamento.referenciaTecnica}</p><a href={equipamento.fonteFabricante} target="_blank" rel="noreferrer">Consultar referência técnica da ZEISS <span aria-hidden="true">↗</span></a></aside>
@@ -42,7 +41,7 @@ export default async function PaginaEquipamento({ params }: Propriedades) {
           <ListaTecnica titulo="Diferenciais" itens={equipamento.diferenciais} />
         </div>
 
-        <section className="fluxo-solicitacao-equipamento"><div><p className="sobrelinha"><span /> ANÁLISE TÉCNICA</p><h2>Confirme a melhor estratégia para sua peça.</h2><p>Envie dimensões, material, tolerâncias, quantidade, finalidade e, se possível, desenho ou modelo CAD. A equipe valida equipamento, preparação, prazo e entregáveis.</p></div><Link className="botao" href={`/solicitar?equipamento=${equipamento.slug}`}>Solicitar análise com este equipamento <span aria-hidden="true">→</span></Link></section>
+        <section className="fluxo-solicitacao-equipamento"><div><p className="sobrelinha"><span /> ANÁLISE TÉCNICA</p><h2>Confirme a melhor estratégia para sua peça.</h2><p>Envie dimensões, material, tolerâncias, quantidade, finalidade e, se possível, desenho ou modelo CAD. A equipe valida equipamento, preparação, prazo e entregáveis.</p></div><a className="botao" href={`/solicitar?equipamento=${equipamento.slug}`}>Solicitar análise com este equipamento <span aria-hidden="true">→</span></a></section>
       </article>
       <RodapePublico />
     </main>
