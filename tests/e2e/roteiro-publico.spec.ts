@@ -45,7 +45,7 @@ test('serviço oficial abre uma solicitação já classificada', async ({ page }
 });
 
 test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }) => {
-  await page.goto('/portal');
+  await page.goto('/portal/demonstracao');
   await expect(page.locator('.aplicacao')).toHaveAttribute('data-hidratado', 'sim');
   await expect(page.getByText('AMBIENTE DE HOMOLOGAÇÃO')).toBeVisible();
   await page.getByRole('button', { name: 'Orçamentos' }).click({ force: (page.viewportSize()?.width ?? 1000) < 650 });
@@ -56,4 +56,10 @@ test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }
   await page.getByRole('button', { name: /Assistente interno/i }).click();
   await expect(page.getByText('PRÉVIA SANITIZADA')).toBeVisible();
   await expect(page.getByText(/não altero o cálculo/i)).toBeVisible();
+});
+
+test('área interna falha fechada sem credenciais de homologação', async ({ page }) => {
+  await page.goto('/portal');
+  await expect(page.getByRole('heading', { name: 'Integração de homologação pendente' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Abrir demonstração local' })).toHaveAttribute('href', '/portal/demonstracao');
 });

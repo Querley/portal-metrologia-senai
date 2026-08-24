@@ -6,7 +6,7 @@ Os originais foram copiados em 22 de agosto de 2026 para `fontes/originais/`, pa
 |---|---|---|---|
 | Proposta de desafio técnico (PDF, 114.781 bytes) | referência local | `3FA1F846AB0B1C6A24BFF853A9D63F29B1ED6562AEAFC02980363EE24E688504` | objetivo, portal público e critérios originais |
 | Complemento ao desafio técnico (PDF, 29.524 bytes) | referência local | `BC25603685E9CED69B347CA2B9C74A954E5322A2E0440C0E3955B082E3D6ED18` | módulo obrigatório de conhecimento em orçamentação |
-| Hora_custos_máquina.xls (49.664 bytes) | **restrita** | `645327C204401544F7440BE20F345302E213B1EAEE399C3AFE6169EB568A067F` | carga histórica de custos; seis equipamentos estão ativos e a CONTURA permanece apenas como registro inativo |
+| Hora_custos_máquina.xls (49.664 bytes) | **restrita** | `645327C204401544F7440BE20F345302E213B1EAEE399C3AFE6169EB568A067F` | fonte real mantida somente em `fontes/originais/restritas/`; seus valores não podem ser copiados para seeds, testes ou código versionado |
 
 Os hashes permitem confirmar que uma cópia continua idêntica ao original. Fontes locais não devem ser publicadas, anexadas a issues ou incluídas em commits.
 

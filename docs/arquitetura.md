@@ -23,6 +23,8 @@ Autorização está no banco, não apenas na interface. O token identifica usuá
 
 Homologação e produção têm bancos, buckets, chaves, URLs e remetentes distintos. Produção usa a região Supabase disponível mais próxima do Brasil. A camada de dados local é apenas demonstrativa e nunca recebe registros reais.
 
+O seed de homologação usa somente valores sintéticos identificados por `massa_sintetica_v1`. Fontes restritas podem orientar uma carga real futura, executada por processo autorizado fora do Git, mas seus valores não são copiados para código, testes ou seeds.
+
 ## Disponibilidade e recuperação
 
 Uma tarefa diária exporta banco e metadados, cifra antes do envio e aplica retenção no R2 (14 diários e quatro semanais). Better Stack recebe falhas não sensíveis e testa disponibilidade. A restauração deve ser executada de fato antes da banca.

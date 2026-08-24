@@ -22,6 +22,7 @@ Construir o Portal de Metrologia SENAI priorizando o ciclo **orçar → executar
 - Teste cálculos, permissões, estados e segregação de origem. Fluxos críticos recebem teste de ponta a ponta.
 - Componentes devem funcionar por teclado, conservar foco visível e buscar WCAG AA.
 - Atualize os documentos relacionados quando uma regra, contrato, comando ou decisão mudar.
+- Quando uma regra de negócio depender de validação institucional, informe ao mantenedor qual informação falta e com quem ela deve ser confirmada; não invente a regra.
 - Neste projeto individual, mudanças pequenas e claramente solicitadas pelo mantenedor podem ser testadas, commitadas e enviadas diretamente para `main`.
 - Use branch e PR quando a mudança for ampla, arriscada, experimental ou quando o mantenedor pedir revisão separada. Não faça merge sem decisão do mantenedor.
 - Novos arquivos de orientação só devem surgir quando houver necessidade concreta.

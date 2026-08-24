@@ -9,7 +9,7 @@ export function MenuMovel() {
         <a href="/catalogo">Serviços e equipamentos</a>
         <a href="/solicitar">Solicitar orçamento</a>
         <a href="/privacidade">Privacidade</a>
-        <a href="/portal">Entrar na demonstração</a>
+        <a href="/portal">Entrar na área interna</a>
       </nav>
     </details>
   );

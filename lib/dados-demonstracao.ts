@@ -1,12 +1,12 @@
 import type { CasoHistorico } from './recomendacao';
 
 export const equipamentosDemonstracao = [
-  { id: 'duramax', nome: 'CMM DuraMax', custoHora: '173.665147' },
-  { id: 'o-inspect', nome: 'CMM O-INSPECT', custoHora: '201.444063' },
-  { id: 'prismo', nome: 'CMM PRISMO', custoHora: '311.979689' },
-  { id: 'max-80', nome: 'BOSELLO MAX 80', custoHora: '273.809147' },
-  { id: 'atos-q', nome: 'ATOS Q 8M', custoHora: '177.155759' },
-  { id: 't-scan', nome: 'T-SCAN hawk 2', custoHora: '162.234162' },
+  { id: 'duramax', nome: 'CMM DuraMax', origem: 'demonstracao', origemFonte: 'massa_sintetica_v1', custoHora: '120.00' },
+  { id: 'o-inspect', nome: 'CMM O-INSPECT', origem: 'demonstracao', origemFonte: 'massa_sintetica_v1', custoHora: '140.00' },
+  { id: 'prismo', nome: 'CMM PRISMO', origem: 'demonstracao', origemFonte: 'massa_sintetica_v1', custoHora: '160.00' },
+  { id: 'max-80', nome: 'BOSELLO MAX 80', origem: 'demonstracao', origemFonte: 'massa_sintetica_v1', custoHora: '180.00' },
+  { id: 'atos-q', nome: 'ATOS Q 8M', origem: 'demonstracao', origemFonte: 'massa_sintetica_v1', custoHora: '110.00' },
+  { id: 't-scan-hawk-2', nome: 'T-SCAN hawk 2', origem: 'demonstracao', origemFonte: 'massa_sintetica_v1', custoHora: '100.00' },
 ] as const;
 
 export const casosDemonstracao: CasoHistorico[] = Array.from({ length: 16 }, (_, indice) => ({

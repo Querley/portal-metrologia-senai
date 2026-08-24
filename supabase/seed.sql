@@ -21,14 +21,15 @@ insert into equipamentos (id, codigo, nome, ativo) values
   ('20000000-0000-0000-0000-000000000007','t-scan-hawk-2','T-SCAN hawk 2',true)
 on conflict (codigo) do nothing;
 
-insert into custos_equipamento (equipamento_id,custo_hora,vigente_desde,origem_fonte) values
-  ('20000000-0000-0000-0000-000000000001',173.665147,'2026-08-22','Hora_custos_máquina.xls'),
-  ('20000000-0000-0000-0000-000000000002',201.444063,'2026-08-22','Hora_custos_máquina.xls'),
-  ('20000000-0000-0000-0000-000000000003',311.979689,'2026-08-22','Hora_custos_máquina.xls'),
-  ('20000000-0000-0000-0000-000000000004',196.622505,'2026-08-22','Hora_custos_máquina.xls'),
-  ('20000000-0000-0000-0000-000000000005',273.809147,'2026-08-22','Hora_custos_máquina.xls'),
-  ('20000000-0000-0000-0000-000000000006',177.155759,'2026-08-22','Hora_custos_máquina.xls'),
-  ('20000000-0000-0000-0000-000000000007',162.234162,'2026-08-22','Hora_custos_máquina.xls')
+-- Valores redondos e fictícios para homologação; não derivam da planilha restrita.
+insert into custos_equipamento (equipamento_id,origem,custo_hora,vigente_desde,origem_fonte) values
+  ('20000000-0000-0000-0000-000000000001','demonstracao',120.00,'2026-08-24','massa_sintetica_v1'),
+  ('20000000-0000-0000-0000-000000000002','demonstracao',140.00,'2026-08-24','massa_sintetica_v1'),
+  ('20000000-0000-0000-0000-000000000003','demonstracao',160.00,'2026-08-24','massa_sintetica_v1'),
+  ('20000000-0000-0000-0000-000000000004','demonstracao',130.00,'2026-08-24','massa_sintetica_v1'),
+  ('20000000-0000-0000-0000-000000000005','demonstracao',180.00,'2026-08-24','massa_sintetica_v1'),
+  ('20000000-0000-0000-0000-000000000006','demonstracao',110.00,'2026-08-24','massa_sintetica_v1'),
+  ('20000000-0000-0000-0000-000000000007','demonstracao',100.00,'2026-08-24','massa_sintetica_v1')
 on conflict (equipamento_id,vigente_desde) do nothing;
 
 insert into conteudos (id,chave,tipo,estado) values

@@ -17,6 +17,8 @@ npm run dev
 
 Copie `.env.example` para `.env.local` apenas quando houver ambientes Supabase e chaves aprovadas. Nunca versione o arquivo preenchido.
 
+O acesso interno não permite autocadastro. Contas e perfis são provisionados no Supabase de homologação; sem URL e chave anônima configuradas, a área interna informa que a integração está indisponível e a demonstração local permanece separada.
+
 ## Verificar
 
 ```bash

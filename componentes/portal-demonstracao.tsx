@@ -24,7 +24,7 @@ const solicitacoes = [
   { id: 'SOL-0282', empresa: 'Fábrica Vetor', servico: 'Raios X industrial', data: '20 ago, 11:05', estado: 'Orçada' },
 ];
 
-export function PortalDemonstracao() {
+export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuario = 'Administrador', aoSair, aoAbrirPerfil, autenticado = false }: { nomeUsuario?: string; perfilUsuario?: string; aoSair?: () => void | Promise<void>; aoAbrirPerfil?: () => void; autenticado?: boolean }) {
   const [secao, setSecao] = useState('visao');
   const [horas, setHoras] = useState(12);
   const [lucro, setLucro] = useState(25);
@@ -39,10 +39,10 @@ export function PortalDemonstracao() {
     <div className="aplicacao" data-hidratado={hidratado ? 'sim' : 'nao'}>
       <aside className="barra-lateral">
         <a className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /><span className="marca-interna-legenda">Gestão de serviços e conhecimento</span></a>
-        <div className="faixa-demo"><span>DEMONSTRAÇÃO</span><small>Dados sintéticos isolados</small></div>
+        <div className="faixa-demo"><span>{autenticado ? 'HOMOLOGAÇÃO' : 'DEMONSTRAÇÃO LOCAL'}</span><small>Dados sintéticos isolados</small></div>
         <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" />{rotulo}{id === 'mensagens' && <b>2</b>}</button>)}</nav>
-        <div className="atalhos"><button type="button"><Settings size={17} />Configurações</button><button type="button"><LogOut size={17} />Sair</button></div>
-        <div className="usuario"><span>QR</span><div><strong>Quérlin</strong><small>Administrador</small></div></div>
+        <div className="atalhos"><button type="button" onClick={aoAbrirPerfil} disabled={!aoAbrirPerfil}><Settings size={17} />Meu perfil</button><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} />Sair</button></div>
+        <div className="usuario"><span>{nomeUsuario.split(/\s+/).slice(0, 2).map((parte) => parte[0]).join('').toUpperCase()}</span><div><strong>{nomeUsuario}</strong><small>{perfilUsuario}</small></div></div>
       </aside>
 
       <main className="conteudo-interno">
