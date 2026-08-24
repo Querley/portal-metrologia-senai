@@ -16,4 +16,9 @@ describe('segregação da massa demonstrativa', () => {
     expect(seed).toContain("'massa_sintetica_v1'");
     expect(seed).not.toContain('Hora_custos_máquina.xls');
   });
+
+  it('não apaga custos reais em migrações compartilhadas', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202608240004_perfil_interno_seguro.sql', import.meta.url), 'utf8');
+    expect(migracao).not.toMatch(/delete\s+from\s+custos_equipamento/i);
+  });
 });

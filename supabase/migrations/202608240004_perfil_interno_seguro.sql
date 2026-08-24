@@ -1,7 +1,5 @@
 -- Primeiro recorte autenticado: perfil próprio em origem demonstrativa e negação por padrão.
--- Nenhum dado da fonte restrita pode permanecer no banco de homologação.
-delete from custos_equipamento
-where origem_fonte = 'Hora_custos_máquina.xls';
+-- Esta migração nunca apaga custos: cargas reais são tratadas por processo privado e auditado.
 
 alter table perfis
   add column origem_ativa origem_dado not null default 'demonstracao';
@@ -12,7 +10,8 @@ comment on column perfis.origem_ativa is
 alter table custos_equipamento
   add column origem origem_dado;
 
--- Falha de forma segura caso existam custos não classificados no ambiente.
+-- Falha de forma segura caso o ambiente já contenha custos não classificados.
+-- O responsável deve classificá-los explicitamente antes de reaplicar a migração.
 alter table custos_equipamento
   alter column origem set not null;
 
