@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { CarrosselMidia } from '../componentes/carrossel-midia';
 import { MarcaOficial } from '../componentes/marca-oficial';
 import { MenuMovel } from '../componentes/menu-movel';
@@ -21,6 +20,7 @@ const etapas = [
 
 const midiasLaboratorio = [
   { tipo: 'imagem', src: '/imagens/laboratorio-prismo.jpeg', alt: 'ZEISS PRISMO instalada no Centro', legenda: 'ZEISS PRISMO no Centro' },
+  { tipo: 'imagem', src: '/imagens/laboratorio-t-scan-hawk-2.jpeg', alt: 'ZEISS T-SCAN hawk 2 em sua maleta no Centro', legenda: 'ZEISS T-SCAN hawk 2 no Centro' },
   { tipo: 'imagem', src: '/imagens/laboratorio-o-inspect.jpeg', alt: 'ZEISS O-INSPECT instalada no Centro', legenda: 'ZEISS O-INSPECT no Centro' },
   { tipo: 'imagem', src: '/imagens/laboratorio-duramax.jpeg', alt: 'ZEISS DuraMax instalada no Centro', legenda: 'ZEISS DuraMax no Centro' },
   { tipo: 'imagem', src: '/imagens/laboratorio-bosello.jpeg', alt: 'ZEISS BOSELLO MAX instalada no Centro', legenda: 'ZEISS BOSELLO MAX no Centro' },
@@ -57,7 +57,7 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-visual" aria-label="Centro de Excelência em Metrologia SENAI ZEISS">
-          <Image className="foto-hero" src="/imagens/laboratorio-centro-excelencia.jpeg" fill sizes="(max-width: 980px) 100vw, 50vw" alt="Centro de Excelência em Metrologia SENAI ZEISS visto de frente" priority />
+          <video className="video-hero" autoPlay muted loop playsInline controls preload="metadata" poster="/imagens/laboratorio-centro-excelencia.jpeg" aria-label="Apresentação em vídeo do Centro de Excelência em Metrologia SENAI ZEISS"><source src="/videos/centro-metrologia-apresentacao.mp4" type="video/mp4" /></video>
         </div>
       </section>
 

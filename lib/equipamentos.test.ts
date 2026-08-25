@@ -11,7 +11,7 @@ describe('catálogo público de equipamentos', () => {
     for (const equipamento of equipamentosPublicos) {
       expect(encontrarEquipamento(equipamento.slug)).toBe(equipamento);
       expect(equipamento.midias.length).toBeGreaterThanOrEqual(1);
-      expect(equipamento.imagemPrincipal).toMatch(/^\/imagens\/recorte-.+-v2\.png$/);
+      expect(equipamento.imagemPrincipal).toMatch(/^\/imagens\/recorte-.+-v[23]\.png$/);
       expect(equipamento.midias[0].src).toBe(equipamento.imagemPrincipal);
       expect(equipamento.midias[0].legenda).toBe('Equipamento em fundo branco');
       expect(equipamento.fonteFabricante).toMatch(/^https:\/\/www\.zeiss\.com\//);
@@ -20,12 +20,15 @@ describe('catálogo público de equipamentos', () => {
   });
 
   it('não substitui mídias pendentes por material ilustrativo', () => {
-    const tScan = encontrarEquipamento('zeiss-t-scan-hawk-2');
-    expect(tScan?.midias).toHaveLength(1);
-
-    for (const equipamento of equipamentosPublicos.filter(({ slug }) => slug !== 'zeiss-t-scan-hawk-2')) {
+    for (const equipamento of equipamentosPublicos) {
       expect(equipamento.midias[1].legenda).toBe('Equipamento instalado no Centro');
     }
-    expect(equipamentosPublicos.flatMap(({ midias }) => midias).some(({ tipo }) => tipo === 'video')).toBe(false);
+    const comVideo = equipamentosPublicos.filter(({ midias }) => midias.some(({ tipo }) => tipo === 'video'));
+    expect(comVideo.map(({ slug }) => slug).sort()).toEqual([
+      'zeiss-atos-q',
+      'zeiss-bosello-max-80',
+      'zeiss-duramax',
+      'zeiss-o-inspect',
+    ]);
   });
 });

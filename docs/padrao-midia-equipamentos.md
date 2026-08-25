@@ -12,12 +12,12 @@ Uma posição só é publicada quando existir uma mídia correspondente e autori
 
 | Equipamento | Imagem em fundo branco | Foto no Centro | Vídeo em operação |
 |---|---|---|---|
-| ZEISS DuraMax HTG | disponível | disponível | pendente |
-| ZEISS O-INSPECT | disponível | disponível | pendente |
-| ZEISS PRISMO | disponível | disponível | pendente |
-| ZEISS BOSELLO MAX 80 | disponível | disponível | pendente |
-| ZEISS ATOS Q 8M | disponível | disponível | pendente |
-| ZEISS T-SCAN hawk 2 | disponível | pendente | pendente |
+| ZEISS DuraMax HTG 5/5/5 | disponível | disponível | disponível |
+| ZEISS O-INSPECT 5/4/3 | disponível | disponível | disponível |
+| ZEISS PRISMO VAST 09/24/07 | disponível | disponível | pendente |
+| ZEISS BOSELLO MAX 80-150 | disponível | disponível | disponível |
+| ZEISS ATOS Q 8M | disponível | disponível | disponível |
+| ZEISS T-SCAN hawk 2 | disponível | disponível | pendente |
 
 ## Recebimento futuro
 

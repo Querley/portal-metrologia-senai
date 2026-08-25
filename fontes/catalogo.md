@@ -12,6 +12,8 @@ Os hashes permitem confirmar que uma cópia continua idêntica ao original. Font
 
 Os arquivos `public/imagens/recorte-*-v2.png` são derivados visuais gerados em 23 de agosto de 2026 a partir das fontes autorizadas. Eles não substituem os originais: isolam os equipamentos sobre fundo branco sólido para apresentação no catálogo e devem ser revisados visualmente sempre que houver uma nova versão. A versão `v1` permanece apenas como histórico e não é consumida pelo portal porque incorporou um padrão xadrez ao fundo.
 
+Em 25 de agosto de 2026, novas versões `v3` foram produzidas para DuraMax, BOSELLO MAX e T-SCAN hawk 2. A DuraMax `v3` corresponde ao modelo aberto instalado no Centro; a BOSELLO `v3` preserva o equipamento completo com maior margem superior; e o T-SCAN `v3` deriva da fotografia close-up recebida, com fundo branco sólido.
+
 ## Marca e acervo fotográfico autorizado
 
 Recebidos em 22 de agosto de 2026. Os originais permanecem em `fontes/originais/midia/`; cópias com nomes normalizados foram colocadas em `public/imagens/` para uso no portal conforme autorização da responsável pelo projeto.
@@ -39,6 +41,24 @@ Recebidos em 22 de agosto de 2026. Os originais permanecem em `fontes/originais/
 | `WhatsApp Image 2026-08-19 at 08.54.00.jpeg` | `6ABD65182E1868F12C2424A6EEA932716E2E421434A365C9A0A1DE4D3CC5BC2E` | 119.829 |
 | `WhatsApp Image 2026-08-19 at 08.54.01.jpeg` | `01D50A670600C90873217B6ACCE17A292806A543186243BAC568F226F1B4553C` | 150.336 |
 | `ZEISS-DuraMax-HTG_1.webp` | `ABC245271F38DF8321F64ECE2A8770FCF5B09F2638352B4E3F2788A15AF215FA` | 14.794 |
+
+## Vídeos, fotografias e cartazes recebidos em 25 de agosto de 2026
+
+Os originais foram preservados em `fontes/originais/midia/2026-08-25/`. A responsável autorizou expressamente a publicação dos cinco vídeos. As versões públicas dos vídeos foram preparadas em MP4 compatível com navegadores e com carregamento progressivo.
+
+| Arquivo original | SHA-256 | Bytes | Uso |
+|---|---|---:|---|
+| `atos_q.mp4` | `49785496B59403962CBDB4986C4B9227A6969DF8EDCB8086C9E31EF62DB588A3` | 12.389.748 | vídeo do ATOS Q em operação |
+| `bosello.mp4` | `CD7DA5487C19DC2FB6F66E3FC816A705D1589CA56E49F2BEF7C89211EB56C39B` | 18.942.168 | vídeo da BOSELLO MAX em operação |
+| `duramax.mp4` | `9C1C45EE16C898AD906D5DF01DB3E0653D3B133D503FAD04FB77F929ECEC018A` | 25.725.176 | vídeo da DuraMax em operação |
+| `faixada_laboratorio.mp4` | `0ED6D641AE740B56FE20C43980C412D9F66A26370A6AFE0023509B266E5FB6D6` | 8.436.621 | apresentação do Centro na abertura da página inicial |
+| `o_inspect.mp4` | `FF129B6973CAAC61E5655DB0AB18A5682E67505760E42C7FC4EFC4CDEC2CD14B` | 17.431.041 | vídeo da O-INSPECT em operação |
+| `IMG_20260825_134835.jpg` | `06A4F27A23A9861EB9ED8EC5C325BDCFBAB8399B62664ABD1CE3D24774050C4F` | 2.335.702 | cartaz da PRISMO VAST 09/24/07 |
+| `IMG_20260825_134917.jpg` | `0C0796D0A7ED37192BBAA8E756EEB6293860B2C5855E0462D91CD385062D7279` | 2.986.627 | cartaz da DuraMax HTG 5/5/5 |
+| `IMG_20260825_134931.jpg` | `11CACE02C6EA481645F0636E8E143864AFEF57C9C245CF27A3B8B6262463CECF` | 2.782.623 | cartaz da O-INSPECT 5/4/3 |
+| `IMG_20260825_134953.jpg` | `E2385E6F120D10E2D2CD7DD0E0B8ABB0154F3D517B19AD5405993526CD2CC5E0` | 2.447.659 | cartaz da BOSELLO MAX 80-150 |
+| `tscan_close_up_para_recortar_o_fundo.jpeg` | `B821F7C571B82727D7514B9B2398F3DEEC82A101180B767E95C126A76A22FB8E` | 300.294 | origem do recorte `v3` do T-SCAN hawk 2 |
+| `tscan_no_Centro.jpeg` | `8F5C3976B9D57C2FCB25266BAA9D7A87F32C27C63D50E3DE5EE7E9E0C455188D` | 280.267 | T-SCAN hawk 2 no Centro |
 
 ## Referências técnicas públicas
 

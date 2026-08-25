@@ -4,16 +4,16 @@
 
 Os fabricantes oferecem o mesmo equipamento em versões, tamanhos, sensores e acessórios diferentes. As páginas públicas já podem explicar a família e as aplicações, mas valores numéricos devem representar a máquina realmente instalada no Centro.
 
-Dados a confirmar com a equipe, certificados, propostas de aquisição ou telas dos softwares:
+Os cartazes fotografados no Centro em 25 de agosto de 2026 permitiram confirmar parte da configuração instalada. O portal já apresenta os dados abaixo; certificados e documentos de aquisição continuam sendo a referência para uso contratual.
 
-| Equipamento | Dados específicos da unidade instalada |
-|---|---|
-| ZEISS DuraMax HTG | volume útil; sensores e pontas disponíveis; erro máximo permitido ou incerteza declarada; faixa de temperatura; versão do CALYPSO; acessórios de fixação |
-| ZEISS O-INSPECT | modelo/tamanho da família; volume útil; câmera e ampliação; sensores táteis ou adicionais; mesa rotativa; erro máximo permitido; software |
-| ZEISS PRISMO | modelo e dimensões do volume de medição; sensor VAST instalado; opções de scanning; erro máximo permitido; faixa térmica; software e módulos |
-| ZEISS BOSELLO MAX 80 | tensão e potência do tubo; detector; dimensões e massa máximas da peça; resolução; recursos 2D/CT disponíveis; softwares de aquisição, reconstrução e análise |
-| ZEISS ATOS Q 8M | áreas/volumes de medição e lentes disponíveis; distância de pontos; calibrações; tripé, mesa ou automação; versão do ZEISS INSPECT |
-| ZEISS T-SCAN hawk 2 | acessórios e escalas calibradas; modos habilitados; volume ampliado/satélite; computador e versão do ZEISS INSPECT; condições de calibração |
+| Equipamento | Configuração identificada | Dados que ainda exigem confirmação |
+|---|---|---|
+| ZEISS DuraMax HTG 5/5/5 | volume 500 × 500 × 500 mm; VAST XXT; mesa rotativa; escala Zerodur; correção de temperatura da peça | pontas disponíveis; incerteza aplicável; faixa de temperatura; versão do CALYPSO; acessórios de fixação |
+| ZEISS O-INSPECT 5/4/3 | volume 500 × 400 × 300 mm; medição óptica e por contato; MPE(E) longitudinal registrado no cartaz para 1D, 2D e 3D | câmera e ampliação; sensores adicionais; mesa rotativa; software; condições completas das expressões de MPE(E) |
+| ZEISS PRISMO VAST 09/24/07 | LineScan; escala Robax com resolução informada de 200 nm; aplicação em peças grandes e complexas | volume; sensor VAST específico; fórmula completa de precisão; faixa térmica; software e módulos |
+| ZEISS BOSELLO MAX 80-150 | raios X 2D; reconhecimento automático de defeitos; preparação CT-ready | tensão e potência do tubo; detector; dimensões e massa máximas; resolução; softwares de aquisição, reconstrução e análise |
+| ZEISS ATOS Q 8M | versão 8M instalada | áreas de medição e lentes; distância de pontos; calibrações; tripé, mesa ou automação; versão do ZEISS INSPECT |
+| ZEISS T-SCAN hawk 2 | modelo instalado e acervo fotográfico local | acessórios e escalas calibradas; modos habilitados; volume ampliado/satélite; computador, software e condições de calibração |
 
 Esses dados não impedem a apresentação do catálogo. Eles são necessários para publicar limites, precisão e capacidade com segurança, sem usar como se fossem locais as especificações genéricas da família do fabricante.
 

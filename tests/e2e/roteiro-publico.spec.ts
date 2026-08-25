@@ -23,11 +23,13 @@ test('catálogo apresenta o parque atual e abre a página detalhada', async ({ p
   await page.getByRole('link', { name: 'ZEISS DuraMax HTG' }).first().click();
   await expect(page.getByRole('heading', { name: 'ZEISS DuraMax HTG' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Aplicações frequentes' })).toBeVisible();
-  await expect(page.locator('.carrossel-palco img')).toHaveAttribute('src', /recorte-zeiss-duramax-v2\.png/);
+  await expect(page.locator('.carrossel-palco img')).toHaveAttribute('src', /recorte-zeiss-duramax-v3\.png/);
   await expect(page.getByText('1. equipamento em fundo branco')).toBeVisible();
   await expect(page.locator('.carrossel')).toHaveAttribute('data-hidratado', 'sim');
   await page.getByRole('button', { name: 'Próxima mídia' }).click();
   await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento instalado no Centro');
+  await page.getByRole('button', { name: 'Próxima mídia' }).click();
+  await expect(page.locator('.carrossel-palco video source')).toHaveAttribute('src', /zeiss-duramax-operacao\.mp4/);
 });
 
 test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
@@ -58,8 +60,8 @@ test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }
   await expect(page.getByText(/não altero o cálculo/i)).toBeVisible();
 });
 
-test('área interna falha fechada sem credenciais de homologação', async ({ page }) => {
+test('área interna oferece autenticação e alternativa de demonstração', async ({ page }) => {
   await page.goto('/portal');
-  await expect(page.getByRole('heading', { name: 'Integração de homologação pendente' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Abrir demonstração local' })).toHaveAttribute('href', '/portal/demonstracao');
+  await expect(page.getByRole('heading', { name: 'Entrar no Portal de Metrologia' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Prefiro abrir a demonstração local' })).toHaveAttribute('href', '/portal/demonstracao');
 });
