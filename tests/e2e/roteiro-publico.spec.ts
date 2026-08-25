@@ -29,11 +29,14 @@ test('catálogo apresenta o parque atual e abre a página detalhada', async ({ p
   await page.getByRole('button', { name: 'Próxima mídia' }).click();
   await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento instalado no Centro');
   await page.getByRole('button', { name: 'Próxima mídia' }).click();
-  await expect(page.locator('.carrossel-palco video source')).toHaveAttribute('src', /zeiss-duramax-operacao\.mp4/);
-  await expect(page.locator('.carrossel-palco video')).toHaveAttribute('preload', 'auto');
-  await expect(page.locator('.carrossel-palco video')).toHaveJSProperty('autoplay', true);
-  await expect(page.locator('.carrossel-palco video')).toHaveJSProperty('loop', true);
-  await expect(page.locator('.carrossel-palco video')).toHaveJSProperty('muted', true);
+  const video = page.locator('.carrossel-palco video');
+  await expect(video).toHaveAttribute('preload', 'auto');
+  await expect(video).toHaveAttribute('data-busca-pronta', 'sim');
+  await expect(video).toHaveJSProperty('autoplay', true);
+  await expect(video).toHaveJSProperty('loop', true);
+  await expect(video).toHaveJSProperty('muted', true);
+  await video.evaluate((elemento: HTMLVideoElement) => { elemento.currentTime = Math.min(2, elemento.duration); });
+  await expect.poll(() => video.evaluate((elemento: HTMLVideoElement) => elemento.currentTime)).toBeGreaterThan(1.5);
 });
 
 test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {

@@ -2,6 +2,7 @@ import { CarrosselMidia } from '../componentes/carrossel-midia';
 import { MarcaOficial } from '../componentes/marca-oficial';
 import { MenuMovel } from '../componentes/menu-movel';
 import { RodapePublico } from '../componentes/rodape-publico';
+import { VideoPublico } from '../componentes/video-publico';
 import type { MidiaEquipamento } from '../lib/equipamentos';
 import './publico.css';
 
@@ -57,7 +58,7 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-visual" aria-label="Centro de Excelência em Metrologia SENAI ZEISS">
-          <video className="video-hero" autoPlay muted loop playsInline controls preload="auto" poster="/imagens/laboratorio-centro-excelencia.jpeg" aria-label="Apresentação em vídeo do Centro de Excelência em Metrologia SENAI ZEISS"><source src="/videos/centro-metrologia-apresentacao.mp4" type="video/mp4" /></video>
+          <VideoPublico className="video-hero" src="/videos/centro-metrologia-apresentacao.mp4" poster="/imagens/laboratorio-centro-excelencia.jpeg" rotulo="Apresentação em vídeo do Centro de Excelência em Metrologia SENAI ZEISS" />
         </div>
       </section>
 

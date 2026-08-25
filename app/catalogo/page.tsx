@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { CabecalhoPublico } from '../../componentes/cabecalho-publico';
 import { RodapePublico } from '../../componentes/rodape-publico';
+import { VideoPublico } from '../../componentes/video-publico';
 import { equipamentosPublicos } from '../../lib/equipamentos';
 import { servicosOficiais } from '../../lib/servicos';
 import '../publico.css';
@@ -35,7 +36,7 @@ export default function Catalogo() {
           <div className="grade-equipamentos-detalhada">
             {equipamentosPublicos.map((equipamento) => <article key={equipamento.slug}><a className="foto-card-equipamento" href={`/equipamentos/${equipamento.slug}`}><Image src={equipamento.imagemPrincipal} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" alt={equipamento.nome} /></a><div><p>{equipamento.categoria}</p><h3><a href={`/equipamentos/${equipamento.slug}`}>{equipamento.nome}</a></h3><span>{equipamento.resumo}</span><a className="link-equipamento" href={`/equipamentos/${equipamento.slug}`}>Conhecer equipamento <b aria-hidden="true">→</b></a></div></article>)}
           </div>
-          <figure className="foto-equipamentos"><video autoPlay muted loop controls playsInline preload="auto" poster="/imagens/laboratorio-fachada-interna.jpeg" aria-label="Vídeo da estrutura atual do Centro de Excelência em Metrologia SENAI ZEISS"><source src="/videos/estrutura-centro-metrologia.mp4" type="video/mp4" /></video><figcaption>Estrutura atual do Centro de Excelência em Metrologia SENAI ZEISS</figcaption></figure>
+          <figure className="foto-equipamentos"><VideoPublico src="/videos/estrutura-centro-metrologia.mp4" poster="/imagens/laboratorio-fachada-interna.jpeg" rotulo="Vídeo da estrutura atual do Centro de Excelência em Metrologia SENAI ZEISS" /><figcaption>Estrutura atual do Centro de Excelência em Metrologia SENAI ZEISS</figcaption></figure>
         </section>
 
         <section className="servico-personalizado">
