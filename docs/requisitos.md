@@ -13,6 +13,7 @@
 9. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; exigir justificativa fora de Q1–Q3.
 10. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
 11. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
+12. Permitir que Validador e Administrador consultem custos-hora e que somente Administrador versione esses valores, sempre na origem ativa e sem exclusão de histórico.
 
 ## IA
 
