@@ -32,7 +32,6 @@ export default async function PaginaEquipamento({ params }: Propriedades) {
           <aside><strong>Antes de solicitar</strong><p>{equipamento.referenciaTecnica}</p><a href={equipamento.fonteFabricante} target="_blank" rel="noreferrer">Consultar referência técnica da ZEISS <span aria-hidden="true">↗</span></a></aside>
         </div>
 
-        <div className="padrao-midia-equipamento"><strong>Sequência de mídia</strong><span>1. equipamento em fundo branco</span><span>2. equipamento no Centro</span><span>3. vídeo em operação</span><small>Somente mídias já recebidas são exibidas; espaços pendentes não usam conteúdo ilustrativo.</small></div>
         <CarrosselMidia midias={equipamento.midias} rotulo={`Fotos e vídeos de ${equipamento.nome}`} />
 
         <div className="grade-informacoes-equipamento">

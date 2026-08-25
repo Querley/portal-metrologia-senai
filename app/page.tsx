@@ -20,7 +20,7 @@ const etapas = [
 
 const midiasLaboratorio = [
   { tipo: 'imagem', src: '/imagens/laboratorio-prismo.jpeg', alt: 'ZEISS PRISMO instalada no Centro', legenda: 'ZEISS PRISMO no Centro' },
-  { tipo: 'imagem', src: '/imagens/laboratorio-t-scan-hawk-2.jpeg', alt: 'ZEISS T-SCAN hawk 2 em sua maleta no Centro', legenda: 'ZEISS T-SCAN hawk 2 no Centro' },
+  { tipo: 'imagem', src: '/imagens/laboratorio-t-scan-hawk-2-close-up.jpeg', alt: 'Close-up do ZEISS T-SCAN hawk 2 no Centro', legenda: 'ZEISS T-SCAN hawk 2 no Centro' },
   { tipo: 'imagem', src: '/imagens/laboratorio-o-inspect.jpeg', alt: 'ZEISS O-INSPECT instalada no Centro', legenda: 'ZEISS O-INSPECT no Centro' },
   { tipo: 'imagem', src: '/imagens/laboratorio-duramax.jpeg', alt: 'ZEISS DuraMax instalada no Centro', legenda: 'ZEISS DuraMax no Centro' },
   { tipo: 'imagem', src: '/imagens/laboratorio-bosello.jpeg', alt: 'ZEISS BOSELLO MAX instalada no Centro', legenda: 'ZEISS BOSELLO MAX no Centro' },
@@ -57,7 +57,7 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-visual" aria-label="Centro de Excelência em Metrologia SENAI ZEISS">
-          <video className="video-hero" autoPlay muted loop playsInline controls preload="metadata" poster="/imagens/laboratorio-centro-excelencia.jpeg" aria-label="Apresentação em vídeo do Centro de Excelência em Metrologia SENAI ZEISS"><source src="/videos/centro-metrologia-apresentacao.mp4" type="video/mp4" /></video>
+          <video className="video-hero" autoPlay muted loop playsInline controls preload="auto" poster="/imagens/laboratorio-centro-excelencia.jpeg" aria-label="Apresentação em vídeo do Centro de Excelência em Metrologia SENAI ZEISS"><source src="/videos/centro-metrologia-apresentacao.mp4" type="video/mp4" /></video>
         </div>
       </section>
 

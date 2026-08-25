@@ -8,6 +8,8 @@ Cada página de equipamento adota esta sequência:
 
 Uma posição só é publicada quando existir uma mídia correspondente e autorizada. Não usar ilustrações genéricas, simulações de software, fotos de instalações externas nem vídeos de outro modelo para completar a sequência.
 
+Os vídeos públicos são preparados em MP4/H.264, com carregamento progressivo e pontos de busca regulares. Eles iniciam automaticamente, sem som por exigência dos navegadores, permanecem em repetição e mantêm controles para ativar o áudio e navegar pela linha do tempo.
+
 ## Situação atual
 
 | Equipamento | Imagem em fundo branco | Foto no Centro | Vídeo em operação |

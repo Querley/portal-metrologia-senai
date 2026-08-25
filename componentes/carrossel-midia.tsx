@@ -19,7 +19,7 @@ export function CarrosselMidia({ midias, rotulo }: { midias: MidiaEquipamento[];
       <div className="carrossel-palco">
         {atual.tipo === 'imagem'
           ? <Image src={atual.src} fill sizes="(max-width: 900px) 100vw, 60vw" alt={atual.alt} priority={indice === 0} />
-          : <video controls preload="metadata" playsInline poster={atual.poster} aria-label={atual.alt}><source src={atual.src} type="video/mp4" /></video>}
+          : <video key={atual.src} controls autoPlay muted loop preload="auto" playsInline poster={atual.poster} aria-label={atual.alt}><source src={atual.src} type="video/mp4" /></video>}
         <div className="carrossel-legenda"><span>{String(indice + 1).padStart(2, '0')} / {String(midias.length).padStart(2, '0')}</span><strong>{atual.legenda}</strong></div>
         {midias.length > 1 && <div className="carrossel-controles"><button type="button" onClick={() => navegar(-1)} aria-label="Mídia anterior"><ChevronLeft /></button><button type="button" onClick={() => navegar(1)} aria-label="Próxima mídia"><ChevronRight /></button></div>}
       </div>

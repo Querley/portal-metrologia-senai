@@ -59,6 +59,7 @@ Os originais foram preservados em `fontes/originais/midia/2026-08-25/`. A respon
 | `IMG_20260825_134953.jpg` | `E2385E6F120D10E2D2CD7DD0E0B8ABB0154F3D517B19AD5405993526CD2CC5E0` | 2.447.659 | cartaz da BOSELLO MAX 80-150 |
 | `tscan_close_up_para_recortar_o_fundo.jpeg` | `B821F7C571B82727D7514B9B2398F3DEEC82A101180B767E95C126A76A22FB8E` | 300.294 | origem do recorte `v3` do T-SCAN hawk 2 |
 | `tscan_no_Centro.jpeg` | `8F5C3976B9D57C2FCB25266BAA9D7A87F32C27C63D50E3DE5EE7E9E0C455188D` | 280.267 | T-SCAN hawk 2 no Centro |
+| `faxadinha_do_lab.mp4` | `ED3CE2F61C7674EDFB76DAA6EA310728F844AD735CC6D71E3942294A4F153CDD` | 25.539.263 | vídeo da estrutura atual do Centro na página de serviços e equipamentos |
 
 ## Referências técnicas públicas
 
