@@ -18,6 +18,7 @@ As migrations `202608220001` até `202608260005` estão aplicadas e registradas 
 - Cada usuário consulta somente o próprio perfil.
 - Validador e Administrador consultam custos da origem ativa.
 - Somente Administrador chama `versionar_custo_equipamento`; a função encerra a vigência anterior, cria a nova versão e registra auditoria.
+- A interface autenticada lista somente custos da origem `demonstracao`, omite a fonte armazenada e oferece o formulário de nova vigência apenas ao Administrador.
 - Validador foi testado e bloqueado ao tentar versionar; Administrador foi testado em transação revertida, sem deixar alteração de teste.
 - Reset demonstrativo nunca alcança a origem real.
 
@@ -32,14 +33,18 @@ As migrations `202608220001` até `202608260005` estão aplicadas e registradas 
 
 Nesta rede, conexões PostgreSQL diretas ao pooler podem expirar. O SQL Editor autenticado do Supabase foi usado como alternativa segura, com transações e registro explícito em `supabase_migrations.schema_migrations`.
 
+## Interface de custos-hora concluída
+
+A interface autenticada de custos-hora entrega:
+
+1. equipamento, custo vigente e início da vigência para Validador e Administrador;
+2. estados vazio, carregamento e erro sem revelar a fonte restrita;
+3. nova versão criada pelo Administrador através da função auditada;
+4. modo somente leitura para Validador, com negação adicional pela RLS/RPC;
+5. validação de valor e data, aviso para não inserir dados reais e testes de autorização e precisão decimal.
+
 ## Próximo recorte vertical
 
-Criar a interface autenticada de custos-hora:
-
-1. listar equipamento, custo vigente e início da vigência para Validador e Administrador;
-2. exibir estado vazio, carregamento e erro sem revelar a fonte restrita;
-3. permitir ao Administrador criar uma nova versão pela função auditada;
-4. impedir qualquer controle de edição para Validador e confirmar o bloqueio também pela RLS/RPC;
-5. testar persistência, atualização da vigência anterior e segregação de origem.
+Persistir um orçamento demonstrativo mínimo usando os custos vigentes autorizados, congelando os valores utilizados na proposta e preservando o fluxo de validação. As regras de aprovação e estados já documentadas devem ser confirmadas contra o esquema antes de qualquer nova migration.
 
 Custos reais só serão carregados no futuro projeto de produção por processo privado e auditado. A planilha restrita e seus valores nunca entram no Git nem na homologação.

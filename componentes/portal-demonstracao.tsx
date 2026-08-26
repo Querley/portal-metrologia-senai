@@ -1,14 +1,18 @@
 'use client';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useMemo, useState, useSyncExternalStore } from 'react';
-import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, CheckCircle2, ChevronRight, Clock3, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
+import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, CheckCircle2, ChevronRight, CircleDollarSign, Clock3, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
 import { calcularProposta, formatarDinheiro } from '../lib/calculos';
+import type { PerfilInterno } from '../lib/contratos';
+import { podeConsultarCustos } from '../lib/custos-equipamento';
 import { casosDemonstracao, equipamentosDemonstracao } from '../lib/dados-demonstracao';
 import { recomendarHoras } from '../lib/recomendacao';
 import { sanitizarParaIa } from '../lib/seguranca-ia';
+import { CustosEquipamento } from './custos-equipamento';
 import { MarcaOficial } from './marca-oficial';
 
-const menu = [
+const menuBase = [
   { id: 'visao', rotulo: 'Visão geral', icone: LayoutDashboard },
   { id: 'solicitacoes', rotulo: 'Solicitações', icone: BriefcaseBusiness },
   { id: 'orcamentos', rotulo: 'Orçamentos', icone: Calculator },
@@ -24,12 +28,26 @@ const solicitacoes = [
   { id: 'SOL-0282', empresa: 'Fábrica Vetor', servico: 'Raios X industrial', data: '20 ago, 11:05', estado: 'Orçada' },
 ];
 
-export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuario = 'Administrador', aoSair, aoAbrirPerfil, autenticado = false }: { nomeUsuario?: string; perfilUsuario?: string; aoSair?: () => void | Promise<void>; aoAbrirPerfil?: () => void; autenticado?: boolean }) {
+type PropriedadesPortal = {
+  nomeUsuario?: string;
+  perfilUsuario?: string;
+  perfilInterno?: PerfilInterno;
+  clienteSupabase?: SupabaseClient;
+  aoSair?: () => void | Promise<void>;
+  aoAbrirPerfil?: () => void;
+  autenticado?: boolean;
+};
+
+export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuario = 'Administrador', perfilInterno, clienteSupabase, aoSair, aoAbrirPerfil, autenticado = false }: PropriedadesPortal) {
   const [secao, setSecao] = useState('visao');
   const [horas, setHoras] = useState(12);
   const [lucro, setLucro] = useState(25);
   const [assistenteAberto, setAssistenteAberto] = useState(false);
   const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
+  const custosDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarCustos(perfilInterno));
+  const menu = useMemo(() => custosDisponiveis
+    ? [...menuBase, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }]
+    : menuBase, [custosDisponiveis]);
 
   const item = useMemo(() => calcularProposta([{ servicoId: 'medicao-tridimensional', descricao: 'Inspeção dimensional de lote', quantidade: '20', usos: [{ maquinaId: 'duramax', horas: String(horas), custoHora: equipamentosDemonstracao[0].custoHora }], custosExtras: '280', percentualLucro: String(lucro) }])[0], [horas, lucro]);
   const recomendacao = useMemo(() => recomendarHoras({ origem: 'demonstracao', servicoId: 'medicao-tridimensional', quantidade: 20, caracteristicas: ['aco', 'geometria-complexa'], recursos: ['duramax'] }, casosDemonstracao), []);
@@ -48,7 +66,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
       <main className="conteudo-interno">
         <header className="cabecalho-interno">
           <div><p>AMBIENTE DE HOMOLOGAÇÃO</p><h1>{menu.find((itemMenu) => itemMenu.id === secao)?.rotulo}</h1></div>
-          <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button"><Plus size={17} /> Novo orçamento</button></div>
+          {secao !== 'custos' && <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button"><Plus size={17} /> Novo orçamento</button></div>}
         </header>
 
         {secao === 'visao' && <VisaoGeral setSecao={setSecao} />}
@@ -58,6 +76,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         {secao === 'conhecimento' && <Conhecimento recomendacao={recomendacao} />}
         {secao === 'mensagens' && <Mensagens />}
         {secao === 'conteudo' && <ConteudoPublico />}
+        {secao === 'custos' && clienteSupabase && perfilInterno && <CustosEquipamento cliente={clienteSupabase} perfil={perfilInterno} />}
       </main>
 
       <button className="assistente-atalho" type="button" onClick={() => setAssistenteAberto(!assistenteAberto)} aria-expanded={assistenteAberto}><Sparkles size={19} /> Assistente interno</button>

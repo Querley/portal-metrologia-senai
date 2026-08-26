@@ -86,7 +86,7 @@ export function PortalInterno() {
   }
 
   if (estado === 'autenticado' && perfil && !editandoPerfil) {
-    return <PortalDemonstracao nomeUsuario={perfil.nome} perfilUsuario={rotulosPerfil[perfil.perfil_interno]} aoSair={sair} aoAbrirPerfil={() => setEditandoPerfil(true)} autenticado />;
+    return <PortalDemonstracao nomeUsuario={perfil.nome} perfilUsuario={rotulosPerfil[perfil.perfil_interno]} perfilInterno={perfil.perfil_interno} clienteSupabase={cliente!} aoSair={sair} aoAbrirPerfil={() => setEditandoPerfil(true)} autenticado />;
   }
 
   if (estado === 'autenticado' && perfil && editandoPerfil) {

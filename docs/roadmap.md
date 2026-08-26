@@ -17,7 +17,7 @@
 - [x] perfis internos, RLS, segregação por origem e massa demonstrativa persistida;
 - [x] consulta de custos para Validador/Administrador e versionamento auditado somente por Administrador;
 - [x] login ponta a ponta validado pelo mantenedor com os dois perfis;
-- [ ] interface persistente para consultar e versionar custos-hora;
+- [x] interface persistente para consultar e versionar custos-hora, com leitura para Validador e edição somente para Administrador;
 - [ ] fluxo vertical persistente `orçar → executar → comparar → aprender → recomendar`;
 - [ ] projeto Supabase de produção, usuários internos reais e carga privada de custos reais.
 
