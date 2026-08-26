@@ -21,4 +21,13 @@ describe('segregação da massa demonstrativa', () => {
     const migracao = readFileSync(new URL('../supabase/migrations/202608240004_perfil_interno_seguro.sql', import.meta.url), 'utf8');
     expect(migracao).not.toMatch(/delete\s+from\s+custos_equipamento/i);
   });
+
+  it('restringe leitura e versionamento de custos por perfil e origem', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202608260005_acesso_versionamento_custos.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain("perfil_interno_atual() in ('validador', 'administrador')");
+    expect(migracao).toContain('and origem = origem_ativa_atual()');
+    expect(migracao).toContain("perfil is distinct from 'administrador'::perfil_interno");
+    expect(migracao).toContain("'versionar_custo'");
+    expect(migracao).not.toMatch(/delete\s+from\s+custos_equipamento/i);
+  });
 });
