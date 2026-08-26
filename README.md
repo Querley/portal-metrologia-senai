@@ -4,7 +4,7 @@ Plataforma web para solicitar, orçar e acompanhar serviços de metrologia, comp
 
 ## Estado atual
 
-O repositório contém uma experiência pública responsiva, painel demonstrativo, contratos e cálculos do domínio, migrações Supabase, massa sintética e documentação de produto. Sem credenciais, a interface opera apenas com dados de demonstração locais; integrações externas ficam desativadas de forma explícita.
+O repositório contém uma experiência pública responsiva, painel demonstrativo, contratos e cálculos do domínio, migrações Supabase, massa sintética e documentação de produto. A homologação já usa autenticação e persistência reais no Supabase, com dois perfis internos sintéticos e RLS validada; produção continua separada e ainda não foi provisionada.
 
 ## Executar
 
@@ -18,6 +18,8 @@ npm run dev
 Copie `.env.example` para `.env.local` apenas quando houver ambientes Supabase e chaves aprovadas. Nunca versione o arquivo preenchido.
 
 O acesso interno não permite autocadastro. Contas e perfis são provisionados no Supabase de homologação; sem URL e chave anônima configuradas, a área interna informa que a integração está indisponível e a demonstração local permanece separada.
+
+O estado aplicado da homologação e o próximo recorte vertical estão registrados em [docs/homologacao.md](docs/homologacao.md). Credenciais locais e de hospedagem nunca são versionadas.
 
 ## Verificar
 

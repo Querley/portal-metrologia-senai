@@ -10,6 +10,17 @@
 - [ ] **11–12 set** — E2E, RLS, acessibilidade, backup, observabilidade, documentação e ensaio.
 - [ ] **13 set** — congelamento, verificação, tag e entrega.
 
+## Estado em 26 de agosto de 2026
+
+- [x] projeto Supabase de homologação conectado ao site publicado;
+- [x] login por e-mail sem autocadastro, com Administrador e Validador sintéticos confirmados;
+- [x] perfis internos, RLS, segregação por origem e massa demonstrativa persistida;
+- [x] consulta de custos para Validador/Administrador e versionamento auditado somente por Administrador;
+- [x] login ponta a ponta validado pelo mantenedor com os dois perfis;
+- [ ] interface persistente para consultar e versionar custos-hora;
+- [ ] fluxo vertical persistente `orçar → executar → comparar → aprender → recomendar`;
+- [ ] projeto Supabase de produção, usuários internos reais e carga privada de custos reais.
+
 ## Dependências institucionais
 
 - [ ] Aprovar nome, marca e textos jurídicos.
