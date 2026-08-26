@@ -7,10 +7,12 @@ import { calcularProposta, formatarDinheiro } from '../lib/calculos';
 import type { PerfilInterno } from '../lib/contratos';
 import { podeConsultarCustos } from '../lib/custos-equipamento';
 import { casosDemonstracao, equipamentosDemonstracao } from '../lib/dados-demonstracao';
+import { podeConsultarOrcamentos, podeCriarRascunhoOrcamento } from '../lib/orcamentos-persistentes';
 import { recomendarHoras } from '../lib/recomendacao';
 import { sanitizarParaIa } from '../lib/seguranca-ia';
 import { CustosEquipamento } from './custos-equipamento';
 import { MarcaOficial } from './marca-oficial';
+import { OrcamentosPersistentes } from './orcamentos-persistentes';
 
 const menuBase = [
   { id: 'visao', rotulo: 'Visão geral', icone: LayoutDashboard },
@@ -45,6 +47,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
   const [assistenteAberto, setAssistenteAberto] = useState(false);
   const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const custosDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarCustos(perfilInterno));
+  const orcamentosPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarOrcamentos(perfilInterno));
   const menu = useMemo(() => custosDisponiveis
     ? [...menuBase, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }]
     : menuBase, [custosDisponiveis]);
@@ -66,12 +69,14 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
       <main className="conteudo-interno">
         <header className="cabecalho-interno">
           <div><p>AMBIENTE DE HOMOLOGAÇÃO</p><h1>{menu.find((itemMenu) => itemMenu.id === secao)?.rotulo}</h1></div>
-          {secao !== 'custos' && <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button"><Plus size={17} /> Novo orçamento</button></div>}
+          {secao !== 'custos' && <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button" onClick={() => setSecao('orcamentos')}>{perfilInterno && !podeCriarRascunhoOrcamento(perfilInterno) ? <><Calculator size={17} /> Ver orçamentos</> : <><Plus size={17} /> Novo orçamento</>}</button></div>}
         </header>
 
         {secao === 'visao' && <VisaoGeral setSecao={setSecao} />}
         {secao === 'solicitacoes' && <TabelaSolicitacoes />}
-        {secao === 'orcamentos' && <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />}
+        {secao === 'orcamentos' && (orcamentosPersistentesDisponiveis && clienteSupabase && perfilInterno
+          ? <OrcamentosPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
+          : <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />)}
         {secao === 'servicos' && <Execucao />}
         {secao === 'conhecimento' && <Conhecimento recomendacao={recomendacao} />}
         {secao === 'mensagens' && <Mensagens />}
@@ -79,8 +84,8 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         {secao === 'custos' && clienteSupabase && perfilInterno && <CustosEquipamento cliente={clienteSupabase} perfil={perfilInterno} />}
       </main>
 
-      <button className="assistente-atalho" type="button" onClick={() => setAssistenteAberto(!assistenteAberto)} aria-expanded={assistenteAberto}><Sparkles size={19} /> Assistente interno</button>
-      {assistenteAberto && <aside className="assistente" aria-label="Assistente interno"><header><span><Bot size={19} /> Assistente interno</span><button type="button" onClick={() => setAssistenteAberto(false)} aria-label="Fechar">×</button></header><div className="mensagem-ia"><small>PRÉVIA SANITIZADA</small><p>{JSON.stringify(previaIa.conteudo)}</p><span><ShieldCheck size={14} /> Campos sensíveis removidos antes do envio</span></div><div className="resposta-ia"><p>O preço exibido foi calculado de forma determinística: custo da DuraMax pelas horas informadas, mais extras e o lucro definido. Eu apenas explico o resultado; não altero o cálculo.</p><small>Fonte: orçamento atual · cálculo local</small></div><form onSubmit={(evento) => evento.preventDefault()}><label htmlFor="mensagem-assistente">Pergunte sobre esta tela</label><div><input id="mensagem-assistente" placeholder="Como este valor foi calculado?" /><button type="submit" aria-label="Enviar"><ChevronRight size={18} /></button></div></form></aside>}
+      {secao !== 'custos' && !(secao === 'orcamentos' && orcamentosPersistentesDisponiveis) && <button className="assistente-atalho" type="button" onClick={() => setAssistenteAberto(!assistenteAberto)} aria-expanded={assistenteAberto}><Sparkles size={19} /> Assistente interno</button>}
+      {assistenteAberto && secao !== 'custos' && !(secao === 'orcamentos' && orcamentosPersistentesDisponiveis) && <aside className="assistente" aria-label="Assistente interno"><header><span><Bot size={19} /> Assistente interno</span><button type="button" onClick={() => setAssistenteAberto(false)} aria-label="Fechar">×</button></header><div className="mensagem-ia"><small>PRÉVIA SANITIZADA</small><p>{JSON.stringify(previaIa.conteudo)}</p><span><ShieldCheck size={14} /> Campos sensíveis removidos antes do envio</span></div><div className="resposta-ia"><p>O preço exibido foi calculado de forma determinística: custo da DuraMax pelas horas informadas, mais extras e o lucro definido. Eu apenas explico o resultado; não altero o cálculo.</p><small>Fonte: orçamento atual · cálculo local</small></div><form onSubmit={(evento) => evento.preventDefault()}><label htmlFor="mensagem-assistente">Pergunte sobre esta tela</label><div><input id="mensagem-assistente" placeholder="Como este valor foi calculado?" /><button type="submit" aria-label="Enviar"><ChevronRight size={18} /></button></div></form></aside>}
     </div>
   );
 }

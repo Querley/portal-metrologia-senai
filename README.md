@@ -4,7 +4,7 @@ Plataforma web para solicitar, orçar e acompanhar serviços de metrologia, comp
 
 ## Estado atual
 
-O repositório contém uma experiência pública responsiva, painel demonstrativo, contratos e cálculos do domínio, migrações Supabase, massa sintética e documentação de produto. A homologação já usa autenticação e persistência reais no Supabase, com dois perfis internos sintéticos, RLS validada e interface persistente de custos-hora; produção continua separada e ainda não foi provisionada.
+O repositório contém uma experiência pública responsiva, painel demonstrativo, contratos e cálculos do domínio, migrações Supabase, massa sintética e documentação de produto. A homologação já usa autenticação e persistência reais no Supabase, com dois perfis internos sintéticos, RLS validada, custos-hora versionados e rascunhos demonstrativos de orçamento persistentes; produção continua separada e ainda não foi provisionada.
 
 ## Executar
 
