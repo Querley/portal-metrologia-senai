@@ -22,6 +22,19 @@ export function podeAprovarOrcamento(perfil: PerfilInterno): boolean {
   return perfil === 'validador' || perfil === 'administrador';
 }
 
+export function podeDecidirOrcamento(perfil: PerfilInterno): boolean {
+  return perfil === 'validador' || perfil === 'administrador';
+}
+
+export function podePublicarOrcamento(perfil: PerfilInterno): boolean {
+  return perfil === 'administrador';
+}
+
+export function normalizarJustificativaDecisao(valor: string): string | null {
+  const justificativa = valor.trim();
+  return justificativa.length >= 5 && justificativa.length <= 500 ? justificativa : null;
+}
+
 function normalizarDecimal(valor: string, maximoInteiros: number): string | null {
   const candidato = valor.trim().replace(',', '.');
   const expressao = new RegExp(`^-?\\d{1,${maximoInteiros}}(?:\\.\\d{1,6})?$`);

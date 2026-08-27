@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EstadoPropostaSchema } from './contratos';
-import { calcularPreviaOrcamento, normalizarEntradaOrcamento, podeAprovarOrcamento, podeConsultarOrcamentos, podeCriarRascunhoOrcamento } from './orcamentos-persistentes';
+import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, podeAprovarOrcamento, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from './orcamentos-persistentes';
 
 describe('autorização de orçamentos persistentes', () => {
   it('mantém a hierarquia cumulativa para consulta e criação', () => {
@@ -24,6 +24,22 @@ describe('autorização de orçamentos persistentes', () => {
 
   it('distingue aprovação de publicação no contrato de estados', () => {
     expect(EstadoPropostaSchema.parse('aprovada')).toBe('aprovada');
+    expect(EstadoPropostaSchema.parse('devolvida')).toBe('devolvida');
+    expect(EstadoPropostaSchema.parse('rejeitada')).toBe('rejeitada');
+  });
+
+  it('reserva decisões para Validador e Administrador e publicação para Administrador', () => {
+    expect(podeDecidirOrcamento('tecnico')).toBe(false);
+    expect(podeDecidirOrcamento('validador')).toBe(true);
+    expect(podeDecidirOrcamento('administrador')).toBe(true);
+    expect(podePublicarOrcamento('validador')).toBe(false);
+    expect(podePublicarOrcamento('administrador')).toBe(true);
+  });
+
+  it('exige justificativa útil para devolver ou rejeitar', () => {
+    expect(normalizarJustificativaDecisao('  Corrigir horas estimadas.  ')).toBe('Corrigir horas estimadas.');
+    expect(normalizarJustificativaDecisao('não')).toBeNull();
+    expect(normalizarJustificativaDecisao('x'.repeat(501))).toBeNull();
   });
 });
 
@@ -59,6 +75,19 @@ describe('cálculo e persistência do orçamento', () => {
     expect(migracao).toContain("estado_atual is distinct from 'em_validacao'::estado_proposta");
     expect(migracao).toContain("'enviar_orcamento_validacao'");
     expect(migracao).toContain("'aprovar_orcamento_demonstrativo'");
+  });
+
+  it('protege devolução, rejeição e publicação no servidor', () => {
+    const estados = readFileSync(new URL('../supabase/migrations/202608270010_estados_decisao_orcamento.sql', import.meta.url), 'utf8');
+    const fluxo = readFileSync(new URL('../supabase/migrations/202608270011_decisao_publicacao_orcamento.sql', import.meta.url), 'utf8');
+    expect(estados).toContain("add value if not exists 'devolvida'");
+    expect(estados).toContain("add value if not exists 'rejeitada'");
+    expect(fluxo).toContain("perfil not in ('validador', 'administrador')");
+    expect(fluxo).toContain('A justificativa deve ter entre 5 e 500 caracteres.');
+    expect(fluxo).toContain("perfil is distinct from 'administrador'::perfil_interno");
+    expect(fluxo).toContain('A publicação exige PDF privado e hash imutável.');
+    expect(fluxo).toContain("estado_atual not in ('rascunho'::estado_proposta, 'devolvida'::estado_proposta)");
+    expect(fluxo).not.toMatch(/delete\s+from/i);
   });
 
   it('isola por tabela a validação de origem compartilhada', () => {

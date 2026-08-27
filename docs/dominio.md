@@ -8,21 +8,21 @@
 - Custo realizado usa a taxa válida no início real.
 - Validador e Administrador podem consultar custos-hora; somente Administrador pode cadastrar uma nova vigência ou encerrar a vigente.
 - Perfis internos são cumulativos: Validador herda as capacidades do Técnico; Administrador herda as capacidades do Validador.
-- Técnico, Validador e Administrador criam e enviam os próprios orçamentos para validação. Somente Validador e Administrador aprovam.
+- Técnico, Validador e Administrador criam e enviam os próprios orçamentos para validação. Somente Validador e Administrador aprovam, devolvem ou rejeitam; devolução e rejeição exigem justificativa. Somente Administrador publica.
 - A carga real inicial da planilha restrita usa como `vigente_desde` a data da primeira carga, pois os valores já estão em vigor e a fonte não informa uma data anterior.
 - Custo-hora é versionado: uma correção encerra a vigência anterior e cria outra, sem apagar o histórico.
 - Lição formalizada não é editada; revisão cria versão em validação.
 
 ## Estados
 
-- Proposta: `rascunho → em_validacao → aprovada → publicada → aceita | recusada | expirada`; uma nova versão torna a anterior `substituida`.
+- Proposta: `rascunho | devolvida → em_validacao → aprovada → publicada → aceita | recusada | expirada`; durante a validação, a proposta também pode ir para `devolvida` ou `rejeitada`. Uma nova versão torna a anterior `substituida`.
 - Serviço: `planejado → em_execucao → concluido`; cancelamento preserva histórico.
 - Lição: `rascunho → em_validacao → formalizada → superada`.
 - Conteúdo: `rascunho → publicado → arquivado`; restauração cria nova versão.
 
 Transições fora desses caminhos só podem ocorrer por função privilegiada e auditada.
 
-A aprovação não publica a proposta. A alçada de publicação ainda depende de confirmação operacional; até lá, nenhuma função promove `aprovada` para `publicada`.
+A aprovação não publica a proposta. Somente Administrador promove `aprovada` para `publicada`, e apenas depois da geração do PDF privado com hash imutável. `rejeitada` representa decisão interna; `recusada` representa a decisão posterior do cliente sobre uma versão publicada.
 
 ## Cálculos
 
