@@ -10,13 +10,14 @@
 - [ ] **11–12 set** — E2E, RLS, acessibilidade, backup, observabilidade, documentação e ensaio.
 - [ ] **13 set** — congelamento, verificação, tag e entrega.
 
-## Estado em 26 de agosto de 2026
+## Estado em 27 de agosto de 2026
 
 - [x] projeto Supabase de homologação conectado ao site publicado;
-- [x] login por e-mail sem autocadastro, com Administrador e Validador sintéticos confirmados;
+- [x] login por e-mail sem autocadastro, com Administrador, Validador e Técnico sintéticos confirmados;
 - [x] perfis internos, RLS, segregação por origem e massa demonstrativa persistida;
 - [x] consulta de custos para Validador/Administrador e versionamento auditado somente por Administrador;
-- [x] login ponta a ponta validado pelo mantenedor com os dois perfis;
+- [x] login ponta a ponta validado pelo mantenedor com Administrador e Validador;
+- [x] perfil Técnico provisionado e RLS validada em transação revertida, sem resíduos; login pela interface pendente de aceite do mantenedor;
 - [x] interface persistente para consultar e versionar custos-hora, com leitura para Validador e edição somente para Administrador;
 - [x] primeiro rascunho de orçamento persistente, com cálculo no servidor, custo-hora congelado, auditoria e segregação demonstrativa;
 - [x] alçada de criação e aprovação confirmada: Técnico cria e envia; Validador e Administrador também executam essas ações e podem aprovar;

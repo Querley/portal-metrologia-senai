@@ -1,13 +1,14 @@
 # Homologação Supabase
 
-## Estado validado em 26 de agosto de 2026
+## Estado validado em 27 de agosto de 2026
 
-O site publicado está conectado ao projeto Supabase de homologação. O login por e-mail foi testado com sucesso pelo mantenedor usando os dois perfis sintéticos:
+O site publicado está conectado ao projeto Supabase de homologação. O login por e-mail foi testado com sucesso pelo mantenedor usando Administrador e Validador. O perfil Técnico também está provisionado e teve suas autorizações validadas em transação revertida:
 
 - `admin.hml@example.test` — Administrador;
-- `validador.hml@example.test` — Validador.
+- `validador.hml@example.test` — Validador;
+- `tecnico.hml@example.test` — Técnico.
 
-Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os dois usuários estão confirmados e a autenticação anônima permanece desabilitada.
+Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
 As migrations `202608220001` até `202608270009` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e aprovação interna. A migration `007` corrige o gatilho compartilhado de origem sem remover histórico; `008` e `009` distinguem aprovação de publicação e protegem as novas transições.
 
@@ -25,6 +26,7 @@ As migrations `202608220001` até `202608270009` estão aplicadas e registradas 
 - O servidor busca o custo vigente, recalcula o item, congela o custo-hora usado e registra auditoria. A interface não envia um custo-hora arbitrário.
 - Cada rascunho deste primeiro recorte possui um item e um equipamento e usa contexto interno totalmente sintético, sem cliente real.
 - Validador foi testado e bloqueado ao tentar versionar; Administrador foi testado em transação revertida, sem deixar alteração de teste.
+- Técnico foi testado criando e enviando um orçamento sintético em transação revertida; a RLS ocultou os custos-hora protegidos e não deixou resíduo.
 - Reset demonstrativo nunca alcança a origem real.
 
 ## Retomada por outro chat
