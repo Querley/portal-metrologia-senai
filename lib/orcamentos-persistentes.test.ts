@@ -90,6 +90,15 @@ describe('cálculo e persistência do orçamento', () => {
     expect(fluxo).not.toMatch(/delete\s+from/i);
   });
 
+  it('permite somente ao autor revisar rascunho ou orçamento devolvido', () => {
+    const revisao = readFileSync(new URL('../supabase/migrations/202608270012_revisao_orcamento_devolvido.sql', import.meta.url), 'utf8');
+    expect(revisao).toContain('Somente o autor pode editar este orçamento.');
+    expect(revisao).toContain("estado_atual not in ('rascunho'::estado_proposta, 'devolvida'::estado_proposta)");
+    expect(revisao).toContain('custo_hora_congelado = custo_hora_vigente');
+    expect(revisao).toContain("'revisar_orcamento_demonstrativo'");
+    expect(revisao).not.toMatch(/delete\s+from/i);
+  });
+
   it('isola por tabela a validação de origem compartilhada', () => {
     const migracao = readFileSync(new URL('../supabase/migrations/202608260007_corrige_gatilho_origem.sql', import.meta.url), 'utf8');
     expect(migracao).toContain("if tg_table_name = 'versoes_proposta' then");

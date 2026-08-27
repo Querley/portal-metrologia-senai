@@ -14,7 +14,7 @@
 10. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
 11. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
 12. Permitir que Validador e Administrador consultem custos-hora e que somente Administrador versione esses valores, sempre na origem ativa e sem exclusão de histórico.
-13. Aplicar hierarquia cumulativa aos perfis internos: Validador faz tudo que Técnico faz; Administrador faz tudo que Validador faz. Técnico, Validador e Administrador criam e enviam os próprios orçamentos; somente Validador e Administrador os aprovam, devolvem ou rejeitam, sempre com justificativa nas decisões negativas; somente Administrador publica uma versão aprovada com PDF imutável.
+13. Aplicar hierarquia cumulativa aos perfis internos: Validador faz tudo que Técnico faz; Administrador faz tudo que Validador faz. Técnico, Validador e Administrador criam, corrigem e enviam os próprios orçamentos; somente Validador e Administrador os aprovam, devolvem ou rejeitam, sempre com justificativa nas decisões negativas; somente Administrador publica uma versão aprovada com PDF imutável.
 
 ## IA
 

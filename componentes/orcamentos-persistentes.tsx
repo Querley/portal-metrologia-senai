@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Ban, Calculator, CheckCircle2, CornerUpLeft, FileCheck2, RefreshCw, Save, Send, ShieldCheck, UploadCloud } from 'lucide-react';
+import { Ban, Calculator, CheckCircle2, CornerUpLeft, FileCheck2, Pencil, RefreshCw, Save, Send, ShieldCheck, UploadCloud } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import type { PerfilInterno } from '../lib/contratos';
@@ -12,6 +12,15 @@ import { servicosOficiais } from '../lib/servicos';
 type Servico = { id: string; slug: string; ativo: boolean };
 type Equipamento = { id: string; codigo: string; nome: string; ativo: boolean };
 type Custo = { equipamento_id: string; custo_hora: string | number; origem: 'demonstracao' };
+type OrcamentoEditavel = {
+  servico_id: string;
+  equipamento_id: string;
+  descricao: string;
+  quantidade: string | number;
+  horas: string | number;
+  custos_extras: string | number;
+  percentual_lucro: string | number;
+};
 type Orcamento = {
   versao_id: string;
   numero: number;
@@ -65,6 +74,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
   const [processandoId, setProcessandoId] = useState('');
   const [decisaoAberta, setDecisaoAberta] = useState<{ versaoId: string; tipo: 'devolver' | 'rejeitar' } | null>(null);
   const [justificativa, setJustificativa] = useState('');
+  const [versaoEmEdicao, setVersaoEmEdicao] = useState('');
   const [servicoId, setServicoId] = useState('');
   const [equipamentoId, setEquipamentoId] = useState('');
   const [descricao, setDescricao] = useState('Inspeção dimensional de lote demonstrativa');
@@ -131,7 +141,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
 
     setSalvando(true);
     setMensagem('');
-    const { error } = await cliente.rpc('criar_orcamento_demonstrativo', {
+    const argumentos = {
       servico: servicoId,
       equipamento: equipamentoId,
       descricao: normalizada.descricao,
@@ -139,17 +149,48 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
       horas: normalizada.horas,
       custos_extras: normalizada.custosExtras,
       percentual_lucro: normalizada.percentualLucro,
-    });
+    };
+    const { error } = versaoEmEdicao
+      ? await cliente.rpc('revisar_orcamento_demonstrativo', { versao: versaoEmEdicao, ...argumentos })
+      : await cliente.rpc('criar_orcamento_demonstrativo', argumentos);
 
     if (error) {
       setMensagem(error.code === '42501'
-        ? 'Seu perfil não tem autorização para criar rascunhos.'
-        : 'Não foi possível salvar o rascunho. Confirme os valores e tente novamente.');
+        ? 'Seu perfil não tem autorização para salvar este orçamento.'
+        : 'Não foi possível salvar o orçamento. Confirme os valores e tente novamente.');
     } else {
-      setMensagem('Rascunho salvo com custo-hora congelado e auditoria registrada.');
+      setMensagem(versaoEmEdicao
+        ? 'Alterações salvas com recálculo protegido e auditoria.'
+        : 'Rascunho salvo com custo-hora congelado e auditoria registrada.');
+      setVersaoEmEdicao('');
       await carregar();
     }
     setSalvando(false);
+  }
+
+  async function carregarParaEdicao(orcamento: Orcamento) {
+    if (!orcamento.pode_enviar) return;
+    setProcessandoId(orcamento.versao_id);
+    setMensagem('');
+    const { data, error } = await cliente.rpc('obter_orcamento_demonstrativo_para_edicao', { versao: orcamento.versao_id });
+    const campos = (data?.[0] ?? null) as OrcamentoEditavel | null;
+
+    if (error || !campos) {
+      setMensagem(error?.code === '42501'
+        ? 'Somente o autor pode editar este orçamento.'
+        : 'Não foi possível carregar os campos para edição. Atualize e tente novamente.');
+    } else {
+      setServicoId(campos.servico_id);
+      setEquipamentoId(campos.equipamento_id);
+      setDescricao(campos.descricao);
+      setQuantidade(String(campos.quantidade));
+      setHoras(String(campos.horas));
+      setCustosExtras(String(campos.custos_extras));
+      setPercentualLucro(String(campos.percentual_lucro));
+      setVersaoEmEdicao(orcamento.versao_id);
+      setMensagem('Campos carregados. Corrija e salve antes de reenviar.');
+    }
+    setProcessandoId('');
   }
 
   async function alterarEstado(orcamento: Orcamento, acao: 'enviar' | 'aprovar' | 'publicar') {
@@ -234,7 +275,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     {!carregando && !erro && <>
       <div className={`grade-orcamentos-persistentes ${podeCriarRascunhoOrcamento(perfil) ? '' : 'somente-leitura'}`}>
         {podeCriarRascunhoOrcamento(perfil) ? <section className="bloco formulario-orcamento-persistente">
-          <header><div><h2>Novo rascunho</h2><p>Um item e um equipamento neste primeiro recorte.</p></div><span className="estado estado-rascunho">Rascunho</span></header>
+          <header><div><h2>{versaoEmEdicao ? 'Editar orçamento' : 'Novo rascunho'}</h2><p>{versaoEmEdicao ? 'Corrija a versão antes de reenviá-la.' : 'Um item e um equipamento neste primeiro recorte.'}</p></div><span className="estado estado-rascunho">{versaoEmEdicao ? 'Em edição' : 'Rascunho'}</span></header>
           <form onSubmit={salvar}>
             <label htmlFor="servico-orcamento">Serviço</label>
             <select id="servico-orcamento" required value={servicoId} onChange={(evento) => setServicoId(evento.target.value)}>{servicos.map((servico) => <option key={servico.id} value={servico.id}>{tituloServico(servico.slug)}</option>)}</select>
@@ -249,7 +290,8 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
             <div className="linha-campos-orcamento"><label htmlFor="extras-orcamento">Custos extras (BRL)<input id="extras-orcamento" required inputMode="decimal" value={custosExtras} onChange={(evento) => setCustosExtras(evento.target.value)} /></label><label htmlFor="lucro-orcamento">Lucro (%)<input id="lucro-orcamento" required inputMode="decimal" value={percentualLucro} onChange={(evento) => setPercentualLucro(evento.target.value)} /></label></div>
             <small>Use somente dados fictícios. Publicação exige PDF imutável e é exclusiva do Administrador.</small>
             {mensagem && <p className="mensagem-formulario-custo" role="status">{mensagem}</p>}
-            <button className="botao-interno" type="submit" disabled={salvando || !normalizarEntradaOrcamento(entrada) || !servicoId || !equipamentoId}><Save size={16} />{salvando ? 'Salvando…' : 'Salvar rascunho'}</button>
+            {versaoEmEdicao && <button className="acao-orcamento" type="button" onClick={() => setVersaoEmEdicao('')}>Cancelar edição</button>}
+            <button className="botao-interno" type="submit" disabled={salvando || !normalizarEntradaOrcamento(entrada) || !servicoId || !equipamentoId}><Save size={16} />{salvando ? 'Salvando…' : versaoEmEdicao ? 'Salvar alterações' : 'Salvar rascunho'}</button>
           </form>
         </section> : null}
 
@@ -263,7 +305,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
         <header><div><h2>Orçamentos salvos</h2><p>{orcamentos.length} registros demonstrativos persistidos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
         <div className="tabela-wrap"><table><thead><tr><th>Criação</th><th>Descrição</th><th>Equipamento</th><th>Horas</th>{podeConsultarCustos(perfil) && <th>Custo-hora congelado</th>}<th>Preço</th><th>Estado</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{orcamentos.map((orcamento) => {
           const estado = apresentacaoEstado[orcamento.estado] ?? apresentacaoEstado.rascunho;
-          return <tr key={orcamento.versao_id}><td>{formatarDataHora(orcamento.criada_em)}</td><td><strong>{orcamento.descricao}</strong><small>{tituloServico(orcamento.servico_slug)}</small>{orcamento.ultima_justificativa_interna && <small className="justificativa-decisao">Motivo: {orcamento.ultima_justificativa_interna}</small>}</td><td>{orcamento.equipamento_nome}</td><td>{String(orcamento.horas).replace('.', ',')} h</td>{podeConsultarCustos(perfil) && <td>{orcamento.custo_hora_congelado === null ? '—' : formatarDinheiro(orcamento.custo_hora_congelado)}</td>}<td><strong>{formatarDinheiro(orcamento.preco_final)}</strong></td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span></td><td><div className="acoes-orcamento">{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'enviar')}><Send size={14} /> {orcamento.estado === 'devolvida' ? 'Reenviar' : 'Enviar'}</button>}{orcamento.pode_aprovar && podeAprovarOrcamento(perfil) && <button className="acao-orcamento aprovar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'aprovar')}><CheckCircle2 size={14} /> Aprovar</button>}{orcamento.pode_devolver && podeDecidirOrcamento(perfil) && <button className="acao-orcamento devolver" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'devolver')}><CornerUpLeft size={14} /> Devolver</button>}{orcamento.pode_rejeitar && podeDecidirOrcamento(perfil) && <button className="acao-orcamento rejeitar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'rejeitar')}><Ban size={14} /> Rejeitar</button>}{orcamento.pode_publicar && podePublicarOrcamento(perfil) && <button className="acao-orcamento publicar" type="button" disabled={processandoId === orcamento.versao_id || !orcamento.publicacao_pronta} title={orcamento.publicacao_pronta ? 'Publicar proposta aprovada' : 'Gere o PDF imutável antes de publicar'} onClick={() => void alterarEstado(orcamento, 'publicar')}><UploadCloud size={14} /> {orcamento.publicacao_pronta ? 'Publicar' : 'PDF pendente'}</button>}</div>{decisaoAberta?.versaoId === orcamento.versao_id && <form className="decisao-orcamento" onSubmit={confirmarDecisao}><label htmlFor={`justificativa-${orcamento.versao_id}`}>{decisaoAberta.tipo === 'devolver' ? 'Motivo da devolução' : 'Motivo da rejeição'}</label><textarea id={`justificativa-${orcamento.versao_id}`} autoFocus required minLength={5} maxLength={500} value={justificativa} onChange={(evento) => setJustificativa(evento.target.value)} /><div><button className="acao-orcamento" type="button" onClick={() => setDecisaoAberta(null)}>Cancelar</button><button className={`acao-orcamento ${decisaoAberta.tipo === 'devolver' ? 'devolver' : 'rejeitar'}`} type="submit" disabled={!normalizarJustificativaDecisao(justificativa) || processandoId === orcamento.versao_id}>Confirmar</button></div></form>}</td></tr>;
+          return <tr key={orcamento.versao_id}><td>{formatarDataHora(orcamento.criada_em)}</td><td><strong>{orcamento.descricao}</strong><small>{tituloServico(orcamento.servico_slug)}</small>{orcamento.ultima_justificativa_interna && <small className="justificativa-decisao">Motivo: {orcamento.ultima_justificativa_interna}</small>}</td><td>{orcamento.equipamento_nome}</td><td>{String(orcamento.horas).replace('.', ',')} h</td>{podeConsultarCustos(perfil) && <td>{orcamento.custo_hora_congelado === null ? '—' : formatarDinheiro(orcamento.custo_hora_congelado)}</td>}<td><strong>{formatarDinheiro(orcamento.preco_final)}</strong></td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span></td><td><div className="acoes-orcamento">{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void carregarParaEdicao(orcamento)}><Pencil size={14} /> Editar</button>}{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'enviar')}><Send size={14} /> {orcamento.estado === 'devolvida' ? 'Reenviar' : 'Enviar'}</button>}{orcamento.pode_aprovar && podeAprovarOrcamento(perfil) && <button className="acao-orcamento aprovar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'aprovar')}><CheckCircle2 size={14} /> Aprovar</button>}{orcamento.pode_devolver && podeDecidirOrcamento(perfil) && <button className="acao-orcamento devolver" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'devolver')}><CornerUpLeft size={14} /> Devolver</button>}{orcamento.pode_rejeitar && podeDecidirOrcamento(perfil) && <button className="acao-orcamento rejeitar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'rejeitar')}><Ban size={14} /> Rejeitar</button>}{orcamento.pode_publicar && podePublicarOrcamento(perfil) && <button className="acao-orcamento publicar" type="button" disabled={processandoId === orcamento.versao_id || !orcamento.publicacao_pronta} title={orcamento.publicacao_pronta ? 'Publicar proposta aprovada' : 'Gere o PDF imutável antes de publicar'} onClick={() => void alterarEstado(orcamento, 'publicar')}><UploadCloud size={14} /> {orcamento.publicacao_pronta ? 'Publicar' : 'PDF pendente'}</button>}</div>{decisaoAberta?.versaoId === orcamento.versao_id && <form className="decisao-orcamento" onSubmit={confirmarDecisao}><label htmlFor={`justificativa-${orcamento.versao_id}`}>{decisaoAberta.tipo === 'devolver' ? 'Motivo da devolução' : 'Motivo da rejeição'}</label><textarea id={`justificativa-${orcamento.versao_id}`} autoFocus required minLength={5} maxLength={500} value={justificativa} onChange={(evento) => setJustificativa(evento.target.value)} /><div><button className="acao-orcamento" type="button" onClick={() => setDecisaoAberta(null)}>Cancelar</button><button className={`acao-orcamento ${decisaoAberta.tipo === 'devolver' ? 'devolver' : 'rejeitar'}`} type="submit" disabled={!normalizarJustificativaDecisao(justificativa) || processandoId === orcamento.versao_id}>Confirmar</button></div></form>}</td></tr>;
         })}</tbody></table></div>
         {orcamentos.length === 0 && <div className="estado-vazio"><FileCheck2 size={18} /><span>Nenhum orçamento persistente foi criado nesta origem.</span></div>}
       </section>

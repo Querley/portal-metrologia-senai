@@ -22,7 +22,7 @@
 - [x] primeiro rascunho de orçamento persistente, com cálculo no servidor, custo-hora congelado, auditoria e segregação demonstrativa;
 - [x] alçada de criação e aprovação confirmada: Técnico cria e envia; Validador e Administrador também executam essas ações e podem aprovar;
 - [x] alçada negativa confirmada: Validador e Administrador devolvem ou rejeitam com justificativa; somente Administrador publica após PDF imutável;
-- [x] devolução, rejeição, reenvio e proteção da publicação implementados e validados por perfil na homologação;
+- [x] correção, devolução, rejeição, reenvio e proteção da publicação implementados e validados por perfil na homologação;
 - [ ] fluxo vertical persistente `orçar → executar → comparar → aprender → recomendar`;
 - [ ] projeto Supabase de produção, usuários internos reais e carga privada de custos reais.
 
