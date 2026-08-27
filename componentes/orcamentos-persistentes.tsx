@@ -1,12 +1,12 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Calculator, FileCheck2, RefreshCw, Save, ShieldCheck } from 'lucide-react';
+import { Calculator, CheckCircle2, FileCheck2, RefreshCw, Save, Send, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import type { PerfilInterno } from '../lib/contratos';
-import { ORIGEM_CUSTOS_HOMOLOGACAO } from '../lib/custos-equipamento';
-import { calcularPreviaOrcamento, normalizarEntradaOrcamento, podeConsultarOrcamentos, podeCriarRascunhoOrcamento } from '../lib/orcamentos-persistentes';
+import { ORIGEM_CUSTOS_HOMOLOGACAO, podeConsultarCustos } from '../lib/custos-equipamento';
+import { calcularPreviaOrcamento, normalizarEntradaOrcamento, podeAprovarOrcamento, podeConsultarOrcamentos, podeCriarRascunhoOrcamento } from '../lib/orcamentos-persistentes';
 import { servicosOficiais } from '../lib/servicos';
 
 type Servico = { id: string; slug: string; ativo: boolean };
@@ -15,18 +15,27 @@ type Custo = { equipamento_id: string; custo_hora: string | number; origem: 'dem
 type Orcamento = {
   versao_id: string;
   numero: number;
-  estado: 'rascunho';
+  estado: 'rascunho' | 'em_validacao' | 'aprovada' | 'publicada';
   criada_em: string;
   descricao: string;
   servico_slug: string;
   equipamento_nome: string;
   horas: string | number;
-  custo_hora_congelado: string | number;
+  custo_hora_congelado: string | number | null;
   custos_extras: string | number;
   percentual_lucro: string | number;
-  custo_congelado: string | number;
+  custo_congelado: string | number | null;
   preco_final: string | number;
+  pode_enviar: boolean;
+  pode_aprovar: boolean;
 };
+
+const apresentacaoEstado = {
+  rascunho: { rotulo: 'Rascunho', classe: 'estado-rascunho' },
+  em_validacao: { rotulo: 'Em validação', classe: 'estado-em-validacao' },
+  aprovada: { rotulo: 'Aprovada', classe: 'estado-formalizada' },
+  publicada: { rotulo: 'Publicada', classe: 'estado-formalizada' },
+} as const;
 
 function tituloServico(slug: string): string {
   return servicosOficiais.find((servico) => servico.slug === slug)?.titulo
@@ -46,6 +55,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [processandoId, setProcessandoId] = useState('');
   const [servicoId, setServicoId] = useState('');
   const [equipamentoId, setEquipamentoId] = useState('');
   const [descricao, setDescricao] = useState('Inspeção dimensional de lote demonstrativa');
@@ -59,10 +69,13 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     setCarregando(true);
     setErro('');
 
+    const respostaCustosPromessa = podeConsultarCustos(perfil)
+      ? cliente.from('custos_equipamento').select('equipamento_id,custo_hora,origem').eq('origem', ORIGEM_CUSTOS_HOMOLOGACAO).is('vigente_ate', null)
+      : Promise.resolve({ data: [], error: null });
     const [respostaServicos, respostaEquipamentos, respostaCustos, respostaOrcamentos] = await Promise.all([
       cliente.from('servicos_catalogo').select('id,slug,ativo').eq('ativo', true).order('slug'),
       cliente.from('equipamentos').select('id,codigo,nome,ativo').eq('ativo', true).order('nome'),
-      cliente.from('custos_equipamento').select('equipamento_id,custo_hora,origem').eq('origem', ORIGEM_CUSTOS_HOMOLOGACAO).is('vigente_ate', null),
+      respostaCustosPromessa,
       cliente.rpc('listar_orcamentos_demonstrativos'),
     ]);
 
@@ -76,7 +89,9 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     const equipamentosEncontrados = (respostaEquipamentos.data ?? []) as Equipamento[];
     const custosEncontrados = ((respostaCustos.data ?? []) as Custo[]).filter((custo) => custo.origem === ORIGEM_CUSTOS_HOMOLOGACAO);
     const idsComCusto = new Set(custosEncontrados.map((custo) => custo.equipamento_id));
-    const equipamentosElegiveis = equipamentosEncontrados.filter((equipamento) => idsComCusto.has(equipamento.id));
+    const equipamentosElegiveis = podeConsultarCustos(perfil)
+      ? equipamentosEncontrados.filter((equipamento) => idsComCusto.has(equipamento.id))
+      : equipamentosEncontrados;
 
     setServicos(servicosEncontrados);
     setEquipamentos(equipamentosElegiveis);
@@ -100,7 +115,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     evento.preventDefault();
     if (!podeCriarRascunhoOrcamento(perfil)) return;
     const normalizada = normalizarEntradaOrcamento(entrada);
-    if (!normalizada || !servicoId || !equipamentoId || !custoSelecionado) {
+    if (!normalizada || !servicoId || !equipamentoId) {
       setMensagem('Revise os campos. Quantidade deve ser positiva e os demais valores não podem ser negativos.');
       return;
     }
@@ -128,13 +143,35 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     setSalvando(false);
   }
 
+  async function alterarEstado(orcamento: Orcamento, acao: 'enviar' | 'aprovar') {
+    if (acao === 'enviar' && !orcamento.pode_enviar) return;
+    if (acao === 'aprovar' && (!orcamento.pode_aprovar || !podeAprovarOrcamento(perfil))) return;
+
+    setProcessandoId(orcamento.versao_id);
+    setMensagem('');
+    const funcao = acao === 'enviar' ? 'enviar_orcamento_para_validacao' : 'aprovar_orcamento_demonstrativo';
+    const { error } = await cliente.rpc(funcao, { versao: orcamento.versao_id });
+
+    if (error) {
+      setMensagem(error.code === '42501'
+        ? 'Seu perfil não tem autorização para esta transição.'
+        : 'O estado do orçamento mudou ou a operação não pôde ser concluída. Atualize e tente novamente.');
+    } else {
+      setMensagem(acao === 'enviar'
+        ? 'Orçamento enviado para validação. A transição foi auditada.'
+        : 'Orçamento aprovado. A publicação permanece como uma etapa separada.');
+      await carregar();
+    }
+    setProcessandoId('');
+  }
+
   if (!podeConsultarOrcamentos(perfil)) {
-    return <div className="painel"><section className="aviso-custos" role="alert"><ShieldCheck size={20} /><div><strong>Acesso não autorizado</strong><p>Este recorte está disponível somente para Validador e Administrador.</p></div></section></div>;
+    return <div className="painel"><section className="aviso-custos" role="alert"><ShieldCheck size={20} /><div><strong>Acesso não autorizado</strong><p>Orçamentos restritos estão disponíveis para Técnico, Validador e Administrador.</p></div></section></div>;
   }
 
   return <div className="painel painel-orcamentos-persistentes">
     <section className="cabecalho-custos">
-      <div><span><Calculator size={17} /> Origem: demonstração</span><h2>Orçamentos persistentes</h2><p>Rascunhos sintéticos calculados no servidor com o custo vigente congelado.</p></div>
+      <div><span><Calculator size={17} /> Origem: demonstração</span><h2>Orçamentos persistentes</h2><p>Técnico prepara e envia; Validador ou Administrador aprova.</p></div>
       <button type="button" onClick={() => void carregar()} disabled={carregando}><RefreshCw size={16} /> Atualizar</button>
     </section>
 
@@ -153,24 +190,29 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
             <div className="linha-campos-orcamento"><label htmlFor="quantidade-orcamento">Quantidade<input id="quantidade-orcamento" required inputMode="decimal" value={quantidade} onChange={(evento) => setQuantidade(evento.target.value)} /></label><label htmlFor="horas-orcamento">Horas estimadas<input id="horas-orcamento" required inputMode="decimal" value={horas} onChange={(evento) => setHoras(evento.target.value)} /></label></div>
             <label htmlFor="equipamento-orcamento">Equipamento</label>
             <select id="equipamento-orcamento" required value={equipamentoId} onChange={(evento) => setEquipamentoId(evento.target.value)}>{equipamentos.map((equipamento) => <option key={equipamento.id} value={equipamento.id}>{equipamento.nome}</option>)}</select>
-            {custoSelecionado && <p className="custo-atual">Custo vigente demonstrativo: <strong>{formatarDinheiro(custoSelecionado.custo_hora)}</strong></p>}
+            {custoSelecionado
+              ? <p className="custo-atual">Custo vigente demonstrativo: <strong>{formatarDinheiro(custoSelecionado.custo_hora)}</strong></p>
+              : <p className="custo-atual"><ShieldCheck size={13} /> O custo-hora fica protegido e será aplicado pelo servidor.</p>}
             <div className="linha-campos-orcamento"><label htmlFor="extras-orcamento">Custos extras (BRL)<input id="extras-orcamento" required inputMode="decimal" value={custosExtras} onChange={(evento) => setCustosExtras(evento.target.value)} /></label><label htmlFor="lucro-orcamento">Lucro (%)<input id="lucro-orcamento" required inputMode="decimal" value={percentualLucro} onChange={(evento) => setPercentualLucro(evento.target.value)} /></label></div>
-            <small>Use somente dados fictícios. A aprovação e a publicação ainda não fazem parte deste recorte.</small>
+            <small>Use somente dados fictícios. A aprovação é interna; a publicação ainda não faz parte deste recorte.</small>
             {mensagem && <p className="mensagem-formulario-custo" role="status">{mensagem}</p>}
-            <button className="botao-interno" type="submit" disabled={salvando || !previa}><Save size={16} />{salvando ? 'Salvando…' : 'Salvar rascunho'}</button>
+            <button className="botao-interno" type="submit" disabled={salvando || !normalizarEntradaOrcamento(entrada) || !servicoId || !equipamentoId}><Save size={16} />{salvando ? 'Salvando…' : 'Salvar rascunho'}</button>
           </form>
-        </section> : <aside className="aviso-custos leitura"><ShieldCheck size={20} /><div><strong>Consulta em modo somente leitura</strong><p>O Validador consulta rascunhos e valores congelados. A criação está restrita ao Administrador neste recorte.</p></div></aside>}
+        </section> : null}
 
         {podeCriarRascunhoOrcamento(perfil) && <aside className="bloco resumo-orcamento resumo-persistente">
           <p>PRÉVIA DETERMINÍSTICA</p>
-          {previa ? <><dl><div><dt>Custo das máquinas</dt><dd>{formatarDinheiro(previa.custo.minus(custosExtras.replace(',', '.')))}</dd></div><div><dt>Custos extras</dt><dd>{formatarDinheiro(custosExtras.replace(',', '.'))}</dd></div><div><dt>Custo total</dt><dd>{formatarDinheiro(previa.custo)}</dd></div><div><dt>Lucro</dt><dd>{formatarDinheiro(previa.precoFinal.minus(previa.custo))}</dd></div><div className="total"><dt>Preço calculado</dt><dd>{formatarDinheiro(previa.precoFinal)}</dd></div></dl><small><ShieldCheck size={13} /> O servidor recalcula e congela o custo vigente ao salvar</small></> : <p className="previa-indisponivel">Preencha valores válidos para ver a prévia.</p>}
+          {previa ? <><dl><div><dt>Custo das máquinas</dt><dd>{formatarDinheiro(previa.custo.minus(custosExtras.replace(',', '.')))}</dd></div><div><dt>Custos extras</dt><dd>{formatarDinheiro(custosExtras.replace(',', '.'))}</dd></div><div><dt>Custo total</dt><dd>{formatarDinheiro(previa.custo)}</dd></div><div><dt>Lucro</dt><dd>{formatarDinheiro(previa.precoFinal.minus(previa.custo))}</dd></div><div className="total"><dt>Preço calculado</dt><dd>{formatarDinheiro(previa.precoFinal)}</dd></div></dl><small><ShieldCheck size={13} /> O servidor recalcula e congela o custo vigente ao salvar</small></> : <p className="previa-indisponivel">Seu perfil prepara o orçamento sem visualizar o custo-hora. O servidor fará o cálculo protegido ao salvar.</p>}
         </aside>}
       </div>
 
       <section className="bloco tabela-orcamentos-persistentes">
-        <header><div><h2>Rascunhos salvos</h2><p>{orcamentos.length} registros demonstrativos persistidos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
-        <div className="tabela-wrap"><table><thead><tr><th>Criação</th><th>Descrição</th><th>Equipamento</th><th>Horas</th><th>Custo-hora congelado</th><th>Preço</th><th>Estado</th></tr></thead><tbody>{orcamentos.map((orcamento) => <tr key={orcamento.versao_id}><td>{formatarDataHora(orcamento.criada_em)}</td><td><strong>{orcamento.descricao}</strong><small>{tituloServico(orcamento.servico_slug)}</small></td><td>{orcamento.equipamento_nome}</td><td>{String(orcamento.horas).replace('.', ',')} h</td><td>{formatarDinheiro(orcamento.custo_hora_congelado)}</td><td><strong>{formatarDinheiro(orcamento.preco_final)}</strong></td><td><span className="estado estado-rascunho">Rascunho</span></td></tr>)}</tbody></table></div>
-        {orcamentos.length === 0 && <div className="estado-vazio"><FileCheck2 size={18} /><span>Nenhum rascunho persistente foi criado nesta origem.</span></div>}
+        <header><div><h2>Orçamentos salvos</h2><p>{orcamentos.length} registros demonstrativos persistidos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
+        <div className="tabela-wrap"><table><thead><tr><th>Criação</th><th>Descrição</th><th>Equipamento</th><th>Horas</th>{podeConsultarCustos(perfil) && <th>Custo-hora congelado</th>}<th>Preço</th><th>Estado</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{orcamentos.map((orcamento) => {
+          const estado = apresentacaoEstado[orcamento.estado] ?? apresentacaoEstado.rascunho;
+          return <tr key={orcamento.versao_id}><td>{formatarDataHora(orcamento.criada_em)}</td><td><strong>{orcamento.descricao}</strong><small>{tituloServico(orcamento.servico_slug)}</small></td><td>{orcamento.equipamento_nome}</td><td>{String(orcamento.horas).replace('.', ',')} h</td>{podeConsultarCustos(perfil) && <td>{orcamento.custo_hora_congelado === null ? '—' : formatarDinheiro(orcamento.custo_hora_congelado)}</td>}<td><strong>{formatarDinheiro(orcamento.preco_final)}</strong></td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span></td><td>{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'enviar')}><Send size={14} /> Enviar</button>}{orcamento.pode_aprovar && podeAprovarOrcamento(perfil) && <button className="acao-orcamento aprovar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'aprovar')}><CheckCircle2 size={14} /> Aprovar</button>}</td></tr>;
+        })}</tbody></table></div>
+        {orcamentos.length === 0 && <div className="estado-vazio"><FileCheck2 size={18} /><span>Nenhum orçamento persistente foi criado nesta origem.</span></div>}
       </section>
     </>}
   </div>;

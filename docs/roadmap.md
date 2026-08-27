@@ -19,12 +19,13 @@
 - [x] login ponta a ponta validado pelo mantenedor com os dois perfis;
 - [x] interface persistente para consultar e versionar custos-hora, com leitura para Validador e edição somente para Administrador;
 - [x] primeiro rascunho de orçamento persistente, com cálculo no servidor, custo-hora congelado, auditoria e segregação demonstrativa;
+- [x] alçada de criação e aprovação confirmada: Técnico cria e envia; Validador e Administrador também executam essas ações e podem aprovar;
 - [ ] fluxo vertical persistente `orçar → executar → comparar → aprender → recomendar`;
 - [ ] projeto Supabase de produção, usuários internos reais e carga privada de custos reais.
 
 ## Dependências institucionais
 
-- [ ] Confirmar com o responsável operacional do CEM/SENAI as alçadas: quem cria e envia propostas, quem aprova e quem publica cada versão.
+- [ ] Confirmar com o responsável operacional do CEM/SENAI quem publica a versão aprovada para o cliente.
 - [ ] Aprovar nome, marca e textos jurídicos.
 - [ ] Definir remetente e domínio oficiais.
 - [ ] Criar dois projetos Supabase e configurar MFA.

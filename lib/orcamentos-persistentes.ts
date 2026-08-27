@@ -11,11 +11,15 @@ export type EntradaOrcamentoPersistente = {
 };
 
 export function podeConsultarOrcamentos(perfil: PerfilInterno): boolean {
-  return perfil === 'validador' || perfil === 'administrador';
+  return perfil === 'tecnico' || perfil === 'validador' || perfil === 'administrador';
 }
 
 export function podeCriarRascunhoOrcamento(perfil: PerfilInterno): boolean {
-  return perfil === 'administrador';
+  return perfil === 'tecnico' || perfil === 'validador' || perfil === 'administrador';
+}
+
+export function podeAprovarOrcamento(perfil: PerfilInterno): boolean {
+  return perfil === 'validador' || perfil === 'administrador';
 }
 
 function normalizarDecimal(valor: string, maximoInteiros: number): string | null {
@@ -52,4 +56,3 @@ export function calcularPreviaOrcamento(entrada: EntradaOrcamentoPersistente, cu
     percentualLucro: normalizada.percentualLucro,
   }])[0];
 }
-

@@ -6,7 +6,7 @@ export const PerfilInternoSchema = z.enum(['consulta', 'tecnico', 'validador', '
 export const PerfilExternoSchema = z.enum(['contato', 'gestor_empresa']);
 export const MoedaSchema = z.enum(['BRL', 'USD', 'EUR']);
 
-export const EstadoPropostaSchema = z.enum(['rascunho', 'em_validacao', 'publicada', 'aceita', 'recusada', 'expirada', 'substituida']);
+export const EstadoPropostaSchema = z.enum(['rascunho', 'em_validacao', 'aprovada', 'publicada', 'aceita', 'recusada', 'expirada', 'substituida']);
 export const EstadoServicoSchema = z.enum(['planejado', 'em_execucao', 'concluido', 'cancelado']);
 export const EstadoLicaoSchema = z.enum(['rascunho', 'em_validacao', 'formalizada', 'superada']);
 export const EstadoConteudoSchema = z.enum(['rascunho', 'publicado', 'arquivado']);
