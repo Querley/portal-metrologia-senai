@@ -1,13 +1,14 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Ban, Calculator, CheckCircle2, CornerUpLeft, FileCheck2, Pencil, RefreshCw, Save, Send, ShieldCheck, UploadCloud } from 'lucide-react';
+import { Ban, Calculator, CheckCircle2, CornerUpLeft, FileCheck2, FileText, Pencil, Printer, RefreshCw, Save, Send, ShieldCheck, UploadCloud, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import type { PerfilInterno } from '../lib/contratos';
 import { ORIGEM_CUSTOS_HOMOLOGACAO, podeConsultarCustos } from '../lib/custos-equipamento';
 import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, podeAprovarOrcamento, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from '../lib/orcamentos-persistentes';
 import { servicosOficiais } from '../lib/servicos';
+import { MarcaOficial } from './marca-oficial';
 
 type Servico = { id: string; slug: string; ativo: boolean };
 type Equipamento = { id: string; codigo: string; nome: string; ativo: boolean };
@@ -20,6 +21,11 @@ type OrcamentoEditavel = {
   horas: string | number;
   custos_extras: string | number;
   percentual_lucro: string | number;
+};
+type DadosPreProposta = {
+  versao_id: string;
+  destinatario: string;
+  prazo_pagamento_dias: number;
 };
 type Orcamento = {
   versao_id: string;
@@ -42,6 +48,8 @@ type Orcamento = {
   pode_rejeitar: boolean;
   pode_publicar: boolean;
   publicacao_pronta: boolean;
+  destinatario?: string;
+  prazo_pagamento_dias?: number;
 };
 
 const apresentacaoEstado = {
@@ -50,7 +58,7 @@ const apresentacaoEstado = {
   devolvida: { rotulo: 'Devolvida', classe: 'estado-devolvida' },
   rejeitada: { rotulo: 'Rejeitada', classe: 'estado-rejeitada' },
   aprovada: { rotulo: 'Aprovada', classe: 'estado-formalizada' },
-  publicada: { rotulo: 'Publicada', classe: 'estado-formalizada' },
+  publicada: { rotulo: 'Pré-proposta emitida', classe: 'estado-formalizada' },
 } as const;
 
 function tituloServico(slug: string): string {
@@ -75,6 +83,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
   const [decisaoAberta, setDecisaoAberta] = useState<{ versaoId: string; tipo: 'devolver' | 'rejeitar' } | null>(null);
   const [justificativa, setJustificativa] = useState('');
   const [versaoEmEdicao, setVersaoEmEdicao] = useState('');
+  const [previsualizando, setPrevisualizando] = useState<Orcamento | null>(null);
   const [servicoId, setServicoId] = useState('');
   const [equipamentoId, setEquipamentoId] = useState('');
   const [descricao, setDescricao] = useState('Inspeção dimensional de lote demonstrativa');
@@ -82,6 +91,8 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
   const [horas, setHoras] = useState('12');
   const [custosExtras, setCustosExtras] = useState('280');
   const [percentualLucro, setPercentualLucro] = useState('25');
+  const [destinatario, setDestinatario] = useState('Contato demonstrativo');
+  const [prazoPagamentoDias, setPrazoPagamentoDias] = useState('30');
 
   const carregar = useCallback(async () => {
     if (!podeConsultarOrcamentos(perfil)) return;
@@ -91,14 +102,15 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     const respostaCustosPromessa = podeConsultarCustos(perfil)
       ? cliente.from('custos_equipamento').select('equipamento_id,custo_hora,origem').eq('origem', ORIGEM_CUSTOS_HOMOLOGACAO).is('vigente_ate', null)
       : Promise.resolve({ data: [], error: null });
-    const [respostaServicos, respostaEquipamentos, respostaCustos, respostaOrcamentos] = await Promise.all([
+    const [respostaServicos, respostaEquipamentos, respostaCustos, respostaOrcamentos, respostaPrePropostas] = await Promise.all([
       cliente.from('servicos_catalogo').select('id,slug,ativo').eq('ativo', true).order('slug'),
       cliente.from('equipamentos').select('id,codigo,nome,ativo').eq('ativo', true).order('nome'),
       respostaCustosPromessa,
       cliente.rpc('listar_orcamentos_demonstrativos'),
+      cliente.rpc('listar_dados_pre_propostas_demonstrativas'),
     ]);
 
-    if (respostaServicos.error || respostaEquipamentos.error || respostaCustos.error || respostaOrcamentos.error) {
+    if (respostaServicos.error || respostaEquipamentos.error || respostaCustos.error || respostaOrcamentos.error || respostaPrePropostas.error) {
       setErro('Não foi possível carregar os orçamentos persistentes de homologação.');
       setCarregando(false);
       return;
@@ -115,7 +127,8 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     setServicos(servicosEncontrados);
     setEquipamentos(equipamentosElegiveis);
     setCustos(custosEncontrados);
-    setOrcamentos((respostaOrcamentos.data ?? []) as Orcamento[]);
+    const dadosPreProposta = new Map(((respostaPrePropostas.data ?? []) as DadosPreProposta[]).map((item) => [item.versao_id, item]));
+    setOrcamentos(((respostaOrcamentos.data ?? []) as Orcamento[]).map((orcamento) => ({ ...orcamento, ...dadosPreProposta.get(orcamento.versao_id) })));
     setServicoId((atual) => atual || servicosEncontrados[0]?.id || '');
     setEquipamentoId((atual) => atual || equipamentosElegiveis[0]?.id || '');
     setCarregando(false);
@@ -134,7 +147,8 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     evento.preventDefault();
     if (!podeCriarRascunhoOrcamento(perfil)) return;
     const normalizada = normalizarEntradaOrcamento(entrada);
-    if (!normalizada || !servicoId || !equipamentoId) {
+    const prazoNormalizado = Number(prazoPagamentoDias);
+    if (!normalizada || !servicoId || !equipamentoId || destinatario.trim().length < 2 || !Number.isInteger(prazoNormalizado) || prazoNormalizado < 1 || prazoNormalizado > 365) {
       setMensagem('Revise os campos. Quantidade deve ser positiva e os demais valores não podem ser negativos.');
       return;
     }
@@ -149,10 +163,12 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
       horas: normalizada.horas,
       custos_extras: normalizada.custosExtras,
       percentual_lucro: normalizada.percentualLucro,
+      destinatario: destinatario.trim(),
+      prazo_pagamento_dias: prazoNormalizado,
     };
     const { error } = versaoEmEdicao
-      ? await cliente.rpc('revisar_orcamento_demonstrativo', { versao: versaoEmEdicao, ...argumentos })
-      : await cliente.rpc('criar_orcamento_demonstrativo', argumentos);
+      ? await cliente.rpc('revisar_pre_proposta_demonstrativa', { versao: versaoEmEdicao, ...argumentos })
+      : await cliente.rpc('criar_pre_proposta_demonstrativa', argumentos);
 
     if (error) {
       setMensagem(error.code === '42501'
@@ -172,10 +188,14 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     if (!orcamento.pode_enviar) return;
     setProcessandoId(orcamento.versao_id);
     setMensagem('');
-    const { data, error } = await cliente.rpc('obter_orcamento_demonstrativo_para_edicao', { versao: orcamento.versao_id });
+    const [{ data, error }, respostaPreProposta] = await Promise.all([
+      cliente.rpc('obter_orcamento_demonstrativo_para_edicao', { versao: orcamento.versao_id }),
+      cliente.rpc('obter_dados_pre_proposta_demonstrativa', { versao: orcamento.versao_id }),
+    ]);
     const campos = (data?.[0] ?? null) as OrcamentoEditavel | null;
+    const dados = (respostaPreProposta.data?.[0] ?? null) as Omit<DadosPreProposta, 'versao_id'> | null;
 
-    if (error || !campos) {
+    if (error || respostaPreProposta.error || !campos || !dados) {
       setMensagem(error?.code === '42501'
         ? 'Somente o autor pode editar este orçamento.'
         : 'Não foi possível carregar os campos para edição. Atualize e tente novamente.');
@@ -187,6 +207,8 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
       setHoras(String(campos.horas));
       setCustosExtras(String(campos.custos_extras));
       setPercentualLucro(String(campos.percentual_lucro));
+      setDestinatario(dados.destinatario);
+      setPrazoPagamentoDias(String(dados.prazo_pagamento_dias));
       setVersaoEmEdicao(orcamento.versao_id);
       setMensagem('Campos carregados. Corrija e salve antes de reenviar.');
     }
@@ -213,8 +235,8 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
       setMensagem(acao === 'enviar'
         ? 'Orçamento enviado para validação. A transição foi auditada.'
         : acao === 'aprovar'
-          ? 'Orçamento aprovado. Somente Administrador poderá publicá-lo após gerar o PDF imutável.'
-          : 'Orçamento publicado pelo Administrador com PDF e hash imutável.');
+          ? 'Pré-proposta aprovada. Somente Administrador poderá emiti-la após gerar o PDF imutável.'
+          : 'Pré-proposta emitida pelo Administrador com PDF e hash imutável.');
       await carregar();
     }
     setProcessandoId('');
@@ -265,7 +287,7 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
 
   return <div className="painel painel-orcamentos-persistentes">
     <section className="cabecalho-custos">
-      <div><span><Calculator size={17} /> Origem: demonstração</span><h2>Orçamentos persistentes</h2><p>Validador ou Administrador aprova, devolve ou rejeita; somente Administrador publica.</p></div>
+      <div><span><Calculator size={17} /> Origem: demonstração</span><h2>Pré-propostas do laboratório</h2><p>Validador ou Administrador aprova, devolve ou rejeita; somente Administrador emite. A proposta oficial é feita no Nectar, fora deste portal.</p></div>
       <button type="button" onClick={() => void carregar()} disabled={carregando}><RefreshCw size={16} /> Atualizar</button>
     </section>
 
@@ -275,8 +297,12 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
     {!carregando && !erro && <>
       <div className={`grade-orcamentos-persistentes ${podeCriarRascunhoOrcamento(perfil) ? '' : 'somente-leitura'}`}>
         {podeCriarRascunhoOrcamento(perfil) ? <section className="bloco formulario-orcamento-persistente">
-          <header><div><h2>{versaoEmEdicao ? 'Editar orçamento' : 'Novo rascunho'}</h2><p>{versaoEmEdicao ? 'Corrija a versão antes de reenviá-la.' : 'Um item e um equipamento neste primeiro recorte.'}</p></div><span className="estado estado-rascunho">{versaoEmEdicao ? 'Em edição' : 'Rascunho'}</span></header>
+          <header><div><h2>{versaoEmEdicao ? 'Editar pré-proposta' : 'Nova pré-proposta'}</h2><p>{versaoEmEdicao ? 'Corrija a versão antes de reenviá-la.' : 'Documento informal do laboratório; não substitui a proposta oficial do SENAI.'}</p></div><span className="estado estado-rascunho">{versaoEmEdicao ? 'Em edição' : 'Rascunho'}</span></header>
           <form onSubmit={salvar}>
+            <label htmlFor="destinatario-orcamento">Destinatário da pré-proposta</label>
+            <input id="destinatario-orcamento" required minLength={2} maxLength={160} value={destinatario} onChange={(evento) => setDestinatario(evento.target.value)} />
+            <label htmlFor="prazo-pagamento-orcamento">Prazo de pagamento desejado</label>
+            <input id="prazo-pagamento-orcamento" required type="number" inputMode="numeric" min="1" max="365" value={prazoPagamentoDias} onChange={(evento) => setPrazoPagamentoDias(evento.target.value)} />
             <label htmlFor="servico-orcamento">Serviço</label>
             <select id="servico-orcamento" required value={servicoId} onChange={(evento) => setServicoId(evento.target.value)}>{servicos.map((servico) => <option key={servico.id} value={servico.id}>{tituloServico(servico.slug)}</option>)}</select>
             <label htmlFor="descricao-orcamento">Descrição do item</label>
@@ -288,10 +314,10 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
               ? <p className="custo-atual">Custo vigente demonstrativo: <strong>{formatarDinheiro(custoSelecionado.custo_hora)}</strong></p>
               : <p className="custo-atual"><ShieldCheck size={13} /> O custo-hora fica protegido e será aplicado pelo servidor.</p>}
             <div className="linha-campos-orcamento"><label htmlFor="extras-orcamento">Custos extras (BRL)<input id="extras-orcamento" required inputMode="decimal" value={custosExtras} onChange={(evento) => setCustosExtras(evento.target.value)} /></label><label htmlFor="lucro-orcamento">Lucro (%)<input id="lucro-orcamento" required inputMode="decimal" value={percentualLucro} onChange={(evento) => setPercentualLucro(evento.target.value)} /></label></div>
-            <small>Use somente dados fictícios. Publicação exige PDF imutável e é exclusiva do Administrador.</small>
+            <small>Use somente dados fictícios. A emissão exige PDF imutável e é exclusiva do Administrador. O Nectar permanece fora do escopo.</small>
             {mensagem && <p className="mensagem-formulario-custo" role="status">{mensagem}</p>}
             {versaoEmEdicao && <button className="acao-orcamento" type="button" onClick={() => setVersaoEmEdicao('')}>Cancelar edição</button>}
-            <button className="botao-interno" type="submit" disabled={salvando || !normalizarEntradaOrcamento(entrada) || !servicoId || !equipamentoId}><Save size={16} />{salvando ? 'Salvando…' : versaoEmEdicao ? 'Salvar alterações' : 'Salvar rascunho'}</button>
+            <button className="botao-interno" type="submit" disabled={salvando || !normalizarEntradaOrcamento(entrada) || !servicoId || !equipamentoId || destinatario.trim().length < 2 || !Number.isInteger(Number(prazoPagamentoDias)) || Number(prazoPagamentoDias) < 1 || Number(prazoPagamentoDias) > 365}><Save size={16} />{salvando ? 'Salvando…' : versaoEmEdicao ? 'Salvar alterações' : 'Salvar rascunho'}</button>
           </form>
         </section> : null}
 
@@ -302,13 +328,14 @@ export function OrcamentosPersistentes({ cliente, perfil }: { cliente: SupabaseC
       </div>
 
       <section className="bloco tabela-orcamentos-persistentes">
-        <header><div><h2>Orçamentos salvos</h2><p>{orcamentos.length} registros demonstrativos persistidos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
+        <header><div><h2>Pré-propostas salvas</h2><p>{orcamentos.length} registros demonstrativos persistidos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
         <div className="tabela-wrap"><table><thead><tr><th>Criação</th><th>Descrição</th><th>Equipamento</th><th>Horas</th>{podeConsultarCustos(perfil) && <th>Custo-hora congelado</th>}<th>Preço</th><th>Estado</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{orcamentos.map((orcamento) => {
           const estado = apresentacaoEstado[orcamento.estado] ?? apresentacaoEstado.rascunho;
-          return <tr key={orcamento.versao_id}><td>{formatarDataHora(orcamento.criada_em)}</td><td><strong>{orcamento.descricao}</strong><small>{tituloServico(orcamento.servico_slug)}</small>{orcamento.ultima_justificativa_interna && <small className="justificativa-decisao">Motivo: {orcamento.ultima_justificativa_interna}</small>}</td><td>{orcamento.equipamento_nome}</td><td>{String(orcamento.horas).replace('.', ',')} h</td>{podeConsultarCustos(perfil) && <td>{orcamento.custo_hora_congelado === null ? '—' : formatarDinheiro(orcamento.custo_hora_congelado)}</td>}<td><strong>{formatarDinheiro(orcamento.preco_final)}</strong></td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span></td><td><div className="acoes-orcamento">{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void carregarParaEdicao(orcamento)}><Pencil size={14} /> Editar</button>}{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'enviar')}><Send size={14} /> {orcamento.estado === 'devolvida' ? 'Reenviar' : 'Enviar'}</button>}{orcamento.pode_aprovar && podeAprovarOrcamento(perfil) && <button className="acao-orcamento aprovar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'aprovar')}><CheckCircle2 size={14} /> Aprovar</button>}{orcamento.pode_devolver && podeDecidirOrcamento(perfil) && <button className="acao-orcamento devolver" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'devolver')}><CornerUpLeft size={14} /> Devolver</button>}{orcamento.pode_rejeitar && podeDecidirOrcamento(perfil) && <button className="acao-orcamento rejeitar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'rejeitar')}><Ban size={14} /> Rejeitar</button>}{orcamento.pode_publicar && podePublicarOrcamento(perfil) && <button className="acao-orcamento publicar" type="button" disabled={processandoId === orcamento.versao_id || !orcamento.publicacao_pronta} title={orcamento.publicacao_pronta ? 'Publicar proposta aprovada' : 'Gere o PDF imutável antes de publicar'} onClick={() => void alterarEstado(orcamento, 'publicar')}><UploadCloud size={14} /> {orcamento.publicacao_pronta ? 'Publicar' : 'PDF pendente'}</button>}</div>{decisaoAberta?.versaoId === orcamento.versao_id && <form className="decisao-orcamento" onSubmit={confirmarDecisao}><label htmlFor={`justificativa-${orcamento.versao_id}`}>{decisaoAberta.tipo === 'devolver' ? 'Motivo da devolução' : 'Motivo da rejeição'}</label><textarea id={`justificativa-${orcamento.versao_id}`} autoFocus required minLength={5} maxLength={500} value={justificativa} onChange={(evento) => setJustificativa(evento.target.value)} /><div><button className="acao-orcamento" type="button" onClick={() => setDecisaoAberta(null)}>Cancelar</button><button className={`acao-orcamento ${decisaoAberta.tipo === 'devolver' ? 'devolver' : 'rejeitar'}`} type="submit" disabled={!normalizarJustificativaDecisao(justificativa) || processandoId === orcamento.versao_id}>Confirmar</button></div></form>}</td></tr>;
+          return <tr key={orcamento.versao_id}><td>{formatarDataHora(orcamento.criada_em)}</td><td><strong>{orcamento.descricao}</strong><small>{tituloServico(orcamento.servico_slug)}</small><small>Para: {orcamento.destinatario ?? '—'} · pagamento em {orcamento.prazo_pagamento_dias ?? '—'} dias</small>{orcamento.ultima_justificativa_interna && <small className="justificativa-decisao">Motivo: {orcamento.ultima_justificativa_interna}</small>}</td><td>{orcamento.equipamento_nome}</td><td>{String(orcamento.horas).replace('.', ',')} h</td>{podeConsultarCustos(perfil) && <td>{orcamento.custo_hora_congelado === null ? '—' : formatarDinheiro(orcamento.custo_hora_congelado)}</td>}<td><strong>{formatarDinheiro(orcamento.preco_final)}</strong></td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span></td><td><div className="acoes-orcamento"><button className="acao-orcamento" type="button" onClick={() => setPrevisualizando(orcamento)}><FileText size={14} /> Prévia PDF</button>{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void carregarParaEdicao(orcamento)}><Pencil size={14} /> Editar</button>}{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'enviar')}><Send size={14} /> {orcamento.estado === 'devolvida' ? 'Reenviar' : 'Enviar'}</button>}{orcamento.pode_aprovar && podeAprovarOrcamento(perfil) && <button className="acao-orcamento aprovar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'aprovar')}><CheckCircle2 size={14} /> Aprovar</button>}{orcamento.pode_devolver && podeDecidirOrcamento(perfil) && <button className="acao-orcamento devolver" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'devolver')}><CornerUpLeft size={14} /> Devolver</button>}{orcamento.pode_rejeitar && podeDecidirOrcamento(perfil) && <button className="acao-orcamento rejeitar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'rejeitar')}><Ban size={14} /> Rejeitar</button>}{orcamento.pode_publicar && podePublicarOrcamento(perfil) && <button className="acao-orcamento publicar" type="button" disabled={processandoId === orcamento.versao_id || !orcamento.publicacao_pronta} title={orcamento.publicacao_pronta ? 'Emitir pré-proposta aprovada' : 'Gere o PDF imutável antes de emitir'} onClick={() => void alterarEstado(orcamento, 'publicar')}><UploadCloud size={14} /> {orcamento.publicacao_pronta ? 'Emitir' : 'PDF pendente'}</button>}</div>{decisaoAberta?.versaoId === orcamento.versao_id && <form className="decisao-orcamento" onSubmit={confirmarDecisao}><label htmlFor={`justificativa-${orcamento.versao_id}`}>{decisaoAberta.tipo === 'devolver' ? 'Motivo da devolução' : 'Motivo da rejeição'}</label><textarea id={`justificativa-${orcamento.versao_id}`} autoFocus required minLength={5} maxLength={500} value={justificativa} onChange={(evento) => setJustificativa(evento.target.value)} /><div><button className="acao-orcamento" type="button" onClick={() => setDecisaoAberta(null)}>Cancelar</button><button className={`acao-orcamento ${decisaoAberta.tipo === 'devolver' ? 'devolver' : 'rejeitar'}`} type="submit" disabled={!normalizarJustificativaDecisao(justificativa) || processandoId === orcamento.versao_id}>Confirmar</button></div></form>}</td></tr>;
         })}</tbody></table></div>
         {orcamentos.length === 0 && <div className="estado-vazio"><FileCheck2 size={18} /><span>Nenhum orçamento persistente foi criado nesta origem.</span></div>}
       </section>
     </>}
+    {previsualizando && <div className="fundo-pre-proposta" role="presentation"><section className="pre-proposta-pdf" role="dialog" aria-modal="true" aria-labelledby="titulo-pre-proposta"><header><MarcaOficial /><div><span>PRÉ-PROPOSTA DO LABORATÓRIO</span><strong>Versão demonstrativa nº {previsualizando.numero}</strong></div></header><div className="aviso-pre-proposta"><ShieldCheck size={17} /> Este documento é uma pré-proposta informal do laboratório. A proposta oficial do SENAI é produzida no Nectar, fora deste portal.</div><h2 id="titulo-pre-proposta">{previsualizando.descricao}</h2><dl><div><dt>Destinatário</dt><dd>{previsualizando.destinatario}</dd></div><div><dt>Serviço</dt><dd>{tituloServico(previsualizando.servico_slug)}</dd></div><div><dt>Valor da pré-proposta</dt><dd>{formatarDinheiro(previsualizando.preco_final)}</dd></div><div><dt>Prazo de pagamento desejado</dt><dd>{previsualizando.prazo_pagamento_dias} dias</dd></div></dl><small>Origem: demonstração · gerada em {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date())}</small><footer><button type="button" onClick={() => setPrevisualizando(null)}><X size={16} /> Fechar</button><button type="button" onClick={() => window.print()}><Printer size={16} /> Imprimir / salvar PDF</button></footer></section></div>}
   </div>;
 }

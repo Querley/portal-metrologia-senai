@@ -9,5 +9,5 @@ export default async function Solicitar({ searchParams }: { searchParams: Promis
   const parametros = await searchParams;
   const servicoInformado = parametros.servico && servicosOficiais.some(({ slug }) => slug === parametros.servico) ? parametros.servico : '';
   const servicoInicial = parametros.equipamento ? 'avaliacao-equipamento' : parametros.servico === 'outro' ? 'outro' : servicoInformado;
-  return <main><CabecalhoPublico titulo="Solicite uma análise" texto="Escolha uma capacidade do catálogo ou descreva uma necessidade personalizada. Nesta prévia, o envio é demonstrativo e não persiste informações." /><section className="conteudo-publico pagina-form"><FormularioSolicitacao servicoInicial={servicoInicial} /></section><RodapePublico /></main>;
+  return <main><CabecalhoPublico titulo="Solicite uma análise sem criar uma conta" texto="Conte o que sua empresa precisa e indique o prazo de pagamento desejado. O acesso será necessário somente depois, para acompanhar o trabalho e trocar mensagens com a equipe." /><section className="conteudo-publico pagina-form"><FormularioSolicitacao servicoInicial={servicoInicial} /></section><RodapePublico /></main>;
 }

@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import { CabecalhoPublico } from '../../componentes/cabecalho-publico';
 import { RodapePublico } from '../../componentes/rodape-publico';
+import { SetoresIndustria } from '../../componentes/setores-industria';
 import { VideoPublico } from '../../componentes/video-publico';
 import { equipamentosPublicos } from '../../lib/equipamentos';
-import { servicosOficiais } from '../../lib/servicos';
 import '../publico.css';
 
 const servicos = [
@@ -19,10 +19,7 @@ export default function Catalogo() {
     <main>
       <CabecalhoPublico titulo="Serviços e equipamentos" texto="Conheça as tecnologias disponíveis no Centro e encontre o caminho mais adequado para o seu desafio de medição." />
       <section className="conteudo-publico">
-        <section className="servicos-oficiais" aria-labelledby="titulo-servicos-oficiais">
-          <div className="cabecalho-lista-servicos"><div><p className="sobrelinha"><span /> PORTFÓLIO DO CENTRO</p><h2 id="titulo-servicos-oficiais">Serviços do Centro de Excelência em Metrologia SENAI ZEISS</h2></div><p>Selecione uma necessidade para iniciar a solicitação. Caso o desafio combine mais de um serviço, descreva o objetivo completo no formulário.</p></div>
-          <div className="grade-servicos-oficiais">{servicosOficiais.map((servico, indice) => <article key={servico.slug}><span>{String(indice + 1).padStart(2, '0')}</span><div><h3>{servico.titulo}</h3><p>{servico.resumo}</p><a href={`/solicitar?servico=${servico.slug}`}>Solicitar este serviço <b aria-hidden="true">→</b></a></div></article>)}</div>
-        </section>
+        <SetoresIndustria />
 
         <section className="tecnologias-centro" aria-labelledby="titulo-tecnologias">
           <div className="cabecalho-tecnologias"><p className="sobrelinha"><span /> TECNOLOGIAS</p><h2 id="titulo-tecnologias">Três áreas tecnológicas apoiam esse portfólio.</h2></div>

@@ -23,6 +23,10 @@ Autorização está no banco, não apenas na interface. O token identifica usuá
 
 Homologação e produção têm bancos, buckets, chaves, URLs e remetentes distintos. Produção usa a região Supabase disponível mais próxima do Brasil. A camada de dados local é apenas demonstrativa e nunca recebe registros reais.
 
+O formulário público é acessível sem autenticação, mas sua persistência real permanece desativada na homologação pública para evitar coleta acidental. A ativação em produção exigirá endpoint protegido por Turnstile e limite de uso, CNPJ cifrado, Storage privado e aviso jurídico aprovado. Depois da triagem, a equipe cria ou aprova o vínculo do contato com a empresa; somente então o mesmo login libera acompanhamento e mensagens por RLS/RPC.
+
+O portal não integra o Nectar. A versão gerada internamente é uma pré-proposta simples; a proposta oficial continua no processo institucional do SENAI.
+
 O seed de homologação usa somente valores sintéticos identificados por `massa_sintetica_v1`. Fontes restritas podem orientar uma carga real futura, executada por processo autorizado fora do Git, mas seus valores não são copiados para código, testes ou seeds.
 
 ## Disponibilidade e recuperação

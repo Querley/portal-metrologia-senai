@@ -28,6 +28,24 @@
 .grade-servicos-oficiais h3 { margin:2px 0 10px; color:var(--azul-escuro); font-size:18px; line-height:1.3; }
 .grade-servicos-oficiais p { margin:0; color:var(--muted); font-size:12px; line-height:1.65; }
 .grade-servicos-oficiais a { display:inline-flex; gap:9px; margin-top:auto; padding-top:18px; color:var(--azul); font-size:10px; font-weight:800; }
+.setores-industria { width:100%; }
+.abas-setores { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:38px; }
+.abas-setores button { min-height:92px; display:flex; align-items:center; gap:12px; padding:18px; color:#416274; background:white; border:1px solid var(--borda); cursor:pointer; text-align:left; font-size:13px; font-weight:750; transition:.2s ease; }
+.abas-setores button:hover,.abas-setores button[aria-selected='true'] { color:var(--azul-escuro); background:#e9f6fa; border-color:#55b8d1; box-shadow:inset 0 -3px var(--ciano); }
+.abas-setores button svg { flex:none; color:var(--azul); }
+.painel-setor { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); min-height:560px; margin-top:12px; overflow:hidden; background:#f5f9fa; border:1px solid var(--borda); }
+.midia-setor { position:relative; min-height:560px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#061f30; }
+.midia-setor img,.midia-setor video { width:100%; height:100%; object-fit:contain; }
+.midia-setor > span { position:absolute; left:16px; bottom:16px; max-width:calc(100% - 32px); padding:10px 12px; color:white; background:rgba(4,35,52,.86); font-size:12px; }
+.conteudo-setor { padding:42px; }
+.conteudo-setor h3 { margin:16px 0 12px; color:var(--azul-escuro); font-size:clamp(24px,2.6vw,36px); line-height:1.2; }
+.conteudo-setor > p:not(.sobrelinha) { color:var(--muted); font-size:14px; line-height:1.65; }
+.conteudo-setor h4 { margin:28px 0 10px; color:#31576b; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+.conteudo-setor ul { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:0 0 20px; padding:0; list-style:none; }
+.conteudo-setor li a { height:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 12px; color:#244d62; background:white; border:1px solid #d7e5ea; font-size:12px; line-height:1.35; }
+.conteudo-setor li a:hover { color:var(--azul); border-color:#83bfd2; }
+.conteudo-setor li svg { flex:none; }
+.conteudo-setor small { color:#667e8b; font-size:12px; line-height:1.5; }
 .tecnologias-centro { margin-top:96px; padding-top:75px; border-top:1px solid var(--borda); }
 .cabecalho-tecnologias { max-width:760px; margin-bottom:38px; }
 .cabecalho-tecnologias h2 { font-size:clamp(31px,3.6vw,48px); }
@@ -57,7 +75,7 @@
 .grade-equipamentos-detalhada article > div > span { color:var(--muted); font-size:12px; line-height:1.65; }
 .link-equipamento { display:inline-flex; align-items:center; gap:10px; margin-top:auto; padding-top:22px; color:var(--azul); font-size:11px; font-weight:800; }
 .foto-equipamentos { position:relative; height:510px; margin:28px 0 0; overflow:hidden; background:#e6eef2; }
-.foto-equipamentos img, .foto-equipamentos video { width:100%; height:100%; object-fit:cover; }
+.foto-equipamentos img, .foto-equipamentos video { width:100%; height:100%; object-fit:contain; background:#061f30; }
 .foto-equipamentos figcaption { position:absolute; left:18px; bottom:18px; padding:10px 13px; color:white; background:rgba(4,35,52,.82); font-size:10px; }
 .servico-personalizado { display:flex; align-items:center; justify-content:space-between; gap:50px; margin-top:90px; padding:42px; color:white; background:linear-gradient(120deg,#07304a,#075d82); }
 .servico-personalizado h2 { color:white; font-size:clamp(28px,3vw,42px); }
@@ -136,17 +154,27 @@
   .catalogo-grade,.grade-equipamentos-detalhada { grid-template-columns:1fr 1fr; }
   .catalogo-grade article:last-child { grid-column:1/-1; }
   .cabecalho-lista-servicos,.titulo-equipamentos,.introducao-equipamento { grid-template-columns:1fr; gap:28px; }
+  .abas-setores { grid-template-columns:1fr 1fr; }
+  .painel-setor { grid-template-columns:1fr; }
+  .midia-setor { min-height:0; aspect-ratio:16/9; }
   .servico-personalizado,.fluxo-solicitacao-equipamento { align-items:flex-start; flex-direction:column; }
   .carrossel-palco { min-height:500px; }
   .laboratorio-real > .carrossel .carrossel-palco { min-height:500px; }
 }
 @media (max-width:700px) {
+  .sobrelinha { font-size:12px; }
   .navegacao-simples { min-height:66px; padding:0 18px; }
   .navegacao-simples .marca-oficial { width:min(225px,62vw); }
   .cabecalho-publico-conteudo { padding:46px 20px 50px; }
   .topo .marca-oficial { width:min(225px,62vw); }
   .catalogo-grade,.grade-equipamentos-detalhada,.grade-informacoes-equipamento { grid-template-columns:1fr; }
   .grade-servicos-oficiais { grid-template-columns:1fr; }
+  .abas-setores { grid-template-columns:1fr; }
+  .abas-setores button { min-height:68px; font-size:14px; }
+  .conteudo-setor { padding:28px 20px; }
+  .conteudo-setor > p:not(.sobrelinha),.conteudo-setor small { font-size:14px; }
+  .conteudo-setor ul { grid-template-columns:1fr; }
+  .conteudo-setor li a { min-height:48px; font-size:14px; }
   .catalogo-grade article:last-child { grid-column:auto; }
   .conteudo-publico,.pagina-equipamento { padding:56px 20px 76px; }
   .pagina-form { padding:48px 20px 72px; }
@@ -167,4 +195,7 @@
   .grade-form { grid-template-columns:1fr; }
   .campo-largo { grid-column:auto; }
   .formulario-solicitacao fieldset { padding:25px 18px; }
+  .grade-equipamentos-detalhada p,.link-equipamento,.migalhas,.carrossel-miniaturas button,.grade-informacoes-equipamento li,.privacidade p,.privacidade li { font-size:14px; }
+  .grade-equipamentos-detalhada article > div > span,.catalogo-grade p:not(.sobrelinha),.catalogo-grade ul,.servico-personalizado p:not(.sobrelinha),.fluxo-solicitacao-equipamento p:not(.sobrelinha) { font-size:14px; }
+  .carrossel-legenda strong,.carrossel-legenda span,.carrossel-carregando,.foto-equipamentos figcaption,.introducao-equipamento aside a,.introducao-equipamento aside p { font-size:12px; }
 }

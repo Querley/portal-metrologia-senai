@@ -10,7 +10,7 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202608270012` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `007` corrige o gatilho compartilhado de origem sem remover histórico; `008` e `009` acrescentam aprovação interna; `010` e `011` protegem devolução, rejeição, reenvio e publicação exclusiva do Administrador; `012` permite ao autor corrigir rascunho ou proposta devolvida com recálculo no servidor.
+As migrations `202608220001` até `202608270012` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `007` corrige o gatilho compartilhado de origem sem remover histórico; `008` e `009` acrescentam aprovação interna; `010` e `011` protegem devolução, rejeição, reenvio e publicação exclusiva do Administrador; `012` permite ao autor corrigir rascunho ou proposta devolvida com recálculo no servidor. A migration `202608280013` está preparada na branch de desenvolvimento, mas ainda não deve ser considerada aplicada até a validação explícita no SQL Editor.
 
 ## Dados e autorização
 
@@ -57,5 +57,18 @@ A interface autenticada de custos-hora entrega:
 Os perfis internos seguem hierarquia cumulativa: Validador faz tudo que Técnico faz; Administrador faz tudo que Validador faz. Técnico, Validador e Administrador podem criar, corrigir e enviar os próprios orçamentos. Validador e Administrador podem aprovar, devolver ou rejeitar orçamentos em validação; devolução e rejeição exigem justificativa auditada.
 
 A aprovação permanece distinta da publicação. Somente Administrador pode executar `aprovada → publicada`, e o servidor bloqueia a transição enquanto não existirem PDF privado e hash imutável. A geração do PDF, o aceite externo e clientes reais permanecem fora do recorte atual.
+
+## Próxima validação de homologação
+
+A migration `202608280013` acrescenta dados mínimos da pré-proposta (destinatário e prazo de pagamento), etapas visuais, ciência versionada de privacidade e RPCs do cliente. Ela limita o primeiro teste externo à origem `demonstracao`. Depois de aplicada, deve ser criado um usuário sintético separado, vinculado a uma empresa demonstrativa e testado para confirmar:
+
+1. ausência de perfil interno;
+2. leitura somente da empresa vinculada;
+3. impossibilidade de visualizar custos, margens e rascunhos;
+4. leitura apenas de pré-proposta emitida e etapas visíveis;
+5. envio de mensagem apenas na própria solicitação;
+6. registro do aviso de privacidade sem alterar função ou empresa.
+
+O formulário público continua sem persistência na homologação publicada. Isso é intencional: evita que visitantes depositem CNPJ, contatos ou arquivos reais em uma base demonstrativa.
 
 Custos reais só serão carregados no futuro projeto de produção por processo privado e auditado. A planilha restrita e seus valores nunca entram no Git nem na homologação.

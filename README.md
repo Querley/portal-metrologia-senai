@@ -4,7 +4,9 @@ Plataforma web para solicitar, orçar e acompanhar serviços de metrologia, comp
 
 ## Estado atual
 
-O repositório contém uma experiência pública responsiva, painel demonstrativo, contratos e cálculos do domínio, migrações Supabase, massa sintética e documentação de produto. A homologação já usa autenticação e persistência reais no Supabase, com três perfis internos sintéticos, RLS validada, custos-hora versionados e rascunhos demonstrativos de orçamento persistentes; produção continua separada e ainda não foi provisionada.
+O repositório contém uma experiência pública responsiva, painel demonstrativo, contratos e cálculos do domínio, migrações Supabase, massa sintética e documentação de produto. A homologação já usa autenticação e persistência reais no Supabase, com três perfis internos sintéticos, RLS validada, custos-hora versionados e pré-propostas demonstrativas persistentes; produção continua separada e ainda não foi provisionada.
+
+O recorte de 28 de agosto acrescenta descoberta por setores, solicitação sem login, dados mínimos da pré-proposta, VLibras e uma área demonstrativa do cliente com etapas e mensagens. O documento emitido pelo laboratório é uma pré-proposta; a proposta oficial é criada no Nectar, sem integração com este portal. A migration `202608280013` permanece pendente de aplicação e teste em homologação.
 
 ## Executar
 

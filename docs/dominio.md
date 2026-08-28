@@ -4,7 +4,9 @@
 
 - `origem` é obrigatória em solicitações, propostas, serviços, lições, mensagens, indicadores e recomendações.
 - Cliente externo nunca acumula perfil interno.
-- Toda proposta publicada congela itens, custos, taxas, câmbio, moeda e PDF.
+- Toda pré-proposta emitida congela itens, custos, taxas, câmbio, moeda e PDF.
+- A pré-proposta do laboratório não é a proposta oficial do SENAI. O Nectar produz o documento oficial e não integra este sistema.
+- A pré-proposta contém no mínimo destinatário, valor e prazo de pagamento desejado pelo cliente.
 - Custo realizado usa a taxa válida no início real.
 - Validador e Administrador podem consultar custos-hora; somente Administrador pode cadastrar uma nova vigência ou encerrar a vigente.
 - Perfis internos são cumulativos: Validador herda as capacidades do Técnico; Administrador herda as capacidades do Validador.
@@ -15,14 +17,22 @@
 
 ## Estados
 
-- Proposta: `rascunho | devolvida → em_validacao → aprovada → publicada → aceita | recusada | expirada`; durante a validação, a proposta também pode ir para `devolvida` ou `rejeitada`. Uma nova versão torna a anterior `substituida`.
+- Pré-proposta: `rascunho | devolvida → em_validacao → aprovada → publicada → aceita | recusada | expirada`; `publicada` significa emitida ao cliente pelo laboratório. Durante a validação, também pode ir para `devolvida` ou `rejeitada`. Uma rejeição exige uma nova proposta; uma nova versão torna a anterior `substituida`.
 - Serviço: `planejado → em_execucao → concluido`; cancelamento preserva histórico.
 - Lição: `rascunho → em_validacao → formalizada → superada`.
 - Conteúdo: `rascunho → publicado → arquivado`; restauração cria nova versão.
 
 Transições fora desses caminhos só podem ocorrer por função privilegiada e auditada.
 
-A aprovação não publica a proposta. Somente Administrador promove `aprovada` para `publicada`, e apenas depois da geração do PDF privado com hash imutável. `rejeitada` representa decisão interna; `recusada` representa a decisão posterior do cliente sobre uma versão publicada.
+A aprovação não emite a pré-proposta. Somente Administrador promove `aprovada` para `publicada`, e apenas depois da geração do PDF privado com hash imutável. `rejeitada` representa decisão interna e exige nova proposta; `recusada` representa a decisão posterior do cliente sobre uma versão emitida.
+
+## Área do cliente
+
+- A solicitação inicial é pública e não exige conta.
+- O acompanhamento exige usuário autenticado e vínculo empresarial previamente aprovado.
+- Cliente externo nunca vê rascunhos internos, custos ou margens; vê somente pré-proposta emitida, etapas marcadas como visíveis e mensagens da própria empresa.
+- Cada etapa tem ordem, estado `a_fazer | em_andamento | concluida`, progresso de 0 a 100 e data de atualização.
+- A ciência do aviso de privacidade registra versão e data no vínculo empresarial.
 
 ## Cálculos
 

@@ -26,6 +26,18 @@
 - [ ] fluxo vertical persistente `orçar → executar → comparar → aprender → recomendar`;
 - [ ] projeto Supabase de produção, usuários internos reais e carga privada de custos reais.
 
+## Recorte iniciado em 28 de agosto de 2026
+
+- [x] descoberta pública reorganizada por setores, mantendo os dez serviços técnicos filtrados;
+- [x] formulário sem login com CNPJ, empresa, necessidade simplificada e prazo de pagamento;
+- [x] diferencial ZEISS, contato por e-mail provisório, copyright e integração VLibras;
+- [x] mídia ajustada para preservar o enquadramento e tipografia móvel revisada;
+- [x] área demonstrativa do cliente com aviso de privacidade, etapas visuais e mensagens;
+- [x] migration preparada para destinatário/prazo da pré-proposta, vínculo externo e etapas com RLS;
+- [ ] validar a migration `202608280013` no Supabase de homologação e testar com um usuário Cliente sintético;
+- [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
+- [ ] gerar, armazenar e assinar o hash do PDF da pré-proposta; o Nectar permanece fora do escopo.
+
 ## Dependências institucionais
 
 - [ ] Aprovar nome, marca e textos jurídicos.
