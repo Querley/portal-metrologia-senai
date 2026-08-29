@@ -54,6 +54,8 @@ for each row execute function validar_origem_etapa_execucao();
 
 alter table etapas_execucao enable row level security;
 
+revoke all on table etapas_execucao from public, anon;
+
 create policy "etapas visiveis aos participantes"
 on etapas_execucao for select to authenticated
 using (
