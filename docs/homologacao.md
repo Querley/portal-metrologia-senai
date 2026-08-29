@@ -1,6 +1,6 @@
 # Homologação Supabase
 
-## Estado validado em 27 de agosto de 2026
+## Estado validado em 29 de agosto de 2026
 
 O site publicado está conectado ao projeto Supabase de homologação. O login por e-mail foi testado com sucesso pelo mantenedor usando Administrador e Validador. O perfil Técnico também está provisionado e teve suas autorizações validadas em transação revertida:
 
@@ -10,7 +10,7 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202608270012` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `007` corrige o gatilho compartilhado de origem sem remover histórico; `008` e `009` acrescentam aprovação interna; `010` e `011` protegem devolução, rejeição, reenvio e publicação exclusiva do Administrador; `012` permite ao autor corrigir rascunho ou proposta devolvida com recálculo no servidor. A migration `202608280013` está preparada na branch de desenvolvimento, mas ainda não deve ser considerada aplicada até a validação explícita no SQL Editor.
+As migrations `202608220001` até `202608280013` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `007` corrige o gatilho compartilhado de origem sem remover histórico; `008` e `009` acrescentam aprovação interna; `010` e `011` protegem devolução, rejeição, reenvio e publicação exclusiva do Administrador; `012` permite ao autor corrigir rascunho ou proposta devolvida com recálculo no servidor; `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do cliente.
 
 ## Dados e autorização
 
@@ -29,6 +29,8 @@ As migrations `202608220001` até `202608270012` estão aplicadas e registradas 
 - Técnico foi testado criando e enviando um orçamento sintético em transação revertida; a RLS ocultou os custos-hora protegidos e não deixou resíduo.
 - Devolução, reenvio, rejeição e publicação foram testados por perfil em transação revertida. Validador não publicou; Administrador foi bloqueado sem PDF/hash e publicou somente após o documento sintético estar marcado como imutável.
 - A revisão da proposta devolvida foi testada com recálculo protegido: somente o autor alterou os campos, o Validador foi bloqueado e o teste foi revertido sem resíduos.
+- A migration `013` foi aplicada pelo SQL Editor e teve estrutura, histórico, RLS e permissões auditados. O papel `anon` não possui privilégios na tabela de etapas; `authenticated` acessa somente através das políticas definidas.
+- A criação e listagem de pré-proposta com destinatário e prazo de pagamento foram validadas pelo Administrador em transação revertida, sem deixar resíduos.
 - Reset demonstrativo nunca alcança a origem real.
 
 ## Retomada por outro chat
@@ -60,7 +62,7 @@ A aprovação permanece distinta da publicação. Somente Administrador pode exe
 
 ## Próxima validação de homologação
 
-A migration `202608280013` acrescenta dados mínimos da pré-proposta (destinatário e prazo de pagamento), etapas visuais, ciência versionada de privacidade e RPCs do cliente. Ela limita o primeiro teste externo à origem `demonstracao`. Depois de aplicada, deve ser criado um usuário sintético separado, vinculado a uma empresa demonstrativa e testado para confirmar:
+A migration `202608280013` limita o primeiro teste externo à origem `demonstracao`. Como ela já está aplicada, o próximo passo é criar um usuário Cliente sintético separado, vinculá-lo a uma empresa demonstrativa e confirmar:
 
 1. ausência de perfil interno;
 2. leitura somente da empresa vinculada;

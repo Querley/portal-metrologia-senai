@@ -10,7 +10,7 @@
 - [ ] **11–12 set** — E2E, RLS, acessibilidade, backup, observabilidade, documentação e ensaio.
 - [ ] **13 set** — congelamento, verificação, tag e entrega.
 
-## Estado em 27 de agosto de 2026
+## Estado em 29 de agosto de 2026
 
 - [x] projeto Supabase de homologação conectado ao site publicado;
 - [x] login por e-mail sem autocadastro, com Administrador, Validador e Técnico sintéticos confirmados;
@@ -33,8 +33,9 @@
 - [x] diferencial ZEISS, contato por e-mail provisório, copyright e integração VLibras;
 - [x] mídia ajustada para preservar o enquadramento e tipografia móvel revisada;
 - [x] área demonstrativa do cliente com aviso de privacidade, etapas visuais e mensagens;
-- [x] migration preparada para destinatário/prazo da pré-proposta, vínculo externo e etapas com RLS;
-- [ ] validar a migration `202608280013` no Supabase de homologação e testar com um usuário Cliente sintético;
+- [x] migration aplicada para destinatário/prazo da pré-proposta, vínculo externo e etapas com RLS;
+- [x] validar estrutura, permissões e RPCs internas da migration `202608280013` no Supabase de homologação;
+- [ ] testar a área externa ponta a ponta com um usuário Cliente sintético;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
 - [ ] gerar, armazenar e assinar o hash do PDF da pré-proposta; o Nectar permanece fora do escopo.
 
