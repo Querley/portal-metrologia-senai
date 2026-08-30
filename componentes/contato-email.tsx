@@ -3,7 +3,7 @@
 import { Check, Copy, ExternalLink, Mail } from 'lucide-react';
 import { useState } from 'react';
 
-export const EMAIL_CONTATO_PROVISORIO = 'metrologia@exemplo.senai.br';
+export const EMAIL_CONTATO_PROVISORIO = 'querleyjuniorodriguesferreira@gmail.com';
 
 export function ContatoEmail() {
   const [copiado, setCopiado] = useState(false);
