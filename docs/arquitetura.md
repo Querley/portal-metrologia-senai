@@ -23,7 +23,7 @@ Autorização está no banco, não apenas na interface. O token identifica usuá
 
 Homologação e produção têm bancos, buckets, chaves, URLs e remetentes distintos. Produção usa a região Supabase disponível mais próxima do Brasil. A camada de dados local é apenas demonstrativa e nunca recebe registros reais.
 
-O formulário público é acessível sem autenticação, mas sua persistência real permanece desativada na homologação pública para evitar coleta acidental. A ativação em produção exigirá endpoint protegido por Turnstile e limite de uso, CNPJ cifrado, Storage privado e aviso jurídico aprovado. Depois da triagem, a equipe cria ou aprova o vínculo do contato com a empresa; somente então o mesmo login libera acompanhamento e mensagens por RLS/RPC.
+O formulário público é acessível sem autenticação. Na homologação, a RPC aceita somente e-mail sintético `.test`, fixa `origem = demonstracao`, aplica limites de tamanho e frequência, gera protocolo e guarda apenas o hash do token de ativação. Depois da autenticação com o mesmo e-mail, o token cria o perfil externo, a empresa demonstrativa, o vínculo aprovado e a solicitação; RLS/RPC liberam somente o acompanhamento daquela empresa. A persistência real continua desativada: produção exigirá endpoint protegido por Turnstile, CNPJ cifrado, Storage privado, convite institucional e aviso jurídico aprovado.
 
 O portal não integra o Nectar. A versão gerada internamente é uma pré-proposta simples; a proposta oficial continua no processo institucional do SENAI.
 

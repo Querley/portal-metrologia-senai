@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Check, CheckCircle2, Circle, Clock3, FileText, LogOut, MessageSquareText, RefreshCw, Send, ShieldCheck } from 'lucide-react';
+import { Check, CheckCircle2, Circle, Clock3, FileText, LogOut, MessageSquareText, RefreshCw, Send, ShieldCheck, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import { contextoClienteDemonstracao, mensagensClienteDemonstracao, solicitacoesClienteDemonstracao, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE } from '../lib/portal-cliente';
@@ -12,6 +12,7 @@ type Propriedades = {
   contexto?: ContextoCliente;
   demonstracao?: boolean;
   aoSair?: () => void | Promise<void>;
+  mensagemInicial?: string;
 };
 
 const estadoEtapa = {
@@ -24,13 +25,14 @@ function dataCurta(valor: string) {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(valor));
 }
 
-export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao, demonstracao = false, aoSair }: Propriedades) {
+export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao, demonstracao = false, aoSair, mensagemInicial = '' }: Propriedades) {
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoCliente[]>(demonstracao ? solicitacoesClienteDemonstracao : []);
   const [selecionadaId, setSelecionadaId] = useState(demonstracao ? solicitacoesClienteDemonstracao[0].id : '');
   const [mensagens, setMensagens] = useState<MensagemCliente[]>(demonstracao ? mensagensClienteDemonstracao : []);
   const [mensagemNova, setMensagemNova] = useState('');
   const [carregando, setCarregando] = useState(!demonstracao);
   const [erro, setErro] = useState('');
+  const [aviso, setAviso] = useState(mensagemInicial);
   const [aceitouPrivacidade, setAceitouPrivacidade] = useState(contexto.versao_aviso_privacidade === VERSAO_AVISO_PRIVACIDADE);
   const [aceitando, setAceitando] = useState(false);
 
@@ -91,10 +93,11 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   }
 
   return <main className="portal-cliente">
-    <header className="topo-cliente"><a href="/" aria-label="Voltar ao site"><MarcaOficial /></a><div><span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span><strong>{contexto.empresa_nome}</strong></div><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} /> Sair</button></header>
+    <header className="topo-cliente"><a href="/" aria-label="Voltar ao site"><MarcaOficial /></a><div><span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span><strong>{contexto.usuario_nome}</strong><small>{contexto.empresa_nome}</small></div><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} /> Sair</button></header>
     <div className="conteudo-cliente">
-      <section className="boas-vindas-cliente"><div><p className="sobrelinha"><span /> ACOMPANHAMENTO DIGITAL</p><h1>Veja o andamento sem termos complicados.</h1><p>A solicitação pode ser enviada sem login. Esta área protegida começa depois do convite da equipe e reúne etapas, pré-proposta e mensagens.</p></div><div className="selo-seguranca-cliente"><ShieldCheck size={22} /><span><strong>Acesso restrito à sua empresa</strong><small>Dados de homologação permanecem demonstrativos.</small></span></div></section>
+      <section className="boas-vindas-cliente"><div><p className="sobrelinha"><span /> ACOMPANHAMENTO DIGITAL</p><h1>Veja o andamento sem termos complicados.</h1><p>A solicitação pode ser enviada sem login. Esta área protegida reúne apenas os trabalhos, etapas, pré-propostas e mensagens permitidos ao seu perfil Cliente.</p></div><aside className="resumo-acesso-cliente"><div className="selo-seguranca-cliente"><ShieldCheck size={22} /><span><strong>Acesso restrito à sua empresa</strong><small>Dados de homologação permanecem demonstrativos.</small></span></div><div className="perfil-cliente"><UserRound size={20} /><span><small>Perfil</small><strong>{contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'}</strong><em>{contexto.usuario_email}</em></span></div></aside></section>
 
+      {aviso && <div className="aviso-cliente sucesso" role="status">{aviso}<button type="button" onClick={() => setAviso('')} aria-label="Fechar aviso">×</button></div>}
       {erro && <div className="aviso-cliente erro" role="alert">{erro}</div>}
       {carregando && <div className="aviso-cliente" role="status"><RefreshCw size={18} /> Carregando acompanhamento…</div>}
       {!carregando && solicitacoes.length === 0 && <section className="vazio-cliente"><FileText size={30} /><h2>Nenhum trabalho disponível ainda</h2><p>Quando a equipe vincular uma solicitação à sua empresa, o acompanhamento aparecerá aqui.</p><a className="botao" href="/solicitar">Fazer uma solicitação</a></section>}

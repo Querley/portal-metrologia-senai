@@ -61,6 +61,20 @@ export function PortalInterno() {
         setEstado('autenticado_interno');
         return;
       }
+
+      const tokenAtivacao = typeof window === 'undefined'
+        ? null
+        : new URLSearchParams(window.location.search).get('ativar');
+      if (tokenAtivacao) {
+        const { error: erroAtivacao } = await cliente.rpc('ativar_solicitacao_cliente_demonstrativa', {
+          token_ativacao: tokenAtivacao,
+        });
+        if (erroAtivacao) setMensagem(erroAtivacao.message || 'Não foi possível ativar a solicitação.');
+        else {
+          setMensagem('Solicitação vinculada à sua área Cliente.');
+          window.history.replaceState({}, '', '/portal');
+        }
+      }
       const contextoEncontrado = await buscarContextoCliente(cliente);
       setContextoCliente(contextoEncontrado);
       setEstado(contextoEncontrado ? 'autenticado_cliente' : 'sem_perfil');
@@ -111,7 +125,7 @@ export function PortalInterno() {
   }
 
   if (estado === 'autenticado_cliente' && contextoCliente) {
-    return <PortalCliente cliente={cliente!} contexto={contextoCliente} aoSair={sair} />;
+    return <PortalCliente cliente={cliente!} contexto={contextoCliente} aoSair={sair} mensagemInicial={mensagem} />;
   }
 
   return <TelaAcesso estado={estado} cliente={cliente} mensagem={mensagem} aoAutenticar={carregarPerfil} />;
@@ -138,7 +152,7 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar }: { estado: Estad
     setEnviando(false);
   }
 
-  return <main className="acesso-interno"><section className="cartao-acesso"><a href="/" aria-label="Voltar à página pública"><MarcaOficial /></a><span className="selo-acesso"><ShieldCheck size={15} /> Acesso protegido</span>{estado === 'carregando' && <><h1>Validando acesso</h1><p role="status">Aguarde enquanto confirmamos sua sessão e o tipo de acesso.</p></>}{estado === 'sem_configuracao' && <><h1>Integração de homologação pendente</h1><p>O acesso permanece fechado até a URL e a chave pública do Supabase de homologação serem configuradas.</p><a className="link-acesso" href="/portal/cliente-demonstracao">Ver demonstração da área do cliente</a></>}{estado === 'sem_perfil' && <><h1>Acesso ainda não vinculado</h1><p>Sua identidade foi confirmada, mas não há perfil interno nem vínculo aprovado com uma empresa. Clientes recebem esse vínculo por convite da equipe após a análise da solicitação.</p><button className="botao-acesso" type="button" onClick={() => void cliente?.auth.signOut()}>Sair</button></>}{estado === 'erro' && <><h1>Não foi possível validar o acesso</h1><p role="alert">{mensagem || 'A autenticação está temporariamente indisponível.'}</p><button className="botao-acesso" type="button" onClick={() => window.location.reload()}>Tentar novamente</button></>}{estado === 'anonimo' && <><h1>Entrar no Portal de Metrologia</h1><p>Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.</p><form onSubmit={entrar}><label htmlFor="email-interno">E-mail</label><input id="email-interno" type="email" autoComplete="username" required value={email} onChange={(evento) => setEmail(evento.target.value)} /><label htmlFor="senha-interna">Senha</label><input id="senha-interna" type="password" autoComplete="current-password" required value={senha} onChange={(evento) => setSenha(evento.target.value)} />{erro && <p className="erro-acesso" role="alert">{erro}</p>}<button className="botao-acesso" type="submit" disabled={enviando}><LockKeyhole size={16} />{enviando ? 'Validando…' : 'Entrar'}</button></form><a className="link-acesso" href="/solicitar">Fazer solicitação sem login</a><a className="link-acesso" href="/portal/cliente-demonstracao">Ver demonstração da área do cliente</a><a className="link-acesso" href="/portal/demonstracao">Abrir demonstração interna</a></>}</section></main>;
+  return <main className="acesso-interno"><section className="cartao-acesso"><a href="/" aria-label="Voltar à página pública"><MarcaOficial /></a><span className="selo-acesso"><ShieldCheck size={15} /> Acesso protegido</span>{estado === 'carregando' && <><h1>Validando acesso</h1><p role="status">Aguarde enquanto confirmamos sua sessão e o tipo de acesso.</p></>}{estado === 'sem_configuracao' && <><h1>Integração de homologação pendente</h1><p>O acesso permanece fechado até a URL e a chave pública do Supabase de homologação serem configuradas.</p><a className="link-acesso" href="/portal/cliente-demonstracao">Ver demonstração da área do cliente</a></>}{estado === 'sem_perfil' && <><h1>Acesso ainda não vinculado</h1><p>Sua identidade foi confirmada, mas não há perfil interno nem vínculo aprovado com uma empresa. Clientes recebem esse vínculo por convite da equipe após a análise da solicitação.</p>{mensagem && <p className="erro-acesso" role="alert">{mensagem}</p>}<button className="botao-acesso" type="button" onClick={() => void cliente?.auth.signOut()}>Sair</button></>}{estado === 'erro' && <><h1>Não foi possível validar o acesso</h1><p role="alert">{mensagem || 'A autenticação está temporariamente indisponível.'}</p><button className="botao-acesso" type="button" onClick={() => window.location.reload()}>Tentar novamente</button></>}{estado === 'anonimo' && <><h1>Entrar no Portal de Metrologia</h1><p>Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.</p><form onSubmit={entrar}><label htmlFor="email-interno">E-mail</label><input id="email-interno" type="email" autoComplete="username" required value={email} onChange={(evento) => setEmail(evento.target.value)} /><label htmlFor="senha-interna">Senha</label><input id="senha-interna" type="password" autoComplete="current-password" required value={senha} onChange={(evento) => setSenha(evento.target.value)} />{erro && <p className="erro-acesso" role="alert">{erro}</p>}<button className="botao-acesso" type="submit" disabled={enviando}><LockKeyhole size={16} />{enviando ? 'Validando…' : 'Entrar'}</button></form><a className="link-acesso" href="/solicitar">Fazer solicitação sem login</a><a className="link-acesso" href="/portal/cliente-demonstracao">Ver demonstração da área do cliente</a><a className="link-acesso" href="/portal/demonstracao">Abrir demonstração interna</a></>}</section></main>;
 }
 
 function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perfil; cliente: SupabaseClient; aoAtualizar: (perfil: Perfil) => void; aoVoltar: () => void }) {

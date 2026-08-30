@@ -141,9 +141,12 @@
 .lista-arquivos button { color:#8c4850; background:transparent; border:0; }
 .aceite { display:flex; align-items:flex-start; gap:10px; color:#4c6877; font-size:13px; line-height:1.5; }
 .formulario-solicitacao > .botao { justify-self:start; }
+.campo-armadilha { position:absolute!important; width:1px!important; height:1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; }
 .confirmacao { max-width:600px; margin:60px auto; padding:45px; text-align:center; color:#1a7952; border:1px solid #b9dfc8; background:#f2fbf5; }
 .confirmacao h1 { color:#123e2b; font-size:34px; }
 .confirmacao p { color:#547062; line-height:1.7; }
+.confirmacao .botao { margin-top:10px; }
+.link-confirmacao { display:block; width:max-content; margin:20px auto 0; color:#176b8f; font-weight:750; text-decoration:underline; }
 .privacidade { max-width:800px; }
 .privacidade h2 { margin-top:42px; font-size:25px; }
 .privacidade p,.privacidade li { color:var(--muted); line-height:1.75; font-size:13px; }

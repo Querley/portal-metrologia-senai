@@ -6,6 +6,8 @@ export type ContextoCliente = {
   empresa_nome: string;
   perfil: 'contato' | 'gestor_empresa';
   origem: 'demonstracao';
+  usuario_nome: string;
+  usuario_email: string;
   aceite_privacidade_em: string | null;
   versao_aviso_privacidade: string | null;
 };
@@ -45,6 +47,8 @@ export const contextoClienteDemonstracao: ContextoCliente = {
   empresa_nome: 'Indústria Horizonte — demonstração',
   perfil: 'contato',
   origem: 'demonstracao',
+  usuario_nome: 'Marina Costa',
+  usuario_email: 'cliente.hml@example.test',
   aceite_privacidade_em: null,
   versao_aviso_privacidade: null,
 };

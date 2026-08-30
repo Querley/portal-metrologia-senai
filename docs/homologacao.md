@@ -10,7 +10,7 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202608280013` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `007` corrige o gatilho compartilhado de origem sem remover histórico; `008` e `009` acrescentam aprovação interna; `010` e `011` protegem devolução, rejeição, reenvio e publicação exclusiva do Administrador; `012` permite ao autor corrigir rascunho ou proposta devolvida com recálculo no servidor; `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do cliente.
+As migrations `202608220001` até `202608290015` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada.
 
 ## Dados e autorização
 
@@ -31,6 +31,7 @@ As migrations `202608220001` até `202608280013` estão aplicadas e registradas 
 - A revisão da proposta devolvida foi testada com recálculo protegido: somente o autor alterou os campos, o Validador foi bloqueado e o teste foi revertido sem resíduos.
 - A migration `013` foi aplicada pelo SQL Editor e teve estrutura, histórico, RLS e permissões auditados. O papel `anon` não possui privilégios na tabela de etapas; `authenticated` acessa somente através das políticas definidas.
 - A criação e listagem de pré-proposta com destinatário e prazo de pagamento foram validadas pelo Administrador em transação revertida, sem deixar resíduos.
+- O fluxo `solicitação pública → token → perfil Gestor da empresa → área Cliente` foi validado com usuário sintético em transação revertida. E-mail divergente foi bloqueado e os testes deixaram zero entradas e zero usuários residuais.
 - Reset demonstrativo nunca alcança a origem real.
 
 ## Retomada por outro chat
@@ -62,7 +63,7 @@ A aprovação permanece distinta da publicação. Somente Administrador pode exe
 
 ## Próxima validação de homologação
 
-A migration `202608280013` limita o primeiro teste externo à origem `demonstracao`. Como ela já está aplicada, o próximo passo é criar um usuário Cliente sintético separado, vinculá-lo a uma empresa demonstrativa e confirmar:
+As migrations `013` a `015` limitam o primeiro teste externo à origem `demonstracao`. O banco já passou pelo teste transacional completo; o próximo passo é provisionar uma conta Cliente sintética pelo fluxo oficial de Auth e repetir pela interface publicada para confirmar:
 
 1. ausência de perfil interno;
 2. leitura somente da empresa vinculada;
@@ -71,6 +72,6 @@ A migration `202608280013` limita o primeiro teste externo à origem `demonstrac
 5. envio de mensagem apenas na própria solicitação;
 6. registro do aviso de privacidade sem alterar função ou empresa.
 
-O formulário público continua sem persistência na homologação publicada. Isso é intencional: evita que visitantes depositem CNPJ, contatos ou arquivos reais em uma base demonstrativa.
+O formulário público persiste somente entradas demonstrativas e rejeita e-mails que não terminem em `.test`. Arquivos selecionados não são enviados antes da autenticação. Isso impede que a homologação seja apresentada como canal para CNPJ, contatos ou documentos reais.
 
 Custos reais só serão carregados no futuro projeto de produção por processo privado e auditado. A planilha restrita e seus valores nunca entram no Git nem na homologação.

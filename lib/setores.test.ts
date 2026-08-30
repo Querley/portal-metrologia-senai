@@ -21,4 +21,13 @@ describe('setores da indústria', () => {
     const oficiais = new Set(servicosOficiais.map((servico) => servico.slug));
     expect(setoresIndustria.flatMap((setor) => setor.servicos).every((slug) => oficiais.has(slug))).toBe(true);
   });
+
+  it('usa a Bosello e mantém mapa de desgaste no setor aeronáutico', () => {
+    const aeronautico = setoresIndustria.find((setor) => setor.slug === 'aeronautico');
+    expect(aeronautico?.midia).toMatchObject({
+      tipo: 'video',
+      src: '/videos/zeiss-bosello-max-operacao.mp4',
+    });
+    expect(aeronautico?.servicos).toContain('mapa-desgaste');
+  });
 });

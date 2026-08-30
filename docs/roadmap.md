@@ -29,13 +29,17 @@
 ## Recorte iniciado em 28 de agosto de 2026
 
 - [x] descoberta pública reorganizada por setores, mantendo os dez serviços técnicos filtrados;
+- [x] setor aeronáutico ajustado para vídeo Bosello e mapa de desgaste;
+- [ ] ampliar gradualmente as galerias setoriais com novas fotos e vídeos autorizados do laboratório;
 - [x] formulário sem login com CNPJ, empresa, necessidade simplificada e prazo de pagamento;
 - [x] diferencial ZEISS, contato por e-mail provisório, copyright e integração VLibras;
 - [x] mídia ajustada para preservar o enquadramento e tipografia móvel revisada;
 - [x] área demonstrativa do cliente com aviso de privacidade, etapas visuais e mensagens;
 - [x] migration aplicada para destinatário/prazo da pré-proposta, vínculo externo e etapas com RLS;
 - [x] validar estrutura, permissões e RPCs internas da migration `202608280013` no Supabase de homologação;
-- [ ] testar a área externa ponta a ponta com um usuário Cliente sintético;
+- [x] persistir solicitação pública estritamente sintética, gerar protocolo e ativar perfil externo pelo mesmo e-mail;
+- [x] validar o fluxo externo e o bloqueio de e-mail divergente em transação revertida, sem resíduos;
+- [ ] repetir o fluxo pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
 - [ ] gerar, armazenar e assinar o hash do PDF da pré-proposta; o Nectar permanece fora do escopo.
 

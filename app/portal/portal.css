@@ -22,6 +22,7 @@
 .topo-cliente > div { display:flex; flex-direction:column; gap:4px; margin-left:auto; text-align:right; }
 .topo-cliente > div span { color:#0873b3; font-size:11px; font-weight:850; letter-spacing:.12em; }
 .topo-cliente > div strong { color:#294d60; font-size:14px; }
+.topo-cliente > div small { color:#6b828e; font-size:11px; }
 .topo-cliente > button { display:inline-flex; align-items:center; gap:7px; padding:10px 14px; color:#31576b; background:white; border:1px solid #c9d9e0; cursor:pointer; font-size:13px; font-weight:700; }
 .conteudo-cliente { width:min(1240px,calc(100% - 44px)); margin:0 auto; padding:46px 0 90px; }
 .boas-vindas-cliente { display:grid; grid-template-columns:1fr auto; align-items:end; gap:60px; }
@@ -32,8 +33,17 @@
 .selo-seguranca-cliente span,.selo-seguranca-cliente strong,.selo-seguranca-cliente small { display:block; }
 .selo-seguranca-cliente strong { font-size:13px; }
 .selo-seguranca-cliente small { margin-top:5px; color:#557266; font-size:12px; line-height:1.4; }
+.resumo-acesso-cliente { display:grid; gap:10px; width:min(100%,360px); }
+.perfil-cliente { display:flex; align-items:center; gap:13px; padding:16px 20px; color:#214f66; background:white; border:1px solid #cbdce3; }
+.perfil-cliente svg { flex:none; color:#0873b3; }
+.perfil-cliente span,.perfil-cliente small,.perfil-cliente strong,.perfil-cliente em { display:block; }
+.perfil-cliente small { color:#69818d; font-size:11px; }
+.perfil-cliente strong { margin-top:3px; font-size:13px; }
+.perfil-cliente em { margin-top:3px; color:#6b818d; font-size:11px; font-style:normal; }
 .aviso-cliente { display:flex; align-items:center; gap:9px; margin-top:24px; padding:15px 17px; color:#255f78; background:#e6f5fa; border:1px solid #b9dce7; font-size:14px; }
 .aviso-cliente.erro { color:#8b3028; background:#fff1ef; border-color:#e8c4c0; }
+.aviso-cliente.sucesso { justify-content:space-between; color:#21664c; background:#e8f7ee; border-color:#b8ddc6; }
+.aviso-cliente.sucesso button { color:inherit; background:transparent; border:0; cursor:pointer; font-size:20px; }
 .vazio-cliente { margin-top:36px; padding:70px 24px; text-align:center; background:white; border:1px solid #d7e3e9; }
 .vazio-cliente svg { color:#1689b5; }
 .vazio-cliente h2 { margin:16px 0 8px; font-size:28px; }
