@@ -1,3 +1,5 @@
+import { servicosOficiais } from './servicos';
+
 export const VERSAO_AVISO_PRIVACIDADE = '2026-08-28-v1';
 
 export type ContextoCliente = {
@@ -40,6 +42,40 @@ export type MensagemCliente = {
   conteudo: string;
   criada_em: string;
 };
+
+export function tituloServicoCliente(slug: string): string {
+  return servicosOficiais.find((servico) => servico.slug === slug)?.titulo
+    ?? slug.replaceAll('-', ' ');
+}
+
+export function situacaoEtapasCliente(etapas: EtapaCliente[]): { titulo: string; descricao: string } {
+  if (etapas.length === 0) {
+    return {
+      titulo: 'Aguardando triagem',
+      descricao: 'A equipe ainda não cadastrou as etapas deste trabalho.',
+    };
+  }
+
+  const emAndamento = etapas.find((etapa) => etapa.estado === 'em_andamento');
+  if (emAndamento) {
+    return {
+      titulo: emAndamento.titulo,
+      descricao: `Etapa em andamento: ${emAndamento.progresso}% concluída.`,
+    };
+  }
+
+  if (etapas.every((etapa) => etapa.estado === 'concluida')) {
+    return {
+      titulo: 'Serviço concluído',
+      descricao: 'Todas as etapas visíveis foram concluídas pela equipe.',
+    };
+  }
+
+  return {
+    titulo: 'Aguardando início',
+    descricao: 'As etapas foram planejadas, mas a execução ainda não começou.',
+  };
+}
 
 export const contextoClienteDemonstracao: ContextoCliente = {
   vinculo_id: 'demo-vinculo',

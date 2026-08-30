@@ -34,7 +34,9 @@
 - [x] formulário sem login com CNPJ, empresa, necessidade simplificada e prazo de pagamento;
 - [x] diferencial ZEISS, contato por e-mail provisório, copyright e integração VLibras;
 - [x] mídia ajustada para preservar o enquadramento e tipografia móvel revisada;
+- [x] navegação pública unificada entre desktop e mobile, contato por e-mail com alternativas e área interna responsiva sem sobreposição;
 - [x] área demonstrativa do cliente com aviso de privacidade, etapas visuais e mensagens;
+- [x] resumo do Cliente separado entre pré-proposta e andamento, inclusive estado vazio sem falso “Concluído”;
 - [x] migration aplicada para destinatário/prazo da pré-proposta, vínculo externo e etapas com RLS;
 - [x] validar estrutura, permissões e RPCs internas da migration `202608280013` no Supabase de homologação;
 - [x] persistir solicitação pública estritamente sintética, gerar protocolo e ativar perfil externo pelo mesmo e-mail;

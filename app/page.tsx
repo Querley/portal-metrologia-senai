@@ -6,6 +6,7 @@ import { RodapePublico } from '../componentes/rodape-publico';
 import { SetoresIndustria } from '../componentes/setores-industria';
 import { VideoPublico } from '../componentes/video-publico';
 import type { MidiaEquipamento } from '../lib/equipamentos';
+import { acoesNavegacaoPublica, linksNavegacaoPublica } from '../lib/navegacao-publica';
 import './publico.css';
 
 const etapas = [
@@ -31,11 +32,11 @@ export default function Home() {
       <header className="topo">
         <a className="marca" href="#inicio" aria-label="Centro de Excelência em Metrologia SENAI ZEISS — início"><MarcaOficial /></a>
         <nav aria-label="Navegação principal">
-          <a href="/catalogo">Serviços</a><a href="#como-funciona">Como funciona</a><a href="/catalogo#equipamentos">Equipamentos</a><a href="#institucional">Institucional</a>
+          {linksNavegacaoPublica.map((item) => <a href={item.href} key={item.href}>{item.rotulo}</a>)}
         </nav>
         <div className="acoes-topo">
           <button className="idioma" type="button" aria-label="Selecionar idioma">PT <span aria-hidden="true">⌄</span></button>
-          <a className="entrar" href="/portal">Entrar</a><a className="botao botao-menor" href="/solicitar">Solicitar orçamento</a>
+          {acoesNavegacaoPublica.map((item) => <a className={'destaque' in item && item.destaque ? 'botao botao-menor' : 'entrar'} href={item.href} key={item.href}>{item.rotulo}</a>)}
         </div>
         <MenuMovel />
       </header>
@@ -79,7 +80,7 @@ export default function Home() {
         <p className="sobrelinha"><span /> COMECE AGORA</p><h2>Tem um desafio de medição?</h2><p>Conte o que você precisa. Nossa equipe analisa os dados e prepara uma proposta sob medida.</p><a className="botao" href="/solicitar">Solicitar orçamento <span aria-hidden="true">→</span></a><small>Ambiente de demonstração — nenhum dado real é exibido nesta versão.</small>
       </section>
       <div id="contato"><ContatoEmail /></div>
-      <div id="institucional"><RodapePublico /></div>
+      <RodapePublico />
     </main>
   );
 }

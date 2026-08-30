@@ -16,7 +16,7 @@
 .menu-movel summary::-webkit-details-marker { display:none; }
 .menu-movel nav { position:absolute; top:calc(100% + 10px); right:0; width:min(310px,calc(100vw - 36px)); display:grid!important; gap:0!important; overflow:hidden; color:#21495f!important; background:white; border:1px solid #cbdce3; box-shadow:0 20px 50px rgba(3,35,53,.22); z-index:100; }
 .menu-movel nav a { padding:15px 17px; border-bottom:1px solid #e4ecef; font-size:12px; }
-.menu-movel nav a:last-child { color:white!important; background:var(--azul); border:0; }
+.menu-movel nav a.destaque { color:white!important; background:var(--azul); border:0; }
 
 .cabecalho-lista-servicos { display:grid; grid-template-columns:1.25fr .75fr; align-items:end; gap:70px; }
 .cabecalho-lista-servicos > p { margin:0 0 5px; color:var(--muted); font-size:13px; line-height:1.7; }
@@ -201,4 +201,11 @@
   .grade-equipamentos-detalhada p,.link-equipamento,.migalhas,.carrossel-miniaturas button,.grade-informacoes-equipamento li,.privacidade p,.privacidade li { font-size:14px; }
   .grade-equipamentos-detalhada article > div > span,.catalogo-grade p:not(.sobrelinha),.catalogo-grade ul,.servico-personalizado p:not(.sobrelinha),.fluxo-solicitacao-equipamento p:not(.sobrelinha) { font-size:14px; }
   .carrossel-legenda strong,.carrossel-legenda span,.carrossel-carregando,.foto-equipamentos figcaption,.introducao-equipamento aside a,.introducao-equipamento aside p { font-size:12px; }
+}
+@media (max-width:420px) {
+  .menu-movel nav { max-height:calc(100vh - 72px); overflow-y:auto; }
+  .menu-movel nav a { min-height:48px; display:flex; align-items:center; font-size:14px; line-height:1.3; }
+  .cabecalho-publico-conteudo h1 { font-size:clamp(34px,13vw,48px); }
+  .pagina-form,.conteudo-publico,.pagina-equipamento { padding-inline:16px; }
+  .carrossel-miniaturas { grid-template-columns:1fr; }
 }

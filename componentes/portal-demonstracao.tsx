@@ -61,7 +61,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
       <aside className="barra-lateral">
         <a className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /><span className="marca-interna-legenda">Gestão de serviços e conhecimento</span></a>
         <div className="faixa-demo"><span>{autenticado ? 'HOMOLOGAÇÃO' : 'DEMONSTRAÇÃO LOCAL'}</span><small>Dados sintéticos isolados</small></div>
-        <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" />{rotulo}{id === 'mensagens' && <b>2</b>}</button>)}</nav>
+        <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button aria-label={rotulo} title={rotulo} className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" /><span className="menu-rotulo">{rotulo}</span>{id === 'mensagens' && <b>2</b>}</button>)}</nav>
         <div className="atalhos"><button type="button" onClick={aoAbrirPerfil} disabled={!aoAbrirPerfil}><Settings size={17} />Meu perfil</button><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} />Sair</button></div>
         <div className="usuario"><span>{nomeUsuario.split(/\s+/).slice(0, 2).map((parte) => parte[0]).join('').toUpperCase()}</span><div><strong>{nomeUsuario}</strong><small>{perfilUsuario}</small></div></div>
       </aside>

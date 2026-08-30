@@ -29,7 +29,7 @@ export default function Catalogo() {
         </section>
 
         <section className="equipamentos" id="equipamentos">
-          <div className="titulo-equipamentos"><div><p className="sobrelinha"><span /> INFRAESTRUTURA ATUAL</p><h2>Seis equipamentos, páginas próprias e aplicações complementares.</h2></div><p>A CONTURA não integra o parque atual. Capacidades e disponibilidade de cada equipamento são confirmadas pela equipe antes da proposta.</p></div>
+          <div className="titulo-equipamentos"><div><p className="sobrelinha"><span /> INFRAESTRUTURA ATUAL</p><h2>Seis equipamentos e aplicações complementares.</h2></div><p>Capacidades e disponibilidade de cada equipamento são confirmadas pela equipe antes da proposta.</p></div>
           <div className="grade-equipamentos-detalhada">
             {equipamentosPublicos.map((equipamento) => <article key={equipamento.slug}><a className="foto-card-equipamento" href={`/equipamentos/${equipamento.slug}`}><Image src={equipamento.imagemPrincipal} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" alt={equipamento.nome} /></a><div><p>{equipamento.categoria}</p><h3><a href={`/equipamentos/${equipamento.slug}`}>{equipamento.nome}</a></h3><span>{equipamento.resumo}</span><a className="link-equipamento" href={`/equipamentos/${equipamento.slug}`}>Conhecer equipamento <b aria-hidden="true">→</b></a></div></article>)}
           </div>
