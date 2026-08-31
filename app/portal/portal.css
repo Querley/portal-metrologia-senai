@@ -146,6 +146,10 @@
 .solicitacao-vinculada span { color:#567282; font-size:9px; overflow-wrap:anywhere; }
 .solicitacao-vinculada button { display:inline-flex; align-items:center; gap:5px; flex:none; padding:7px 9px; color:#4d6878; background:white; border:1px solid #bfd0d9; font-size:8px; font-weight:800; cursor:pointer; }
 .solicitacao-vinculada button:focus-visible { outline:3px solid rgba(8,117,183,.2); outline-offset:2px; }
+.baixar-pdf-cliente { display:inline-flex; align-items:center; gap:6px; align-self:flex-start; margin-top:13px; padding:8px 10px; color:#006da9; background:white; border:1px solid #8abbd4; font:inherit; font-size:9px; font-weight:800; cursor:pointer; }
+.baixar-pdf-cliente:hover { background:#eff8fc; }
+.baixar-pdf-cliente:focus-visible { outline:3px solid rgba(8,117,183,.2); outline-offset:2px; }
+.baixar-pdf-cliente:disabled { cursor:wait; opacity:.65; }
 
 @media (max-width:650px) {
   .solicitacao-vinculada { align-items:flex-start; flex-direction:column; }

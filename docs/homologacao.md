@@ -7,11 +7,11 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 - `admin.hml@example.test` — Administrador;
 - `validador.hml@example.test` — Validador;
 - `tecnico.hml@example.test` — Técnico;
-- `cliente.hml@example.test` — conta Cliente sintética provisionada; ativação pela interface ainda pendente de validação do mantenedor.
+- `cliente.hml@example.test` — conta Cliente sintética ativada e validada pela interface pelo mantenedor.
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202608310017` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador; `017` cria a pré-proposta sobre a solicitação Cliente existente e impede uma segunda proposta ativa para o mesmo atendimento.
+As migrations `202608220001` até `202608310019` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador; `017` cria a pré-proposta sobre a solicitação Cliente existente e impede uma segunda proposta ativa para o mesmo atendimento; `018` cria o bucket privado e as funções protegidas do PDF; `019` impede sua substituição depois que caminho e SHA-256 forem congelados.
 
 ## Dados e autorização
 
@@ -36,6 +36,8 @@ As migrations `202608220001` até `202608310017` estão aplicadas e registradas 
 - Cliente e equipe possuem conversa persistente na solicitação ativada. O Cliente continua limitado à própria empresa; Técnico, Validador e Administrador acessam somente conversas da origem demonstrativa.
 - O Cliente pode atualizar apenas o próprio nome por função protegida, sem alterar vínculo, função ou empresa.
 - Técnico, Validador e Administrador podem iniciar uma pré-proposta a partir da fila. O servidor valida a solicitação ativada, reaproveita empresa e protocolo, congela o custo vigente e registra auditoria.
+- Somente Administrador envia e congela o PDF privado de uma versão aprovada; depois disso, a política de Storage impede sobrescrita.
+- O Cliente recebe a referência somente após a emissão e apenas para a própria empresa. O navegador recalcula o SHA-256 do download e bloqueia divergências.
 - Reset demonstrativo nunca alcança a origem real.
 
 ## Retomada por outro chat
@@ -63,15 +65,15 @@ A interface autenticada de custos-hora entrega:
 
 Os perfis internos seguem hierarquia cumulativa: Validador faz tudo que Técnico faz; Administrador faz tudo que Validador faz. Técnico, Validador e Administrador podem criar, corrigir e enviar os próprios orçamentos. Validador e Administrador podem aprovar, devolver ou rejeitar orçamentos em validação; devolução e rejeição exigem justificativa auditada.
 
-A aprovação permanece distinta da publicação. Somente Administrador pode executar `aprovada → publicada`, e o servidor bloqueia a transição enquanto não existirem PDF privado e hash imutável. A geração do PDF, o aceite externo e clientes reais permanecem fora do recorte atual.
+A aprovação permanece distinta da publicação. Somente Administrador pode gerar e congelar o PDF e executar `aprovada → publicada`; o servidor bloqueia a transição enquanto não existirem arquivo privado e hash imutável. O aceite externo e clientes reais permanecem fora do recorte atual.
 
 ## Validação pela interface e próximo passo
 
 O mantenedor confirmou pela interface publicada que o Cliente cria solicitações e troca mensagens com a equipe. As migrations `013` a `017` mantêm esse fluxo limitado à origem `demonstracao`. A próxima validação deve confirmar:
 
-1. criação de uma única pré-proposta ligada ao mesmo protocolo, sem duplicar a solicitação;
-2. envio, aprovação e emissão dessa pré-proposta pelos perfis internos autorizados;
-3. leitura pelo Cliente somente depois da emissão, sem custos, margens ou rascunhos;
+1. geração e download interno do PDF pelo Administrador depois da aprovação;
+2. bloqueio da emissão enquanto o PDF não estiver congelado;
+3. emissão e download íntegro pelo Cliente, sem custos, margens ou rascunhos;
 4. futura inicialização da execução e exibição apenas das etapas visíveis.
 
 O formulário público persiste somente entradas demonstrativas e rejeita e-mails que não terminem em `.test`. Arquivos selecionados não são enviados antes da autenticação. Isso impede que a homologação seja apresentada como canal para CNPJ, contatos ou documentos reais.

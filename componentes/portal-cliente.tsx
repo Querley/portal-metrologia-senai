@@ -1,9 +1,10 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Check, CheckCircle2, Circle, Clock3, FileText, LogOut, MessageSquareText, Pencil, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Check, CheckCircle2, Circle, Clock3, Download, FileText, LogOut, MessageSquareText, Pencil, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
+import { calcularSha256Hex } from '../lib/pre-proposta-pdf';
 import { contextoClienteDemonstracao, mensagensClienteDemonstracao, situacaoEtapasCliente, solicitacoesClienteDemonstracao, tituloServicoCliente, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE } from '../lib/portal-cliente';
 import { MarcaOficial } from './marca-oficial';
 
@@ -39,6 +40,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [nomeEmEdicao, setNomeEmEdicao] = useState(contexto.usuario_nome);
   const [editandoPerfil, setEditandoPerfil] = useState(false);
   const [salvandoPerfil, setSalvandoPerfil] = useState(false);
+  const [baixandoPdf, setBaixandoPdf] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!cliente || demonstracao) return;
@@ -129,6 +131,42 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setSalvandoPerfil(false);
   }
 
+  async function baixarPdfPreProposta() {
+    if (!selecionada || selecionada.valor_pre_proposta === null) return;
+    if (!cliente || demonstracao) {
+      setAviso('Na demonstração local, o PDF não é persistido. Use a homologação autenticada para testar o download protegido.');
+      return;
+    }
+    setBaixandoPdf(true);
+    setErro('');
+    const { data: referencias, error: erroReferencia } = await cliente.rpc('obter_pdf_pre_proposta_cliente', { solicitacao: selecionada.id });
+    const referencia = (referencias?.[0] ?? null) as { caminho: string; hash_sha256: string } | null;
+    if (erroReferencia || !referencia) {
+      setErro('O PDF emitido ainda não está disponível para download.');
+      setBaixandoPdf(false);
+      return;
+    }
+    const { data, error } = await cliente.storage.from('pre-propostas').download(referencia.caminho);
+    if (error || !data) setErro('Não foi possível baixar o PDF protegido.');
+    else {
+      const bytes = new Uint8Array(await data.arrayBuffer());
+      const hashCalculado = await calcularSha256Hex(bytes);
+      if (hashCalculado !== referencia.hash_sha256) {
+        setErro('A verificação de integridade do PDF falhou. O download foi bloqueado; avise a equipe do laboratório.');
+        setBaixandoPdf(false);
+        return;
+      }
+      const url = URL.createObjectURL(data);
+      const ancora = document.createElement('a');
+      ancora.href = url;
+      ancora.download = `pre-proposta-SOL-${String(selecionada.codigo).padStart(4, '0')}.pdf`;
+      ancora.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      setAviso(`PDF verificado: ${referencia.hash_sha256.slice(0, 12)}…`);
+    }
+    setBaixandoPdf(false);
+  }
+
   return <main className="portal-cliente">
     <header className="topo-cliente"><a href="/" aria-label="Voltar ao site"><MarcaOficial /></a><div><span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span><strong>{nomeCliente}</strong><small>{contexto.empresa_nome}</small></div><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} /> Sair</button></header>
     <div className="conteudo-cliente">
@@ -143,7 +181,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         <aside className="lista-projetos-cliente"><h2>Seus trabalhos</h2>{solicitacoes.map((item) => <button key={item.id} type="button" className={item.id === selecionada.id ? 'ativo' : ''} onClick={() => setSelecionadaId(item.id)}><span>SOL-{String(item.codigo).padStart(4, '0')}</span><strong>{tituloServicoCliente(item.servico)}</strong><small>Recebida em {dataCurta(item.criada_em)}</small></button>)}</aside>
         <section className="detalhe-projeto-cliente">
           <header><div><span>SOL-{String(selecionada.codigo).padStart(4, '0')}</span><h2>{tituloServicoCliente(selecionada.servico)}</h2></div><button type="button" onClick={() => void carregar()}><RefreshCw size={15} /> Atualizar</button></header>
-          <div className="resumo-projeto-cliente"><article><small>Pré-proposta comercial</small><strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong><span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : (selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise')}</span></article><article><small>Andamento do serviço</small><strong>{situacaoAtual?.titulo}</strong><span>{situacaoAtual?.descricao}</span></article></div>
+          <div className="resumo-projeto-cliente"><article><small>Pré-proposta comercial</small><strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong><span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : (selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise')}</span>{selecionada.valor_pre_proposta !== null && <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}><Download size={15} /> {baixandoPdf ? 'Baixando…' : 'Baixar PDF emitido'}</button>}</article><article><small>Andamento do serviço</small><strong>{situacaoAtual?.titulo}</strong><span>{situacaoAtual?.descricao}</span></article></div>
           <section className="acompanhamento-etapas"><div className="titulo-bloco-cliente"><div><h3>Etapas do trabalho</h3><p>A porcentagem indica o progresso da etapa atual, não do contrato inteiro.</p></div></div>{selecionada.etapas.length === 0 ? <div className="sem-etapas-cliente"><Clock3 size={22} /><div><strong>A equipe ainda está preparando o acompanhamento</strong><p>As etapas aparecerão aqui depois da triagem inicial da solicitação.</p></div></div> : <ol>{selecionada.etapas.map((etapa) => { const { rotulo, Icone } = estadoEtapa[etapa.estado]; return <li key={etapa.id} className={`etapa-${etapa.estado}`}><span className="icone-etapa"><Icone size={20} /></span><div><header><strong>{etapa.titulo}</strong><b>{rotulo}{etapa.estado === 'em_andamento' ? ` (${etapa.progresso}%)` : ''}</b></header>{etapa.descricao && <p>{etapa.descricao}</p>}<div className="barra-progresso" aria-label={`${etapa.progresso}% concluído`}><i style={{ width: `${etapa.progresso}%` }} /></div><small>Atualizado em {dataCurta(etapa.atualizada_em)}</small></div></li>; })}</ol>}</section>
           <section className="mensagens-cliente"><div className="titulo-bloco-cliente"><div><h3><MessageSquareText size={18} /> Mensagens</h3><p>Canal vinculado a esta solicitação.</p></div></div><div className="lista-mensagens-cliente">{mensagens.map((mensagem) => <p key={mensagem.id} className={mensagem.autor_proprio ? 'propria' : ''}>{mensagem.conteudo}<small>{dataCurta(mensagem.criada_em)}</small></p>)}</div><form onSubmit={enviarMensagem}><label htmlFor="mensagem-cliente" className="sr-only">Nova mensagem</label><input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para a equipe" /><button type="submit"><Send size={16} /> Enviar</button></form></section>
         </section>

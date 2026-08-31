@@ -47,7 +47,8 @@
 - [x] validar o fluxo externo e o bloqueio de e-mail divergente em transação revertida, sem resíduos;
 - [x] repetir solicitação, ativação e mensagens pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
-- [ ] gerar, armazenar e assinar o hash do PDF da pré-proposta; o Nectar permanece fora do escopo.
+- [x] gerar e armazenar o PDF em bucket privado, congelar seu SHA-256 e verificar a integridade no download; o Nectar permanece fora do escopo;
+- [ ] validar pela interface publicada o ciclo `aprovar → gerar PDF → emitir → baixar como Cliente`;
 - [ ] iniciar a execução somente a partir da pré-proposta emitida e permitir que a equipe atualize etapas visíveis ao Cliente;
 
 ## Dependências institucionais
