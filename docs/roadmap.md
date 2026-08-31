@@ -43,10 +43,12 @@
 - [x] substituir a lista interna estática pela fila persistente de solicitações sintéticas recebidas pelo site;
 - [x] substituir as mensagens estáticas pelo canal bidirecional persistente entre Cliente e equipe, com atualização em tempo real;
 - [x] permitir que o Cliente atualize o próprio nome sem alterar função, empresa ou escopo de acesso;
+- [x] vincular a pré-proposta interna à solicitação ativada do Cliente, preservando protocolo, empresa, destinatário e auditoria;
 - [x] validar o fluxo externo e o bloqueio de e-mail divergente em transação revertida, sem resíduos;
-- [ ] repetir o fluxo pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
+- [x] repetir solicitação, ativação e mensagens pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
 - [ ] gerar, armazenar e assinar o hash do PDF da pré-proposta; o Nectar permanece fora do escopo.
+- [ ] iniciar a execução somente a partir da pré-proposta emitida e permitir que a equipe atualize etapas visíveis ao Cliente;
 
 ## Dependências institucionais
 

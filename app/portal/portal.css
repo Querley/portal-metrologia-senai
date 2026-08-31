@@ -138,6 +138,18 @@
 .painel-solicitacoes-persistentes { display:grid; gap:14px; }
 .tabela-solicitacoes-persistentes td small { display:block; max-width:310px; margin-top:5px; color:#6a818d; font-size:9px; line-height:1.45; white-space:normal; }
 .tabela-solicitacoes-persistentes td:nth-child(2) small { max-width:360px; }
+.tabela-solicitacoes-persistentes .acao-orcamento { display:inline-flex; }
+.solicitacao-vinculada { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:8px; padding:13px; border:1px solid #9bcde4; background:#eff9fd; }
+.solicitacao-vinculada div { display:grid; gap:3px; min-width:0; }
+.solicitacao-vinculada small { color:#0875b7!important; font-size:8px!important; font-weight:850; letter-spacing:.07em; }
+.solicitacao-vinculada strong { color:#173548; font-size:11px; }
+.solicitacao-vinculada span { color:#567282; font-size:9px; overflow-wrap:anywhere; }
+.solicitacao-vinculada button { display:inline-flex; align-items:center; gap:5px; flex:none; padding:7px 9px; color:#4d6878; background:white; border:1px solid #bfd0d9; font-size:8px; font-weight:800; cursor:pointer; }
+.solicitacao-vinculada button:focus-visible { outline:3px solid rgba(8,117,183,.2); outline-offset:2px; }
+
+@media (max-width:650px) {
+  .solicitacao-vinculada { align-items:flex-start; flex-direction:column; }
+}
 .painel-mensagens-persistentes { display:grid; gap:14px; }
 .mensagens-reais { min-height:620px; }
 .mensagens-reais .baloes { display:flex; flex-direction:column; gap:10px; overflow-y:auto; }

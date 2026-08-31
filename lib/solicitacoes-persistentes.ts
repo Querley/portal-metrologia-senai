@@ -2,6 +2,24 @@ import type { PerfilInterno } from './contratos';
 
 export type EstadoSolicitacaoPublica = 'recebida' | 'ativada' | 'descartada';
 
+export type SolicitacaoParaPreProposta = {
+  id: string;
+  codigo: number;
+  nome: string;
+  email: string;
+  empresa: string;
+  necessidade: string;
+  estado: EstadoSolicitacaoPublica;
+  criado_em: string;
+  solicitacao_id: string | null;
+  servico_id: string | null;
+  descricao: string;
+  quantidade: number;
+  prazo_pagamento_dias: number;
+  tem_pre_proposta: boolean;
+  estado_pre_proposta: string | null;
+};
+
 const apresentacoes = {
   recebida: {
     rotulo: 'Aguardando ativação',
@@ -22,6 +40,12 @@ const apresentacoes = {
 
 export function podeConsultarSolicitacoes(perfil: PerfilInterno): boolean {
   return perfil === 'tecnico' || perfil === 'validador' || perfil === 'administrador';
+}
+
+export function podeCriarPrePropostaDaSolicitacao(solicitacao: SolicitacaoParaPreProposta): boolean {
+  return solicitacao.estado === 'ativada'
+    && Boolean(solicitacao.solicitacao_id)
+    && !solicitacao.tem_pre_proposta;
 }
 
 export function apresentarEstadoSolicitacao(estado: string) {

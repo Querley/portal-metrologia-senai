@@ -1,29 +1,18 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { BriefcaseBusiness, RefreshCw, ShieldCheck } from 'lucide-react';
+import { BriefcaseBusiness, FileText, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
 import { rotuloNecessidadeCliente } from '../lib/solicitacao';
-import { apresentarEstadoSolicitacao, podeConsultarSolicitacoes } from '../lib/solicitacoes-persistentes';
-
-type SolicitacaoPersistente = {
-  id: string;
-  codigo: number;
-  nome: string;
-  email: string;
-  empresa: string;
-  necessidade: string;
-  estado: string;
-  criado_em: string;
-};
+import { apresentarEstadoSolicitacao, podeConsultarSolicitacoes, podeCriarPrePropostaDaSolicitacao, type SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
 
 function formatarDataHora(valor: string): string {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(valor));
 }
 
-export function SolicitacoesPersistentes({ cliente, perfil }: { cliente: SupabaseClient; perfil: PerfilInterno }) {
-  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoPersistente[]>([]);
+export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta }: { cliente: SupabaseClient; perfil: PerfilInterno; aoCriarPreProposta: (solicitacao: SolicitacaoParaPreProposta) => void }) {
+  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoParaPreProposta[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -41,7 +30,7 @@ export function SolicitacoesPersistentes({ cliente, perfil }: { cliente: Supabas
         ? 'Seu perfil não tem autorização para consultar solicitações.'
         : 'Não foi possível consultar as solicitações da homologação.');
     } else {
-      setSolicitacoes((data ?? []) as SolicitacaoPersistente[]);
+      setSolicitacoes((data ?? []) as SolicitacaoParaPreProposta[]);
     }
     setCarregando(false);
   }, [cliente, perfil]);
@@ -63,9 +52,10 @@ export function SolicitacoesPersistentes({ cliente, perfil }: { cliente: Supabas
 
     {!carregando && !erro && <section className="bloco tabela-solicitacoes-persistentes">
       <header><div><h2>Fila de atendimento</h2><p>{solicitacoes.length} {solicitacoes.length === 1 ? 'solicitação encontrada' : 'solicitações encontradas'}.</p></div><span className="estado estado-formalizada">Acesso protegido</span></header>
-      <div className="tabela-wrap"><table><thead><tr><th>Protocolo</th><th>Empresa e contato</th><th>Necessidade</th><th>Recebida</th><th>Acesso do Cliente</th></tr></thead><tbody>{solicitacoes.map((solicitacao) => {
+      <div className="tabela-wrap"><table><thead><tr><th>Protocolo</th><th>Empresa e contato</th><th>Necessidade</th><th>Recebida</th><th>Acesso do Cliente</th><th>Atendimento</th></tr></thead><tbody>{solicitacoes.map((solicitacao) => {
         const estado = apresentarEstadoSolicitacao(solicitacao.estado);
-        return <tr key={solicitacao.id}><td><strong>DEM-SOL-{String(solicitacao.codigo).padStart(4, '0')}</strong></td><td><strong>{solicitacao.empresa}</strong><small>{solicitacao.nome} · {solicitacao.email}</small></td><td>{rotuloNecessidadeCliente(solicitacao.necessidade)}</td><td>{formatarDataHora(solicitacao.criado_em)}</td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span><small>{estado.descricao}</small></td></tr>;
+        const podeCriar = podeCriarPrePropostaDaSolicitacao(solicitacao);
+        return <tr key={solicitacao.id}><td><strong>DEM-SOL-{String(solicitacao.codigo).padStart(4, '0')}</strong></td><td><strong>{solicitacao.empresa}</strong><small>{solicitacao.nome} · {solicitacao.email}</small></td><td>{rotuloNecessidadeCliente(solicitacao.necessidade)}</td><td>{formatarDataHora(solicitacao.criado_em)}</td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span><small>{estado.descricao}</small></td><td>{podeCriar ? <button className="acao-orcamento" type="button" onClick={() => aoCriarPreProposta(solicitacao)}><FileText size={14} /> Criar pré-proposta</button> : solicitacao.tem_pre_proposta ? <><span className="estado estado-orçada">Pré-proposta criada</span><small>Estado: {String(solicitacao.estado_pre_proposta ?? 'em processamento').replaceAll('_', ' ')}</small></> : <small>Disponível depois da ativação pelo Cliente.</small>}</td></tr>;
       })}</tbody></table></div>
       {solicitacoes.length === 0 && <div className="estado-vazio"><BriefcaseBusiness size={18} /><span>Nenhuma solicitação sintética foi recebida nesta origem.</span></div>}
     </section>}

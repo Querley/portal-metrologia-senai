@@ -10,6 +10,7 @@ import { casosDemonstracao, equipamentosDemonstracao } from '../lib/dados-demons
 import { podeConsultarOrcamentos, podeCriarRascunhoOrcamento } from '../lib/orcamentos-persistentes';
 import { recomendarHoras } from '../lib/recomendacao';
 import { sanitizarParaIa } from '../lib/seguranca-ia';
+import type { SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
 import { CustosEquipamento } from './custos-equipamento';
 import { MarcaOficial } from './marca-oficial';
 import { MensagensPersistentes } from './mensagens-persistentes';
@@ -47,6 +48,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
   const [horas, setHoras] = useState(12);
   const [lucro, setLucro] = useState(25);
   const [assistenteAberto, setAssistenteAberto] = useState(false);
+  const [solicitacaoParaOrcamento, setSolicitacaoParaOrcamento] = useState<SolicitacaoParaPreProposta | null>(null);
   const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const custosDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarCustos(perfilInterno));
   const orcamentosPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarOrcamentos(perfilInterno));
@@ -78,10 +80,10 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
 
         {secao === 'visao' && <VisaoGeral setSecao={setSecao} />}
         {secao === 'solicitacoes' && (solicitacoesPersistentesDisponiveis && clienteSupabase && perfilInterno
-          ? <SolicitacoesPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
+          ? <SolicitacoesPersistentes cliente={clienteSupabase} perfil={perfilInterno} aoCriarPreProposta={(solicitacao) => { setSolicitacaoParaOrcamento(solicitacao); setSecao('orcamentos'); }} />
           : <TabelaSolicitacoes />)}
         {secao === 'orcamentos' && (orcamentosPersistentesDisponiveis && clienteSupabase && perfilInterno
-          ? <OrcamentosPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
+          ? <OrcamentosPersistentes cliente={clienteSupabase} perfil={perfilInterno} solicitacaoInicial={solicitacaoParaOrcamento} aoConsumirSolicitacao={() => setSolicitacaoParaOrcamento(null)} />
           : <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />)}
         {secao === 'servicos' && <Execucao />}
         {secao === 'conhecimento' && <Conhecimento recomendacao={recomendacao} />}
