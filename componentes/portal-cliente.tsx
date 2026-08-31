@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Check, CheckCircle2, Circle, Clock3, FileText, LogOut, MessageSquareText, RefreshCw, Send, ShieldCheck, UserRound } from 'lucide-react';
+import { Check, CheckCircle2, Circle, Clock3, FileText, LogOut, MessageSquareText, Pencil, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import { contextoClienteDemonstracao, mensagensClienteDemonstracao, situacaoEtapasCliente, solicitacoesClienteDemonstracao, tituloServicoCliente, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE } from '../lib/portal-cliente';
@@ -35,6 +35,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [aviso, setAviso] = useState(mensagemInicial);
   const [aceitouPrivacidade, setAceitouPrivacidade] = useState(contexto.versao_aviso_privacidade === VERSAO_AVISO_PRIVACIDADE);
   const [aceitando, setAceitando] = useState(false);
+  const [nomeCliente, setNomeCliente] = useState(contexto.usuario_nome);
+  const [nomeEmEdicao, setNomeEmEdicao] = useState(contexto.usuario_nome);
+  const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [salvandoPerfil, setSalvandoPerfil] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!cliente || demonstracao) return;
@@ -58,6 +62,14 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
 
   useEffect(() => { queueMicrotask(() => void carregar()); }, [carregar]);
   useEffect(() => { queueMicrotask(() => void carregarMensagens(selecionadaId)); }, [carregarMensagens, selecionadaId]);
+  useEffect(() => {
+    if (!cliente || demonstracao || !selecionadaId) return;
+    const canal = cliente
+      .channel(`mensagens-cliente-${selecionadaId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `solicitacao_id=eq.${selecionadaId}` }, () => void carregarMensagens(selecionadaId))
+      .subscribe();
+    return () => { void cliente.removeChannel(canal); };
+  }, [carregarMensagens, cliente, demonstracao, selecionadaId]);
 
   const selecionada = useMemo(() => solicitacoes.find((item) => item.id === selecionadaId) ?? solicitacoes[0], [selecionadaId, solicitacoes]);
   const situacaoAtual = useMemo(() => selecionada ? situacaoEtapasCliente(selecionada.etapas) : null, [selecionada]);
@@ -93,10 +105,34 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setMensagemNova('');
   }
 
+  async function salvarPerfil(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const nome = nomeEmEdicao.trim();
+    if (nome.length < 2 || nome.length > 120) {
+      setErro('Informe um nome entre 2 e 120 caracteres.');
+      return;
+    }
+    setSalvandoPerfil(true);
+    setErro('');
+    if (cliente && !demonstracao) {
+      const { data, error } = await cliente.rpc('atualizar_nome_cliente', { nome });
+      if (error || typeof data !== 'string') {
+        setErro('Não foi possível atualizar o nome do perfil.');
+        setSalvandoPerfil(false);
+        return;
+      }
+    }
+    setNomeCliente(nome);
+    setNomeEmEdicao(nome);
+    setEditandoPerfil(false);
+    setAviso('Nome do perfil atualizado. Função e empresa permanecem protegidas.');
+    setSalvandoPerfil(false);
+  }
+
   return <main className="portal-cliente">
-    <header className="topo-cliente"><a href="/" aria-label="Voltar ao site"><MarcaOficial /></a><div><span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span><strong>{contexto.usuario_nome}</strong><small>{contexto.empresa_nome}</small></div><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} /> Sair</button></header>
+    <header className="topo-cliente"><a href="/" aria-label="Voltar ao site"><MarcaOficial /></a><div><span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span><strong>{nomeCliente}</strong><small>{contexto.empresa_nome}</small></div><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} /> Sair</button></header>
     <div className="conteudo-cliente">
-      <section className="boas-vindas-cliente"><div><p className="sobrelinha"><span /> ACOMPANHAMENTO DIGITAL</p><h1>Veja o andamento sem termos complicados.</h1><p>A solicitação pode ser enviada sem login. Esta área protegida reúne apenas os trabalhos, etapas, pré-propostas e mensagens permitidos ao seu perfil Cliente.</p></div><aside className="resumo-acesso-cliente"><div className="selo-seguranca-cliente"><ShieldCheck size={22} /><span><strong>Acesso restrito à sua empresa</strong><small>Dados de homologação permanecem demonstrativos.</small></span></div><div className="perfil-cliente"><UserRound size={20} /><span><small>Perfil</small><strong>{contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'}</strong><em>{contexto.usuario_email}</em></span></div></aside></section>
+      <section className="boas-vindas-cliente"><div><p className="sobrelinha"><span /> ACOMPANHAMENTO DIGITAL</p><h1>Veja o andamento sem termos complicados.</h1><p>A solicitação pode ser enviada sem login. Esta área protegida reúne apenas os trabalhos, etapas, pré-propostas e mensagens permitidos ao seu perfil Cliente.</p></div><aside className="resumo-acesso-cliente"><div className="selo-seguranca-cliente"><ShieldCheck size={22} /><span><strong>Acesso restrito à sua empresa</strong><small>Dados de homologação permanecem demonstrativos.</small></span></div><div className="perfil-cliente"><UserRound size={20} /><span><small>Perfil</small><strong>{contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'}</strong><em>{contexto.usuario_email}</em></span><button type="button" onClick={() => setEditandoPerfil(true)} aria-label="Editar nome do perfil"><Pencil size={15} /></button></div>{editandoPerfil && <form className="editar-perfil-cliente" onSubmit={salvarPerfil}><label htmlFor="nome-cliente">Nome de exibição</label><input id="nome-cliente" required minLength={2} maxLength={120} value={nomeEmEdicao} onChange={(evento) => setNomeEmEdicao(evento.target.value)} /><div><button type="button" onClick={() => { setNomeEmEdicao(nomeCliente); setEditandoPerfil(false); }}><X size={15} /> Cancelar</button><button type="submit" disabled={salvandoPerfil}><Save size={15} /> {salvandoPerfil ? 'Salvando…' : 'Salvar'}</button></div></form>}</aside></section>
 
       {aviso && <div className="aviso-cliente sucesso" role="status">{aviso}<button type="button" onClick={() => setAviso('')} aria-label="Fechar aviso">×</button></div>}
       {erro && <div className="aviso-cliente erro" role="alert">{erro}</div>}

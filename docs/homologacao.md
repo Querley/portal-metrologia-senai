@@ -1,16 +1,17 @@
 # Homologação Supabase
 
-## Estado validado em 29 de agosto de 2026
+## Estado validado em 31 de agosto de 2026
 
 O site publicado está conectado ao projeto Supabase de homologação. O login por e-mail foi testado com sucesso pelo mantenedor usando Administrador e Validador. O perfil Técnico também está provisionado e teve suas autorizações validadas em transação revertida:
 
 - `admin.hml@example.test` — Administrador;
 - `validador.hml@example.test` — Validador;
-- `tecnico.hml@example.test` — Técnico.
+- `tecnico.hml@example.test` — Técnico;
+- `cliente.hml@example.test` — conta Cliente sintética provisionada; ativação pela interface ainda pendente de validação do mantenedor.
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202608290015` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada.
+As migrations `202608220001` até `202608310016` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador.
 
 ## Dados e autorização
 
@@ -32,6 +33,8 @@ As migrations `202608220001` até `202608290015` estão aplicadas e registradas 
 - A migration `013` foi aplicada pelo SQL Editor e teve estrutura, histórico, RLS e permissões auditados. O papel `anon` não possui privilégios na tabela de etapas; `authenticated` acessa somente através das políticas definidas.
 - A criação e listagem de pré-proposta com destinatário e prazo de pagamento foram validadas pelo Administrador em transação revertida, sem deixar resíduos.
 - O fluxo `solicitação pública → token → perfil Gestor da empresa → área Cliente` foi validado com usuário sintético em transação revertida. E-mail divergente foi bloqueado e os testes deixaram zero entradas e zero usuários residuais.
+- Cliente e equipe possuem conversa persistente na solicitação ativada. O Cliente continua limitado à própria empresa; Técnico, Validador e Administrador acessam somente conversas da origem demonstrativa.
+- O Cliente pode atualizar apenas o próprio nome por função protegida, sem alterar vínculo, função ou empresa.
 - Reset demonstrativo nunca alcança a origem real.
 
 ## Retomada por outro chat
@@ -63,13 +66,13 @@ A aprovação permanece distinta da publicação. Somente Administrador pode exe
 
 ## Próxima validação de homologação
 
-As migrations `013` a `015` limitam o primeiro teste externo à origem `demonstracao`. O banco já passou pelo teste transacional completo; o próximo passo é provisionar uma conta Cliente sintética pelo fluxo oficial de Auth e repetir pela interface publicada para confirmar:
+As migrations `013` a `016` limitam o primeiro teste externo à origem `demonstracao`. A conta Cliente sintética já foi provisionada no Auth; o próximo passo é repetir pela interface publicada para confirmar:
 
 1. ausência de perfil interno;
 2. leitura somente da empresa vinculada;
 3. impossibilidade de visualizar custos, margens e rascunhos;
 4. leitura apenas de pré-proposta emitida e etapas visíveis;
-5. envio de mensagem apenas na própria solicitação;
+5. troca bidirecional de mensagens apenas na própria solicitação, inclusive atualização em tempo real;
 6. registro do aviso de privacidade sem alterar função ou empresa.
 
 O formulário público persiste somente entradas demonstrativas e rejeita e-mails que não terminem em `.test`. Arquivos selecionados não são enviados antes da autenticação. Isso impede que a homologação seja apresentada como canal para CNPJ, contatos ou documentos reais.

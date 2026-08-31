@@ -138,6 +138,34 @@
 .painel-solicitacoes-persistentes { display:grid; gap:14px; }
 .tabela-solicitacoes-persistentes td small { display:block; max-width:310px; margin-top:5px; color:#6a818d; font-size:9px; line-height:1.45; white-space:normal; }
 .tabela-solicitacoes-persistentes td:nth-child(2) small { max-width:360px; }
+.painel-mensagens-persistentes { display:grid; gap:14px; }
+.mensagens-reais { min-height:620px; }
+.mensagens-reais .baloes { display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+.mensagens-reais .baloes p { margin-block:0; }
+.mensagens-reais .conversa form button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; }
+.mensagens-reais .conversa form button:disabled { cursor:not-allowed; opacity:.6; }
+.conversa-vazia { margin:auto; color:#69818d; text-align:center; }
+.conversa-vazia svg { color:#1681b2; }
+.conversa-vazia strong { display:block; margin-top:8px; color:#244c60; font-size:13px; }
+.conversa-vazia p { width:auto!important; max-width:none!important; margin:4px 0 0!important; padding:0!important; color:#718792!important; background:transparent!important; border:0!important; }
+.perfil-cliente > button { align-self:center; margin-left:auto; padding:8px; color:#096fa4; background:#edf7fa; border:1px solid #c5e0e8; cursor:pointer; }
+.editar-perfil-cliente { display:grid; gap:8px; padding:14px 16px; background:white; border:1px solid #cbdce3; }
+.editar-perfil-cliente label { color:#526f7e; font-size:11px; font-weight:750; }
+.editar-perfil-cliente input { min-height:42px; padding:0 11px; color:#173d51; background:white; border:1px solid #b8cfd8; font-size:13px; }
+.editar-perfil-cliente > div { display:flex; justify-content:flex-end; gap:8px; }
+.editar-perfil-cliente button { display:inline-flex; align-items:center; gap:6px; min-height:38px; padding:0 11px; color:#24586f; background:white; border:1px solid #b9cfd8; cursor:pointer; font-size:11px; font-weight:750; }
+.editar-perfil-cliente button[type='submit'] { color:white; background:#0875ad; border-color:#0875ad; }
+
+@media (max-width:650px) {
+  .mensagens.mensagens-reais > aside { display:block; max-height:220px; overflow-y:auto; border-right:0; border-bottom:1px solid #dfe7eb; }
+  .mensagens-reais { min-height:0; }
+  .mensagens-reais .conversa { min-height:520px; }
+  .mensagens-reais .conversa > header { height:auto; align-items:flex-start; flex-direction:column; gap:10px; padding:16px; }
+  .mensagens-reais .baloes { min-height:300px; padding:18px 14px; }
+  .mensagens-reais .baloes p { width:auto; max-width:88%; }
+  .mensagens-reais .conversa form { flex-direction:column; }
+  .mensagens-reais .conversa form input { min-height:46px; }
+}
 
 .fundo-pre-proposta { position:fixed; inset:0; z-index:1500; display:grid; place-items:center; padding:20px; background:rgba(2,26,40,.72); backdrop-filter:blur(4px); }
 .pre-proposta-pdf { width:min(760px,100%); max-height:calc(100vh - 40px); overflow:auto; padding:38px; color:#173548; background:white; box-shadow:0 24px 80px rgba(1,23,36,.35); }

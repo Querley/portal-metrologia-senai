@@ -12,6 +12,7 @@ import { recomendarHoras } from '../lib/recomendacao';
 import { sanitizarParaIa } from '../lib/seguranca-ia';
 import { CustosEquipamento } from './custos-equipamento';
 import { MarcaOficial } from './marca-oficial';
+import { MensagensPersistentes } from './mensagens-persistentes';
 import { OrcamentosPersistentes } from './orcamentos-persistentes';
 import { SolicitacoesPersistentes } from './solicitacoes-persistentes';
 
@@ -50,6 +51,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
   const custosDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarCustos(perfilInterno));
   const orcamentosPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarOrcamentos(perfilInterno));
   const solicitacoesPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
+  const mensagensPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
   const menu = useMemo(() => custosDisponiveis
     ? [...menuBase, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }]
     : menuBase, [custosDisponiveis]);
@@ -63,7 +65,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
       <aside className="barra-lateral">
         <a className="marca marca-interna" href="/" aria-label="Voltar à página pública"><MarcaOficial /><span className="marca-interna-legenda">Gestão de serviços e conhecimento</span></a>
         <div className="faixa-demo"><span>{autenticado ? 'HOMOLOGAÇÃO' : 'DEMONSTRAÇÃO LOCAL'}</span><small>Dados sintéticos isolados</small></div>
-        <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button aria-label={rotulo} title={rotulo} className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" /><span className="menu-rotulo">{rotulo}</span>{id === 'mensagens' && <b>2</b>}</button>)}</nav>
+        <nav aria-label="Módulos internos">{menu.map(({ id, rotulo, icone: Icone }) => <button aria-label={rotulo} title={rotulo} className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}><Icone size={18} aria-hidden="true" /><span className="menu-rotulo">{rotulo}</span>{id === 'mensagens' && !autenticado && <b>2</b>}</button>)}</nav>
         <div className="atalhos"><button type="button" onClick={aoAbrirPerfil} disabled={!aoAbrirPerfil}><Settings size={17} />Meu perfil</button><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} />Sair</button></div>
         <div className="usuario"><span>{nomeUsuario.split(/\s+/).slice(0, 2).map((parte) => parte[0]).join('').toUpperCase()}</span><div><strong>{nomeUsuario}</strong><small>{perfilUsuario}</small></div></div>
       </aside>
@@ -83,13 +85,15 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
           : <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />)}
         {secao === 'servicos' && <Execucao />}
         {secao === 'conhecimento' && <Conhecimento recomendacao={recomendacao} />}
-        {secao === 'mensagens' && <Mensagens />}
+        {secao === 'mensagens' && (mensagensPersistentesDisponiveis && clienteSupabase && perfilInterno
+          ? <MensagensPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
+          : <Mensagens />)}
         {secao === 'conteudo' && <ConteudoPublico />}
         {secao === 'custos' && clienteSupabase && perfilInterno && <CustosEquipamento cliente={clienteSupabase} perfil={perfilInterno} />}
       </main>
 
-      {secao !== 'custos' && !(secao === 'orcamentos' && orcamentosPersistentesDisponiveis) && <button className="assistente-atalho" type="button" onClick={() => setAssistenteAberto(!assistenteAberto)} aria-expanded={assistenteAberto}><Sparkles size={19} /> Assistente interno</button>}
-      {assistenteAberto && secao !== 'custos' && !(secao === 'orcamentos' && orcamentosPersistentesDisponiveis) && <aside className="assistente" aria-label="Assistente interno"><header><span><Bot size={19} /> Assistente interno</span><button type="button" onClick={() => setAssistenteAberto(false)} aria-label="Fechar">×</button></header><div className="mensagem-ia"><small>PRÉVIA SANITIZADA</small><p>{JSON.stringify(previaIa.conteudo)}</p><span><ShieldCheck size={14} /> Campos sensíveis removidos antes do envio</span></div><div className="resposta-ia"><p>O preço exibido foi calculado de forma determinística: custo da DuraMax pelas horas informadas, mais extras e o lucro definido. Eu apenas explico o resultado; não altero o cálculo.</p><small>Fonte: orçamento atual · cálculo local</small></div><form onSubmit={(evento) => evento.preventDefault()}><label htmlFor="mensagem-assistente">Pergunte sobre esta tela</label><div><input id="mensagem-assistente" placeholder="Como este valor foi calculado?" /><button type="submit" aria-label="Enviar"><ChevronRight size={18} /></button></div></form></aside>}
+      {secao !== 'custos' && !(secao === 'orcamentos' && orcamentosPersistentesDisponiveis) && !(secao === 'mensagens' && mensagensPersistentesDisponiveis) && <button className="assistente-atalho" type="button" onClick={() => setAssistenteAberto(!assistenteAberto)} aria-expanded={assistenteAberto}><Sparkles size={19} /> Assistente interno</button>}
+      {assistenteAberto && secao !== 'custos' && !(secao === 'orcamentos' && orcamentosPersistentesDisponiveis) && !(secao === 'mensagens' && mensagensPersistentesDisponiveis) && <aside className="assistente" aria-label="Assistente interno"><header><span><Bot size={19} /> Assistente interno</span><button type="button" onClick={() => setAssistenteAberto(false)} aria-label="Fechar">×</button></header><div className="mensagem-ia"><small>PRÉVIA SANITIZADA</small><p>{JSON.stringify(previaIa.conteudo)}</p><span><ShieldCheck size={14} /> Campos sensíveis removidos antes do envio</span></div><div className="resposta-ia"><p>O preço exibido foi calculado de forma determinística: custo da DuraMax pelas horas informadas, mais extras e o lucro definido. Eu apenas explico o resultado; não altero o cálculo.</p><small>Fonte: orçamento atual · cálculo local</small></div><form onSubmit={(evento) => evento.preventDefault()}><label htmlFor="mensagem-assistente">Pergunte sobre esta tela</label><div><input id="mensagem-assistente" placeholder="Como este valor foi calculado?" /><button type="submit" aria-label="Enviar"><ChevronRight size={18} /></button></div></form></aside>}
     </div>
   );
 }

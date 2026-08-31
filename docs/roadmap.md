@@ -10,7 +10,7 @@
 - [ ] **11–12 set** — E2E, RLS, acessibilidade, backup, observabilidade, documentação e ensaio.
 - [ ] **13 set** — congelamento, verificação, tag e entrega.
 
-## Estado em 29 de agosto de 2026
+## Estado em 31 de agosto de 2026
 
 - [x] projeto Supabase de homologação conectado ao site publicado;
 - [x] login por e-mail sem autocadastro, com Administrador, Validador e Técnico sintéticos confirmados;
@@ -41,6 +41,8 @@
 - [x] validar estrutura, permissões e RPCs internas da migration `202608280013` no Supabase de homologação;
 - [x] persistir solicitação pública estritamente sintética, gerar protocolo e ativar perfil externo pelo mesmo e-mail;
 - [x] substituir a lista interna estática pela fila persistente de solicitações sintéticas recebidas pelo site;
+- [x] substituir as mensagens estáticas pelo canal bidirecional persistente entre Cliente e equipe, com atualização em tempo real;
+- [x] permitir que o Cliente atualize o próprio nome sem alterar função, empresa ou escopo de acesso;
 - [x] validar o fluxo externo e o bloqueio de e-mail divergente em transação revertida, sem resíduos;
 - [ ] repetir o fluxo pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
