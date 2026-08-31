@@ -135,6 +135,10 @@
   .lista-projetos-cliente button,.resumo-projeto-cliente article { padding-inline:17px; }
 }
 
+.painel-solicitacoes-persistentes { display:grid; gap:14px; }
+.tabela-solicitacoes-persistentes td small { display:block; max-width:310px; margin-top:5px; color:#6a818d; font-size:9px; line-height:1.45; white-space:normal; }
+.tabela-solicitacoes-persistentes td:nth-child(2) small { max-width:360px; }
+
 .fundo-pre-proposta { position:fixed; inset:0; z-index:1500; display:grid; place-items:center; padding:20px; background:rgba(2,26,40,.72); backdrop-filter:blur(4px); }
 .pre-proposta-pdf { width:min(760px,100%); max-height:calc(100vh - 40px); overflow:auto; padding:38px; color:#173548; background:white; box-shadow:0 24px 80px rgba(1,23,36,.35); }
 .pre-proposta-pdf > header { display:flex; align-items:center; justify-content:space-between; gap:30px; padding-bottom:24px; border-bottom:2px solid #0c72ab; }

@@ -40,6 +40,7 @@
 - [x] migration aplicada para destinatário/prazo da pré-proposta, vínculo externo e etapas com RLS;
 - [x] validar estrutura, permissões e RPCs internas da migration `202608280013` no Supabase de homologação;
 - [x] persistir solicitação pública estritamente sintética, gerar protocolo e ativar perfil externo pelo mesmo e-mail;
+- [x] substituir a lista interna estática pela fila persistente de solicitações sintéticas recebidas pelo site;
 - [x] validar o fluxo externo e o bloqueio de e-mail divergente em transação revertida, sem resíduos;
 - [ ] repetir o fluxo pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;

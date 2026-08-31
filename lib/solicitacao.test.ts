@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cnpjValido, formatarCnpj, necessidadeInicial, necessidadesCliente, prazosPagamento } from './solicitacao';
+import { cnpjValido, formatarCnpj, necessidadeInicial, necessidadesCliente, prazosPagamento, rotuloNecessidadeCliente } from './solicitacao';
 
 describe('solicitação pública', () => {
   it('formata e valida CNPJ sem consultar fonte externa', () => {
@@ -16,5 +16,7 @@ describe('solicitação pública', () => {
   it('traduz o serviço técnico para uma necessidade compreensível', () => {
     expect(necessidadeInicial('tomografia-industrial')).toBe('inspecao-interna-nao-destrutiva');
     expect(necessidadeInicial('outro')).toBe('outro');
+    expect(rotuloNecessidadeCliente('analise-falha-desgaste')).toBe('Análise de falha ou desgaste');
+    expect(rotuloNecessidadeCliente('valor-desconhecido')).toBe('Necessidade não classificada');
   });
 });

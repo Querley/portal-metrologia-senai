@@ -13,6 +13,7 @@ import { sanitizarParaIa } from '../lib/seguranca-ia';
 import { CustosEquipamento } from './custos-equipamento';
 import { MarcaOficial } from './marca-oficial';
 import { OrcamentosPersistentes } from './orcamentos-persistentes';
+import { SolicitacoesPersistentes } from './solicitacoes-persistentes';
 
 const menuBase = [
   { id: 'visao', rotulo: 'Visão geral', icone: LayoutDashboard },
@@ -48,6 +49,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
   const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const custosDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarCustos(perfilInterno));
   const orcamentosPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarOrcamentos(perfilInterno));
+  const solicitacoesPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
   const menu = useMemo(() => custosDisponiveis
     ? [...menuBase, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }]
     : menuBase, [custosDisponiveis]);
@@ -73,7 +75,9 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         </header>
 
         {secao === 'visao' && <VisaoGeral setSecao={setSecao} />}
-        {secao === 'solicitacoes' && <TabelaSolicitacoes />}
+        {secao === 'solicitacoes' && (solicitacoesPersistentesDisponiveis && clienteSupabase && perfilInterno
+          ? <SolicitacoesPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
+          : <TabelaSolicitacoes />)}
         {secao === 'orcamentos' && (orcamentosPersistentesDisponiveis && clienteSupabase && perfilInterno
           ? <OrcamentosPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
           : <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />)}

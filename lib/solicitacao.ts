@@ -29,6 +29,10 @@ export function necessidadeInicial(valor: string): typeof necessidadesCliente[nu
   return necessidadePorServicoTecnico[valor] ?? '';
 }
 
+export function rotuloNecessidadeCliente(valor: string): string {
+  return necessidadesCliente.find((item) => item.valor === valor)?.rotulo ?? 'Necessidade não classificada';
+}
+
 export function somenteDigitos(valor: string): string {
   return valor.replace(/\D/g, '');
 }
