@@ -50,7 +50,9 @@
 - [x] gerar e armazenar o PDF em bucket privado, congelar seu SHA-256 e verificar a integridade no download; o Nectar permanece fora do escopo;
 - [x] corrigir a autorização de leitura do PDF pelo Cliente sem tornar o bucket público nem contornar o vínculo empresarial;
 - [ ] validar pela interface publicada o ciclo `aprovar → gerar PDF → emitir → baixar como Cliente`;
-- [ ] iniciar a execução somente a partir da pré-proposta emitida e permitir que a equipe atualize etapas visíveis ao Cliente;
+- [x] aplicar a migration `202609010021`: Cliente aceita a pré-proposta emitida e somente Administrador confirma o início auditado;
+- [ ] validar pela interface publicada o aceite do Cliente e a confirmação de início pelo Administrador;
+- [ ] validar e automatizar os modelos de etapas propostos em `docs/etapas-sugeridas-servicos.md`, permitindo que a equipe atualize apenas a execução autorizada;
 
 ## Dependências institucionais
 

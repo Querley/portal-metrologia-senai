@@ -5,7 +5,7 @@ import { Check, CheckCircle2, Circle, Clock3, Download, FileText, LogOut, Messag
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import { calcularSha256Hex } from '../lib/pre-proposta-pdf';
-import { contextoClienteDemonstracao, mensagensClienteDemonstracao, situacaoEtapasCliente, solicitacoesClienteDemonstracao, tituloServicoCliente, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE } from '../lib/portal-cliente';
+import { contextoClienteDemonstracao, mensagensClienteDemonstracao, podeAceitarPreProposta, situacaoEtapasCliente, solicitacoesClienteDemonstracao, tituloServicoCliente, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE, VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA } from '../lib/portal-cliente';
 import { MarcaOficial } from './marca-oficial';
 
 type Propriedades = {
@@ -41,6 +41,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [editandoPerfil, setEditandoPerfil] = useState(false);
   const [salvandoPerfil, setSalvandoPerfil] = useState(false);
   const [baixandoPdf, setBaixandoPdf] = useState(false);
+  const [aceitandoPreProposta, setAceitandoPreProposta] = useState(false);
+  const [confirmouAceite, setConfirmouAceite] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!cliente || demonstracao) return;
@@ -74,7 +76,9 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   }, [carregarMensagens, cliente, demonstracao, selecionadaId]);
 
   const selecionada = useMemo(() => solicitacoes.find((item) => item.id === selecionadaId) ?? solicitacoes[0], [selecionadaId, solicitacoes]);
-  const situacaoAtual = useMemo(() => selecionada ? situacaoEtapasCliente(selecionada.etapas) : null, [selecionada]);
+  const situacaoAtual = useMemo(() => selecionada
+    ? situacaoEtapasCliente(selecionada.etapas, selecionada.execucao_estado, selecionada.proposta_estado)
+    : null, [selecionada]);
 
   async function aceitarPrivacidade() {
     setAceitando(true);
@@ -167,6 +171,36 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setBaixandoPdf(false);
   }
 
+  async function aceitarPreProposta() {
+    if (!selecionada || !podeAceitarPreProposta(selecionada.proposta_estado) || !confirmouAceite) return;
+    setAceitandoPreProposta(true);
+    setErro('');
+    setAviso('');
+
+    if (cliente && !demonstracao) {
+      const { error } = await cliente.rpc('aceitar_pre_proposta_cliente', {
+        solicitacao: selecionada.id,
+        declaracao_versao: VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA,
+      });
+      if (error) {
+        setErro(error.code === '23514'
+          ? 'Esta pré-proposta não pode mais ser aceita. Atualize a página ou fale com a equipe.'
+          : 'Não foi possível registrar o aceite da pré-proposta. Tente novamente.');
+        setAceitandoPreProposta(false);
+        return;
+      }
+      await carregar();
+    } else {
+      setSolicitacoes((atuais) => atuais.map((item) => item.id === selecionada.id
+        ? { ...item, proposta_estado: 'aceita', aceita_em: new Date().toISOString() }
+        : item));
+    }
+
+    setConfirmouAceite(false);
+    setAviso('Aceite registrado. O trabalho começará somente após a liberação do Administrador.');
+    setAceitandoPreProposta(false);
+  }
+
   return <main className="portal-cliente">
     <header className="topo-cliente"><a href="/" aria-label="Voltar ao site"><MarcaOficial /></a><div><span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span><strong>{nomeCliente}</strong><small>{contexto.empresa_nome}</small></div><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} /> Sair</button></header>
     <div className="conteudo-cliente">
@@ -178,10 +212,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       {!carregando && solicitacoes.length === 0 && <section className="vazio-cliente"><FileText size={30} /><h2>Nenhum trabalho disponível ainda</h2><p>Quando a equipe vincular uma solicitação à sua empresa, o acompanhamento aparecerá aqui.</p><a className="botao" href="/solicitar">Fazer uma solicitação</a></section>}
 
       {selecionada && <div className="grade-cliente">
-        <aside className="lista-projetos-cliente"><h2>Seus trabalhos</h2>{solicitacoes.map((item) => <button key={item.id} type="button" className={item.id === selecionada.id ? 'ativo' : ''} onClick={() => setSelecionadaId(item.id)}><span>SOL-{String(item.codigo).padStart(4, '0')}</span><strong>{tituloServicoCliente(item.servico)}</strong><small>Recebida em {dataCurta(item.criada_em)}</small></button>)}</aside>
+        <aside className="lista-projetos-cliente"><h2>Seus trabalhos</h2>{solicitacoes.map((item) => <button key={item.id} type="button" className={item.id === selecionada.id ? 'ativo' : ''} onClick={() => { setSelecionadaId(item.id); setConfirmouAceite(false); }}><span>SOL-{String(item.codigo).padStart(4, '0')}</span><strong>{tituloServicoCliente(item.servico)}</strong><small>Recebida em {dataCurta(item.criada_em)}</small></button>)}</aside>
         <section className="detalhe-projeto-cliente">
           <header><div><span>SOL-{String(selecionada.codigo).padStart(4, '0')}</span><h2>{tituloServicoCliente(selecionada.servico)}</h2></div><button type="button" onClick={() => void carregar()}><RefreshCw size={15} /> Atualizar</button></header>
-          <div className="resumo-projeto-cliente"><article><small>Pré-proposta comercial</small><strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong><span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : (selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise')}</span>{selecionada.valor_pre_proposta !== null && <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}><Download size={15} /> {baixandoPdf ? 'Baixando…' : 'Baixar PDF emitido'}</button>}</article><article><small>Andamento do serviço</small><strong>{situacaoAtual?.titulo}</strong><span>{situacaoAtual?.descricao}</span></article></div>
+          <div className="resumo-projeto-cliente"><article><small>Pré-proposta comercial</small><strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong><span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : (selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise')}</span>{selecionada.valor_pre_proposta !== null && <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}><Download size={15} /> {baixandoPdf ? 'Baixando…' : 'Baixar PDF emitido'}</button>}{podeAceitarPreProposta(selecionada.proposta_estado) && <div className="aceite-pre-proposta-cliente"><strong>Deseja prosseguir?</strong><p>Este aceite manifesta seu interesse nesta pré-proposta do laboratório. Ele não substitui a proposta oficial emitida pelo SENAI no Nectar, e o serviço só começa após a liberação do laboratório.</p><label><input type="checkbox" checked={confirmouAceite} onChange={(evento) => setConfirmouAceite(evento.target.checked)} /> Li e desejo prosseguir com esta pré-proposta.</label><button type="button" onClick={() => void aceitarPreProposta()} disabled={!confirmouAceite || aceitandoPreProposta}><CheckCircle2 size={16} /> {aceitandoPreProposta ? 'Registrando…' : 'Aceitar pré-proposta'}</button></div>}{selecionada.proposta_estado === 'aceita' && <div className="aceite-pre-proposta-cliente confirmado"><CheckCircle2 size={20} /><div><strong>Aceite registrado</strong><p>{selecionada.aceita_em ? `Registrado em ${dataCurta(selecionada.aceita_em)}. ` : ''}Agora o laboratório precisa confirmar a liberação do trabalho.</p></div></div>}</article><article><small>Andamento do serviço</small><strong>{situacaoAtual?.titulo}</strong><span>{situacaoAtual?.descricao}</span></article></div>
           <section className="acompanhamento-etapas"><div className="titulo-bloco-cliente"><div><h3>Etapas do trabalho</h3><p>A porcentagem indica o progresso da etapa atual, não do contrato inteiro.</p></div></div>{selecionada.etapas.length === 0 ? <div className="sem-etapas-cliente"><Clock3 size={22} /><div><strong>A equipe ainda está preparando o acompanhamento</strong><p>As etapas aparecerão aqui depois da triagem inicial da solicitação.</p></div></div> : <ol>{selecionada.etapas.map((etapa) => { const { rotulo, Icone } = estadoEtapa[etapa.estado]; return <li key={etapa.id} className={`etapa-${etapa.estado}`}><span className="icone-etapa"><Icone size={20} /></span><div><header><strong>{etapa.titulo}</strong><b>{rotulo}{etapa.estado === 'em_andamento' ? ` (${etapa.progresso}%)` : ''}</b></header>{etapa.descricao && <p>{etapa.descricao}</p>}<div className="barra-progresso" aria-label={`${etapa.progresso}% concluído`}><i style={{ width: `${etapa.progresso}%` }} /></div><small>Atualizado em {dataCurta(etapa.atualizada_em)}</small></div></li>; })}</ol>}</section>
           <section className="mensagens-cliente"><div className="titulo-bloco-cliente"><div><h3><MessageSquareText size={18} /> Mensagens</h3><p>Canal vinculado a esta solicitação.</p></div></div><div className="lista-mensagens-cliente">{mensagens.map((mensagem) => <p key={mensagem.id} className={mensagem.autor_proprio ? 'propria' : ''}>{mensagem.conteudo}<small>{dataCurta(mensagem.criada_em)}</small></p>)}</div><form onSubmit={enviarMensagem}><label htmlFor="mensagem-cliente" className="sr-only">Nova mensagem</label><input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para a equipe" /><button type="submit"><Send size={16} /> Enviar</button></form></section>
         </section>

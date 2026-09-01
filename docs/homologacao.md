@@ -11,7 +11,7 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202609010020` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador; `017` cria a pré-proposta sobre a solicitação Cliente existente e impede uma segunda proposta ativa para o mesmo atendimento; `018` cria o bucket privado e as funções protegidas do PDF; `019` impede sua substituição depois que caminho e SHA-256 forem congelados; `020` corrige a leitura do arquivo pelo Cliente por meio de autorização protegida, sem tornar o bucket público.
+As migrations `202608220001` até `202609010021` estão aplicadas na homologação; a `021` foi executada manualmente no SQL Editor em 1º de setembro e seu registro no histórico remoto ainda precisa ser conferido. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador; `017` cria a pré-proposta sobre a solicitação Cliente existente e impede uma segunda proposta ativa para o mesmo atendimento; `018` cria o bucket privado e as funções protegidas do PDF; `019` impede sua substituição depois que caminho e SHA-256 forem congelados; `020` corrige a leitura do arquivo pelo Cliente por meio de autorização protegida, sem tornar o bucket público; `021` registra o aceite autenticado da pré-proposta pelo Cliente e reserva ao Administrador a confirmação auditada do início.
 
 ## Dados e autorização
 
@@ -65,7 +65,7 @@ A interface autenticada de custos-hora entrega:
 
 Os perfis internos seguem hierarquia cumulativa: Validador faz tudo que Técnico faz; Administrador faz tudo que Validador faz. Técnico, Validador e Administrador podem criar, corrigir e enviar os próprios orçamentos. Validador e Administrador podem aprovar, devolver ou rejeitar orçamentos em validação; devolução e rejeição exigem justificativa auditada.
 
-A aprovação permanece distinta da publicação. Somente Administrador pode gerar e congelar o PDF e executar `aprovada → publicada`; o servidor bloqueia a transição enquanto não existirem arquivo privado e hash imutável. O aceite externo e clientes reais permanecem fora do recorte atual.
+A aprovação permanece distinta da publicação. Somente Administrador pode gerar e congelar o PDF e executar `aprovada → publicada`; o servidor bloqueia a transição enquanto não existirem arquivo privado e hash imutável. O aceite externo demonstrativo está preparado na migration `021`; clientes e dados reais permanecem fora do recorte atual.
 
 ## Validação pela interface e próximo passo
 
@@ -74,7 +74,8 @@ O mantenedor confirmou pela interface publicada que o Cliente cria solicitaçõe
 1. geração e download interno do PDF pelo Administrador depois da aprovação;
 2. bloqueio da emissão enquanto o PDF não estiver congelado;
 3. emissão e download íntegro pelo Cliente, sem custos, margens ou rascunhos;
-4. futura inicialização da execução e exibição apenas das etapas visíveis.
+4. após aplicar a `021`, aceite pelo Cliente e confirmação do início exclusivamente pelo Administrador;
+5. depois de validar os modelos propostos, criação e atualização das etapas visíveis de cada serviço.
 
 O formulário público persiste somente entradas demonstrativas e rejeita e-mails que não terminem em `.test`. Arquivos selecionados não são enviados antes da autenticação. Isso impede que a homologação seja apresentada como canal para CNPJ, contatos ou documentos reais.
 

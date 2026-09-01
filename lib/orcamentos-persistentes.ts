@@ -30,6 +30,16 @@ export function podePublicarOrcamento(perfil: PerfilInterno): boolean {
   return perfil === 'administrador';
 }
 
+export function podeConfirmarInicioTrabalho(
+  perfil: PerfilInterno,
+  estadoProposta: string,
+  estadoExecucao: string | null,
+): boolean {
+  return perfil === 'administrador'
+    && estadoProposta === 'aceita'
+    && estadoExecucao === null;
+}
+
 export function normalizarJustificativaDecisao(valor: string): string | null {
   const justificativa = valor.trim();
   return justificativa.length >= 5 && justificativa.length <= 500 ? justificativa : null;

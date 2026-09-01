@@ -8,14 +8,14 @@
 4. Permitir cadastro verificado, vínculo aprovado com empresa e múltiplos contatos convidados.
 5. Receber respostas configuráveis e até cinco arquivos por solicitação: PDF/imagem até 10 MB; CAD até 50 MB; armazenamento privado e somente download.
 6. Criar propostas com vários itens, versões e PDF imutável; aceitar/recusar a versão inteira e solicitar revisão.
-7. Registrar aceite autenticado com pessoa, empresa, versão, data e endereço de rede.
+7. Registrar aceite autenticado da pré-proposta com pessoa, empresa, versão do texto e data; em produção, capturar também o endereço de rede por endpoint protegido e juridicamente aprovado.
 8. Registrar execução, fechamento, realizado, causas, retrabalho, mudança de escopo e lição.
 9. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; exigir justificativa fora de Q1–Q3.
 10. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
 11. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
 12. Permitir que Validador e Administrador consultem custos-hora e que somente Administrador versione esses valores, sempre na origem ativa e sem exclusão de histórico.
 13. Aplicar hierarquia cumulativa aos perfis internos: Validador faz tudo que Técnico faz; Administrador faz tudo que Validador faz. Técnico, Validador e Administrador criam, corrigem e enviam os próprios orçamentos; somente Validador e Administrador os aprovam, devolvem ou rejeitam, sempre com justificativa nas decisões negativas; somente Administrador publica uma versão aprovada com PDF imutável.
-14. Tratar o documento comercial do laboratório como pré-proposta informal, contendo no mínimo destinatário, valor e prazo de pagamento desejado; a proposta oficial é produzida no Nectar, que permanece sem integração e fora do escopo.
+14. Tratar o documento comercial do laboratório como pré-proposta informal, contendo no mínimo destinatário, valor e prazo de pagamento desejado; a proposta oficial é produzida no Nectar, que permanece sem integração e fora do escopo. O aceite do Cliente manifesta interesse, e somente o Administrador confirma o início após verificar o trâmite institucional.
 15. Permitir solicitação pública sem login com CNPJ, nome da empresa, necessidade simplificada e prazo de pagamento desejado; persistência real só pode ser ativada em produção com proteção antiabuso, criptografia e texto jurídico aprovado.
 16. Convidar o cliente para a área autenticada somente após a análise, com vínculo aprovado à empresa, aviso de privacidade versionado, etapas visuais do trabalho e mensagens persistentes.
 17. Organizar a descoberta pública por setor — indústria e processos, automotivo e mobilidade, aeronáutico, ferramentaria e desenvolvimento de produto — filtrando os serviços técnicos aplicáveis.

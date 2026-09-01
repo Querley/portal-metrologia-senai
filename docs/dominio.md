@@ -17,7 +17,7 @@
 
 ## Estados
 
-- Pré-proposta: `rascunho | devolvida → em_validacao → aprovada → publicada → aceita | recusada | expirada`; `publicada` significa emitida ao cliente pelo laboratório. Durante a validação, também pode ir para `devolvida` ou `rejeitada`. Uma rejeição exige uma nova proposta; uma nova versão torna a anterior `substituida`.
+- Pré-proposta: `rascunho | devolvida → em_validacao → aprovada → publicada → aceita | recusada | expirada`; `publicada` significa emitida ao cliente pelo laboratório. Durante a validação, também pode ir para `devolvida` ou `rejeitada`. Uma rejeição exige uma nova proposta; uma nova versão torna a anterior `substituida`. O aceite autenticado representa interesse na pré-proposta informal e não substitui a proposta oficial do Nectar; somente o Administrador confirma o início depois do trâmite institucional.
 - Serviço: `planejado → em_execucao → concluido`; cancelamento preserva histórico.
 - Lição: `rascunho → em_validacao → formalizada → superada`.
 - Conteúdo: `rascunho → publicado → arquivado`; restauração cria nova versão.

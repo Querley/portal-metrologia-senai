@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EstadoPropostaSchema } from './contratos';
-import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, podeAprovarOrcamento, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from './orcamentos-persistentes';
+import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, podeAprovarOrcamento, podeConfirmarInicioTrabalho, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from './orcamentos-persistentes';
 
 describe('autorização de orçamentos persistentes', () => {
   it('mantém a hierarquia cumulativa para consulta e criação', () => {
@@ -34,6 +34,13 @@ describe('autorização de orçamentos persistentes', () => {
     expect(podeDecidirOrcamento('administrador')).toBe(true);
     expect(podePublicarOrcamento('validador')).toBe(false);
     expect(podePublicarOrcamento('administrador')).toBe(true);
+  });
+
+  it('reserva a confirmação do início ao Administrador depois do aceite', () => {
+    expect(podeConfirmarInicioTrabalho('validador', 'aceita', null)).toBe(false);
+    expect(podeConfirmarInicioTrabalho('administrador', 'publicada', null)).toBe(false);
+    expect(podeConfirmarInicioTrabalho('administrador', 'aceita', null)).toBe(true);
+    expect(podeConfirmarInicioTrabalho('administrador', 'aceita', 'em_execucao')).toBe(false);
   });
 
   it('exige justificativa útil para devolver ou rejeitar', () => {
@@ -104,6 +111,16 @@ describe('cálculo e persistência do orçamento', () => {
     expect(migracao).toContain("if tg_table_name = 'versoes_proposta' then");
     expect(migracao).toContain("elsif tg_table_name = 'itens_proposta' then");
     expect(migracao).toContain("else\n    raise exception 'Tabela não suportada");
+    expect(migracao).not.toMatch(/delete\s+from/i);
+  });
+
+  it('protege aceite do Cliente e início do trabalho no servidor', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202609010021_aceite_cliente_inicio_trabalho.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain("declaracao_versao is distinct from '2026-09-01-v1'");
+    expect(migracao).toContain('and usuario_da_empresa(p.empresa_id)');
+    expect(migracao).toContain("perfil is distinct from 'administrador'::perfil_interno");
+    expect(migracao).toContain("estado_atual is distinct from 'aceita'::estado_proposta");
+    expect(migracao).toContain("'confirmar_inicio_trabalho_demonstrativo'");
     expect(migracao).not.toMatch(/delete\s+from/i);
   });
 });

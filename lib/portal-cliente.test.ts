@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
+import { podeAceitarPreProposta, situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
 
 function etapa(parcial: Partial<EtapaCliente>): EtapaCliente {
   return {
@@ -17,6 +17,18 @@ function etapa(parcial: Partial<EtapaCliente>): EtapaCliente {
 describe('resumo do portal do Cliente', () => {
   it('não considera uma lista vazia como serviço concluído', () => {
     expect(situacaoEtapasCliente([]).titulo).toBe('Aguardando triagem');
+  });
+
+  it('explica separadamente o aceite e a liberação do trabalho', () => {
+    expect(situacaoEtapasCliente([], null, 'publicada').titulo).toBe('Aguardando sua decisão');
+    expect(situacaoEtapasCliente([], null, 'aceita').titulo).toBe('Aceite registrado');
+    expect(situacaoEtapasCliente([], 'em_execucao', 'aceita').titulo).toBe('Início confirmado');
+  });
+
+  it('permite o aceite somente da pré-proposta emitida', () => {
+    expect(podeAceitarPreProposta('publicada')).toBe(true);
+    expect(podeAceitarPreProposta('aceita')).toBe(false);
+    expect(podeAceitarPreProposta(null)).toBe(false);
   });
 
   it('distingue etapa em andamento de serviço concluído', () => {
