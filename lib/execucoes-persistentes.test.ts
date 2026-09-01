@@ -73,4 +73,12 @@ describe('execuções persistentes', () => {
     expect(migracao).toContain("fechamento_estado = case when decisao = 'aprovar' then 'aprovado' else 'devolvido' end");
     expect(migracao).toContain("estado = case when decisao = 'aprovar' then 'concluido'::estado_servico else estado end");
   });
+
+  it('remove o filtro de autoria sem alterar a autoria original', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202609010024_acesso_tecnico_execucoes.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain("pg_get_functiondef('public.listar_execucoes_demonstrativas()'::regprocedure)");
+    expect(migracao).toContain('Restricao esperada nao encontrada');
+    expect(migracao).not.toMatch(/update\s+propostas/i);
+    expect(migracao).not.toMatch(/update\s+perfis/i);
+  });
 });

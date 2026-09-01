@@ -33,6 +33,7 @@ A aprovação não emite a pré-proposta. Somente Administrador promove `aprovad
 - Cliente externo nunca vê rascunhos internos, custos ou margens; vê somente pré-proposta emitida, etapas marcadas como visíveis e mensagens da própria empresa.
 - Cada etapa tem ordem, estado `a_fazer | em_andamento | concluida`, progresso de 0 a 100 e data de atualização.
 - Concluir todas as etapas não encerra automaticamente o trabalho. O Técnico registra o fechamento; Validador ou Administrador aprova e conclui definitivamente, ou devolve ao Técnico com justificativa.
+- Enquanto não houver atribuição formal de responsável, Técnico, Validador e Administrador visualizam e operam todas as execuções demonstrativas. A autoria original e o usuário de cada alteração permanecem na auditoria.
 - A ciência do aviso de privacidade registra versão e data no vínculo empresarial.
 
 ## Cálculos

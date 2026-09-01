@@ -58,6 +58,8 @@
 - [x] preparar fechamento persistente: Técnico registra; Validador ou Administrador aprova ou devolve;
 - [x] aplicar e registrar a migration `202609010023` e validar suas RPCs protegidas;
 - [ ] publicar e validar o fluxo de fechamento pelos três perfis internos;
+- [ ] aplicar a migration `202609010024` e confirmar que o Técnico visualiza trabalhos criados por outro perfil;
+- [ ] modelar futuramente a atribuição de responsável por execução antes de operar com dados reais;
 
 ## Dependências institucionais
 
