@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { podeAceitarPreProposta, situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
+import { descricaoAceiteCliente, podeAceitarPreProposta, situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
 
 function etapa(parcial: Partial<EtapaCliente>): EtapaCliente {
   return {
@@ -38,6 +38,21 @@ describe('resumo do portal do Cliente', () => {
       descricao: 'Etapa em andamento: 50% concluída.',
     });
     expect(situacaoEtapasCliente([etapa({ estado: 'concluida', progresso: 100 })]).titulo).toBe('Etapas concluídas');
+  });
+
+  it('prioriza o encerramento aprovado sobre o estado visual das etapas', () => {
+    expect(situacaoEtapasCliente([
+      etapa({ estado: 'concluida', progresso: 100 }),
+    ], 'concluido', 'aceita')).toEqual({
+      titulo: 'Serviço concluído',
+      descricao: 'O trabalho foi concluído e o encerramento foi aprovado pela equipe do laboratório.',
+    });
+  });
+
+  it('atualiza a mensagem do aceite conforme o trabalho avança', () => {
+    const data = (valor: string) => valor.slice(0, 10);
+    expect(descricaoAceiteCliente('2026-09-01T09:00:00Z', 'em_execucao', data)).toMatch(/está em execução/i);
+    expect(descricaoAceiteCliente('2026-09-01T09:00:00Z', 'concluido', data)).toMatch(/concluído e encerrado/i);
   });
 
   it('traduz o slug técnico para o título público', () => {

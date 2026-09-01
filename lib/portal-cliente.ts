@@ -60,6 +60,20 @@ export function situacaoEtapasCliente(
   execucaoEstado: SolicitacaoCliente['execucao_estado'] = null,
   propostaEstado: string | null = null,
 ): { titulo: string; descricao: string } {
+  if (execucaoEstado === 'concluido') {
+    return {
+      titulo: 'Serviço concluído',
+      descricao: 'O trabalho foi concluído e o encerramento foi aprovado pela equipe do laboratório.',
+    };
+  }
+
+  if (execucaoEstado === 'cancelado') {
+    return {
+      titulo: 'Serviço cancelado',
+      descricao: 'Este trabalho foi cancelado. Fale com a equipe pelo canal de mensagens para mais informações.',
+    };
+  }
+
   if (etapas.length === 0) {
     if (execucaoEstado === 'em_execucao') {
       return {
@@ -117,6 +131,18 @@ export function situacaoEtapasCliente(
     titulo: 'Aguardando início',
     descricao: 'As etapas foram planejadas, mas a execução ainda não começou.',
   };
+}
+
+export function descricaoAceiteCliente(
+  aceitaEm: string | null,
+  execucaoEstado: SolicitacaoCliente['execucao_estado'],
+  formatarData: (valor: string) => string,
+): string {
+  const registro = aceitaEm ? `Registrado em ${formatarData(aceitaEm)}. ` : '';
+  if (execucaoEstado === 'concluido') return `${registro}O trabalho foi concluído e encerrado pela equipe.`;
+  if (execucaoEstado === 'em_execucao') return `${registro}O laboratório confirmou a liberação e o trabalho está em execução.`;
+  if (execucaoEstado === 'cancelado') return `${registro}O trabalho foi cancelado; consulte a equipe pelo canal de mensagens.`;
+  return `${registro}Agora o laboratório precisa confirmar a liberação do trabalho.`;
 }
 
 export const contextoClienteDemonstracao: ContextoCliente = {

@@ -17,7 +17,7 @@ O mantenedor validou pela interface publicada o aceite do Cliente e a confirmaç
 
 A migration `202609010023` foi executada e registrada em 1º de setembro. As três RPCs foram reconhecidas pela API e responderam `401 permission denied` ao papel anônimo, confirmando a negação por padrão. Ela adiciona o fechamento operacional com horas reais por equipamento, custos extras, ocorrências e aprendizado; Técnico registra e Validador ou Administrador aprova ou devolve. A execução só muda para `concluido` após a aprovação.
 
-A migration `202609010024` está preparada para corrigir o filtro de autoria que ocultava do Técnico trabalhos criados por outro perfil. Até existir atribuição formal, os três perfis operacionais acessam todas as execuções demonstrativas; a decisão do fechamento continua exclusiva de Validador e Administrador.
+A migration `202609010024` foi aplicada e validada pela interface em 1º de setembro: o Técnico passou a visualizar o trabalho criado por outro perfil. Até existir atribuição formal, os três perfis operacionais acessam todas as execuções demonstrativas; a decisão do fechamento continua exclusiva de Validador e Administrador. A visualização do Cliente também foi corrigida para priorizar `execucao_estado = concluido` sobre a simples conclusão das etapas.
 
 ## Dados e autorização
 
