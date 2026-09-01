@@ -1,11 +1,12 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Ban, Calculator, CheckCircle2, CornerUpLeft, Download, FileCheck2, FileText, FileUp, Pencil, PlayCircle, Printer, RefreshCw, Save, Send, ShieldCheck, UploadCloud, X } from 'lucide-react';
+import { Ban, Calculator, CheckCircle2, CornerUpLeft, Download, FileCheck2, FileText, FileUp, Pencil, PlayCircle, Printer, RefreshCw, Save, Send, ShieldCheck, Sparkles, UploadCloud, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import type { PerfilInterno } from '../lib/contratos';
 import { ORIGEM_CUSTOS_HOMOLOGACAO, podeConsultarCustos } from '../lib/custos-equipamento';
+import { formatarHoras, recomendacaoExigeJustificativa, type RecomendacaoPersistente } from '../lib/conhecimento-persistente';
 import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, podeAprovarOrcamento, podeConfirmarInicioTrabalho, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from '../lib/orcamentos-persistentes';
 import { calcularSha256Hex, gerarPdfPreProposta } from '../lib/pre-proposta-pdf';
 import { servicosOficiais } from '../lib/servicos';
@@ -109,6 +110,8 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
   const [destinatario, setDestinatario] = useState(solicitacaoInicial?.nome ?? 'Contato demonstrativo');
   const [prazoPagamentoDias, setPrazoPagamentoDias] = useState(String(solicitacaoInicial?.prazo_pagamento_dias ?? 30));
   const [solicitacaoVinculada, setSolicitacaoVinculada] = useState<SolicitacaoParaPreProposta | null>(solicitacaoInicial?.solicitacao_id ? solicitacaoInicial : null);
+  const [recomendacao, setRecomendacao] = useState<RecomendacaoPersistente | null>(null);
+  const [consultandoRecomendacao, setConsultandoRecomendacao] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!podeConsultarOrcamentos(perfil)) return;
@@ -160,6 +163,20 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
   const custoSelecionado = custosPorEquipamento.get(equipamentoId);
   const entrada = { descricao, quantidade, horas, custosExtras, percentualLucro };
   const previa = custoSelecionado ? calcularPreviaOrcamento(entrada, custoSelecionado.custo_hora) : null;
+  const exigeJustificativaEstatistica = recomendacaoExigeJustificativa(horas.replace(',', '.'), recomendacao);
+
+  async function consultarRecomendacao() {
+    const quantidadeNormalizada = Number(quantidade.replace(',', '.'));
+    if (!servicoId || !Number.isFinite(quantidadeNormalizada) || quantidadeNormalizada <= 0) {
+      setMensagem('Informe serviço e quantidade positiva antes de consultar a recomendação.');
+      return;
+    }
+    setConsultandoRecomendacao(true); setMensagem('');
+    const resposta = await cliente.rpc('recomendar_horas_demonstrativas', { servico: servicoId, quantidade_nova: quantidadeNormalizada, equipamento: equipamentoId || null });
+    if (resposta.error) setMensagem('Não foi possível consultar a recomendação estatística.');
+    else setRecomendacao(resposta.data as RecomendacaoPersistente);
+    setConsultandoRecomendacao(false);
+  }
 
   async function salvar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -420,6 +437,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
             <div className="linha-campos-orcamento"><label htmlFor="quantidade-orcamento">Quantidade<input id="quantidade-orcamento" required inputMode="decimal" value={quantidade} onChange={(evento) => setQuantidade(evento.target.value)} /></label><label htmlFor="horas-orcamento">Horas estimadas<input id="horas-orcamento" required inputMode="decimal" value={horas} onChange={(evento) => setHoras(evento.target.value)} /></label></div>
             <label htmlFor="equipamento-orcamento">Equipamento</label>
             <select id="equipamento-orcamento" required value={equipamentoId} onChange={(evento) => setEquipamentoId(evento.target.value)}>{equipamentos.map((equipamento) => <option key={equipamento.id} value={equipamento.id}>{equipamento.nome}</option>)}</select>
+            <div className="recomendacao-orcamento-persistente"><Sparkles size={18} /><div><strong>Assistente estatístico persistente</strong>{recomendacao ? <p>{recomendacao.horas_sugeridas === null ? 'Ainda não há caso formalizado para este serviço.' : `${formatarHoras(recomendacao.horas_sugeridas)} sugeridas · ${recomendacao.quantidade_casos} casos · confiança ${recomendacao.confianca}`}</p> : <p>Consulte casos concluídos com lição formalizada antes de definir as horas.</p>}{recomendacao?.q1 !== null && recomendacao?.q1 !== undefined && <small>Faixa Q1–Q3: {formatarHoras(recomendacao.q1)} a {formatarHoras(recomendacao.q3)}.</small>}{exigeJustificativaEstatistica && <small className="fora-faixa">A estimativa atual está fora de Q1–Q3 e exige justificativa na validação.</small>}</div><span><button type="button" disabled={consultandoRecomendacao} onClick={() => void consultarRecomendacao()}>{consultandoRecomendacao ? 'Consultando…' : 'Consultar'}</button>{recomendacao?.horas_sugeridas !== null && recomendacao?.horas_sugeridas !== undefined && <button type="button" onClick={() => setHoras(String(recomendacao.horas_sugeridas))}>Aplicar</button>}</span></div>
             {custoSelecionado
               ? <p className="custo-atual">Custo vigente demonstrativo: <strong>{formatarDinheiro(custoSelecionado.custo_hora)}</strong></p>
               : <p className="custo-atual"><ShieldCheck size={13} /> O custo-hora fica protegido e será aplicado pelo servidor.</p>}

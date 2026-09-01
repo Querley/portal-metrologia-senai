@@ -3,14 +3,14 @@
 ## Marcos
 
 - [x] **22–24 ago** — organização inicial, documentação, identidade visual, contratos e estrutura Supabase.
-- [ ] **25–30 ago** — autenticação real, perfis, custos, orçamento, execução, lições, reset demonstrativo e recomendação.
+- [ ] **25 ago–1º set** — autenticação real, perfis, custos, orçamento, execução, lições, reset demonstrativo e recomendação.
 - [ ] **31 ago–4 set** — empresas, solicitações, propostas, PDF, aceite, anexos e chat.
 - [ ] **5–8 set** — CMS completo, catálogo, equipamentos, contato e traduções revisadas.
 - [ ] **9–10 set** — gerador de lições, bot público e assistente interno com sanitização.
 - [ ] **11–12 set** — E2E, RLS, acessibilidade, backup, observabilidade, documentação e ensaio.
 - [ ] **13 set** — congelamento, verificação, tag e entrega.
 
-## Estado em 31 de agosto de 2026
+## Estado em 1º de setembro de 2026
 
 - [x] projeto Supabase de homologação conectado ao site publicado;
 - [x] login por e-mail sem autocadastro, com Administrador, Validador e Técnico sintéticos confirmados;
@@ -23,7 +23,8 @@
 - [x] alçada de criação e aprovação confirmada: Técnico cria e envia; Validador e Administrador também executam essas ações e podem aprovar;
 - [x] alçada negativa confirmada: Validador e Administrador devolvem ou rejeitam com justificativa; somente Administrador publica após PDF imutável;
 - [x] correção, devolução, rejeição, reenvio e proteção da publicação implementados e validados por perfil na homologação;
-- [ ] fluxo vertical persistente `orçar → executar → comparar → aprender → recomendar`;
+- [x] fluxo persistente até `orçar → executar → comparar`, incluindo fechamento separado da aprovação final;
+- [x] aplicar e validar em homologação as migrations `202609010025` e `202609010026`, fechando `aprender → recomendar` com lições revisionadas, indicadores e estatística;
 - [ ] projeto Supabase de produção, usuários internos reais e carga privada de custos reais.
 
 ## Recorte iniciado em 28 de agosto de 2026
@@ -59,6 +60,8 @@
 - [x] aplicar e registrar a migration `202609010023` e validar suas RPCs protegidas;
 - [x] publicar e validar o fluxo de fechamento pelos três perfis internos;
 - [x] aplicar a migration `202609010024` e confirmar que o Técnico visualiza trabalhos criados por outro perfil;
+- [x] corrigir o roteiro E2E público e manter os mesmos cenários em Chrome desktop e Pixel 7;
+- [x] preparar lições persistentes, comparação estimado versus realizado e recomendação estatística sem mistura de origem;
 - [ ] modelar futuramente a atribuição de responsável por execução antes de operar com dados reais;
 
 ## Dependências institucionais

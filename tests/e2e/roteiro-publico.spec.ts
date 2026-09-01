@@ -5,11 +5,11 @@ test('visitante navega da página inicial ao catálogo e à solicitação', asyn
   await expect(page.getByRole('heading', { name: /Precisão para medir/i })).toBeVisible();
   await expect(page.locator('.medicao, .cartao-flutuante')).toHaveCount(0);
   await page.getByRole('link', { name: 'Conhecer serviços' }).click();
-  await page.getByRole('link', { name: /Saiba mais sobre Escaneamento 3D/i }).click();
-  await expect(page.getByRole('heading', { name: 'Serviços e equipamentos' })).toBeVisible();
-  await page.getByRole('link', { name: /Solicitar análise/i }).first().click();
-  await expect(page.getByRole('heading', { name: 'Solicite uma análise' })).toBeVisible();
-  await expect(page.getByText('Ambiente de demonstração.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Soluções organizadas por setor' })).toBeVisible();
+  await page.getByRole('link', { name: 'Escaneamento 3D e digitalização de peças' }).click();
+  await expect(page.getByRole('heading', { name: 'Solicite uma análise sem criar uma conta' })).toBeVisible();
+  await expect(page.getByText('Homologação persistente.')).toBeVisible();
+  await expect(page.getByLabel('Tipo de necessidade')).toHaveValue('digitalizacao-modelo-3d');
   await expect(page.locator('.navegacao-simples')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   await expect(page.locator('.cabecalho-publico-conteudo')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   const larguraFormulario = (await page.locator('.pagina-form').boundingBox())?.width ?? 0;
@@ -41,16 +41,18 @@ test('catálogo apresenta o parque atual e abre a página detalhada', async ({ p
 
 test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
   await page.goto('/solicitar?servico=outro');
-  await expect(page.getByLabel('Serviço desejado')).toHaveValue('outro');
-  await expect(page.getByLabel(/Qual serviço, equipamento ou resultado/i)).toBeVisible();
+  await expect(page.getByLabel('Tipo de necessidade')).toHaveValue('outro');
+  await expect(page.getByLabel('Qual resultado você espera?')).toBeVisible();
 });
 
 test('serviço oficial abre uma solicitação já classificada', async ({ page }) => {
   await page.goto('/catalogo');
-  await expect(page.locator('.grade-servicos-oficiais article')).toHaveCount(10);
-  await page.getByRole('link', { name: 'Solicitar este serviço' }).last().click();
-  await expect(page.getByLabel('Serviço desejado')).toHaveValue('almoxarifado-virtual-biblioteca-digital');
-  await expect(page.getByRole('option', { name: /Tomografia industrial/i })).toHaveCount(1);
+  const servicosDoSetor = page.locator('.conteudo-setor a[href^="/solicitar?servico="]');
+  await expect(servicosDoSetor).toHaveCount(10);
+  await page.getByRole('link', { name: 'Apoio na criação de almoxarifado virtual e biblioteca digital de peças' }).click();
+  await expect(page.getByLabel('Tipo de necessidade')).toHaveValue('orientacao-tecnica');
+  await expect(page.getByRole('option', { name: 'Inspeção interna sem destruir a peça' })).toHaveCount(1);
+  await expect(page.getByLabel('Qual resultado você espera?')).toBeVisible();
 });
 
 test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }) => {
@@ -69,6 +71,8 @@ test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }
 
 test('área interna oferece autenticação e alternativa de demonstração', async ({ page }) => {
   await page.goto('/portal');
-  await expect(page.getByRole('heading', { name: 'Entrar no Portal de Metrologia' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Prefiro abrir a demonstração local' })).toHaveAttribute('href', '/portal/demonstracao');
+  await expect(page.getByText('Acesso protegido')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Entrar no Portal de Metrologia|Integração de homologação pendente/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Abrir demonstração interna' })).toHaveAttribute('href', '/portal/demonstracao');
+  await expect(page.getByRole('link', { name: 'Ver demonstração da área do cliente' })).toHaveAttribute('href', '/portal/cliente-demonstracao');
 });

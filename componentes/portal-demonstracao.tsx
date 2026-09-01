@@ -12,6 +12,7 @@ import { recomendarHoras } from '../lib/recomendacao';
 import { sanitizarParaIa } from '../lib/seguranca-ia';
 import type { SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
 import { CustosEquipamento } from './custos-equipamento';
+import { ConhecimentoPersistente } from './conhecimento-persistente';
 import { ExecucoesPersistentes } from './execucoes-persistentes';
 import { MarcaOficial } from './marca-oficial';
 import { MensagensPersistentes } from './mensagens-persistentes';
@@ -89,7 +90,9 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         {secao === 'servicos' && (clienteSupabase && perfilInterno
           ? <ExecucoesPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
           : <ExecucaoDemonstrativa />)}
-        {secao === 'conhecimento' && <Conhecimento recomendacao={recomendacao} />}
+        {secao === 'conhecimento' && (clienteSupabase && perfilInterno
+          ? <ConhecimentoPersistente cliente={clienteSupabase} perfil={perfilInterno} />
+          : <Conhecimento recomendacao={recomendacao} />)}
         {secao === 'mensagens' && (mensagensPersistentesDisponiveis && clienteSupabase && perfilInterno
           ? <MensagensPersistentes cliente={clienteSupabase} perfil={perfilInterno} />
           : <Mensagens />)}

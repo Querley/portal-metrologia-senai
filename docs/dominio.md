@@ -14,6 +14,7 @@
 - A carga real inicial da planilha restrita usa como `vigente_desde` a data da primeira carga, pois os valores já estão em vigor e a fonte não informa uma data anterior.
 - Custo-hora é versionado: uma correção encerra a vigência anterior e cria outra, sem apagar o histórico.
 - Lição formalizada não é editada; revisão cria versão em validação.
+- Enquanto não existir atribuição formal, os três perfis operacionais acessam todas as execuções demonstrativas; essa exceção não amplia acesso a custos nem a decisões de aprovação.
 
 ## Estados
 

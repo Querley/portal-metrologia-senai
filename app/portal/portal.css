@@ -325,3 +325,24 @@
 .pre-proposta-pdf > footer button:last-child { color:white; background:#006da9; border-color:#006da9; }
 @media (max-width:650px) { .pre-proposta-pdf { padding:25px 20px; }.pre-proposta-pdf > header { align-items:flex-start; flex-direction:column; }.pre-proposta-pdf .marca-oficial { max-width:100%; }.pre-proposta-pdf > header > div { text-align:left; }.pre-proposta-pdf dl div { grid-template-columns:1fr; gap:6px; }.pre-proposta-pdf > footer { align-items:stretch; }.pre-proposta-pdf > footer button { justify-content:center; } }
 @media print { body * { visibility:hidden!important; }.pre-proposta-pdf,.pre-proposta-pdf * { visibility:visible!important; }.fundo-pre-proposta { position:static; display:block; padding:0; background:white; }.pre-proposta-pdf { position:absolute; inset:0; width:100%; max-height:none; overflow:visible; padding:18mm; box-shadow:none; }.pre-proposta-pdf > footer { display:none; } }
+
+.conhecimento-persistente { display:grid; gap:14px; }
+.recomendador-persistente > header,.lista-indicadores > header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.recomendador-persistente { padding-bottom:20px; }
+.recomendador-persistente form { display:grid; grid-template-columns:minmax(220px,2fr) minmax(120px,1fr) auto; align-items:end; gap:12px; padding:18px 20px 0; }
+.recomendador-persistente label,.nova-licao label { display:grid; gap:6px; color:#526f7e; font-size:10px; font-weight:750; }
+.recomendador-persistente input,.recomendador-persistente select,.nova-licao input,.nova-licao textarea { width:100%; min-height:42px; padding:9px 11px; color:#173d51; background:white; border:1px solid #b8cfd8; font:inherit; }
+.recomendador-persistente button,.lista-indicadores > header button,.licao-registrada button,.nova-licao button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:42px; padding:0 13px; color:white; background:#0875ad; border:1px solid #0875ad; cursor:pointer; font-size:10px; font-weight:800; }
+.resultado-recomendacao { display:flex; align-items:center; flex-wrap:wrap; gap:8px 18px; margin:16px 20px 0; padding:14px; color:#28596e; background:#eaf7fa; border-left:3px solid #16a5cc; }
+.resultado-recomendacao strong { color:#096c99; font-size:15px; }.resultado-recomendacao small { flex-basis:100%; }
+.lista-indicadores > header button { color:#1b637f; background:white; border-color:#b9d1da; }
+.indicador-execucao { padding:18px 20px; border-top:1px solid #e1eaee; }
+.indicador-execucao > header { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+.indicador-execucao > header strong,.indicador-execucao > header small { display:block; }.indicador-execucao > header small { margin-top:4px; color:#6b818d; }
+.metricas-comparadas { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+.metrica-comparada { display:grid; gap:5px; padding:12px; background:#f5f8f9; border:1px solid #e1eaed; }.metrica-comparada small { color:#637b88; }.metrica-comparada strong { color:#244d61; font-size:12px; }.metrica-comparada span { font-size:10px; font-weight:750; }.dentro-faixa { color:#277c58; }.fora-faixa { color:#a34a38; }
+.licao-registrada { display:flex; align-items:flex-start; gap:10px; margin-top:12px; padding:13px; color:#1d6c50; background:#edf8f3; }.licao-registrada div { flex:1; }.licao-registrada strong,.licao-registrada small { display:block; }.licao-registrada small { margin-top:4px; color:#5b7b6d; }
+.nova-licao { display:grid; grid-template-columns:minmax(0,2fr) minmax(180px,1fr) auto; align-items:end; gap:10px; margin-top:12px; padding:13px; background:#f7f9fa; }.nova-licao textarea { min-height:74px; resize:vertical; }.nova-licao button { min-height:44px; }
+@media (max-width:850px) { .metricas-comparadas { grid-template-columns:1fr; }.nova-licao,.recomendador-persistente form { grid-template-columns:1fr; }.nova-licao button,.recomendador-persistente button { width:100%; }.indicador-execucao > header { flex-direction:column; } }
+.recomendacao-orcamento-persistente { display:flex; align-items:flex-start; gap:10px; padding:13px; color:#225a71; background:#eaf7fa; border-left:3px solid #16a5cc; }.recomendacao-orcamento-persistente > div { flex:1; }.recomendacao-orcamento-persistente strong,.recomendacao-orcamento-persistente small { display:block; }.recomendacao-orcamento-persistente p { margin:4px 0; }.recomendacao-orcamento-persistente > span { display:flex; gap:6px; }.recomendacao-orcamento-persistente button { min-height:36px; padding:0 10px; color:#096c99; background:white; border:1px solid #9ccfdd; cursor:pointer; font-size:10px; font-weight:800; }
+@media (max-width:650px) { .recomendacao-orcamento-persistente { flex-wrap:wrap; }.recomendacao-orcamento-persistente > span { width:100%; }.recomendacao-orcamento-persistente button { flex:1; } }
