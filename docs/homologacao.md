@@ -1,6 +1,6 @@
 # Homologação Supabase
 
-## Estado validado em 31 de agosto de 2026
+## Estado validado em 1º de setembro de 2026
 
 O site publicado está conectado ao projeto Supabase de homologação. O login por e-mail foi testado com sucesso pelo mantenedor usando Administrador e Validador. O perfil Técnico também está provisionado e teve suas autorizações validadas em transação revertida:
 
@@ -11,7 +11,7 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202608310019` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador; `017` cria a pré-proposta sobre a solicitação Cliente existente e impede uma segunda proposta ativa para o mesmo atendimento; `018` cria o bucket privado e as funções protegidas do PDF; `019` impede sua substituição depois que caminho e SHA-256 forem congelados.
+As migrations `202608220001` até `202609010020` estão aplicadas e registradas no histórico remoto. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador; `017` cria a pré-proposta sobre a solicitação Cliente existente e impede uma segunda proposta ativa para o mesmo atendimento; `018` cria o bucket privado e as funções protegidas do PDF; `019` impede sua substituição depois que caminho e SHA-256 forem congelados; `020` corrige a leitura do arquivo pelo Cliente por meio de autorização protegida, sem tornar o bucket público.
 
 ## Dados e autorização
 
@@ -37,7 +37,7 @@ As migrations `202608220001` até `202608310019` estão aplicadas e registradas 
 - O Cliente pode atualizar apenas o próprio nome por função protegida, sem alterar vínculo, função ou empresa.
 - Técnico, Validador e Administrador podem iniciar uma pré-proposta a partir da fila. O servidor valida a solicitação ativada, reaproveita empresa e protocolo, congela o custo vigente e registra auditoria.
 - Somente Administrador envia e congela o PDF privado de uma versão aprovada; depois disso, a política de Storage impede sobrescrita.
-- O Cliente recebe a referência somente após a emissão e apenas para a própria empresa. O navegador recalcula o SHA-256 do download e bloqueia divergências.
+- O Cliente recebe a referência e o arquivo somente após a emissão e apenas para a própria empresa. A política do Storage usa função protegida para validar o vínculo apesar das RLS internas; o navegador recalcula o SHA-256 e bloqueia divergências.
 - Reset demonstrativo nunca alcança a origem real.
 
 ## Retomada por outro chat

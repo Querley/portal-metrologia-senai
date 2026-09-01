@@ -48,6 +48,7 @@
 - [x] repetir solicitação, ativação e mensagens pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
 - [x] gerar e armazenar o PDF em bucket privado, congelar seu SHA-256 e verificar a integridade no download; o Nectar permanece fora do escopo;
+- [x] corrigir a autorização de leitura do PDF pelo Cliente sem tornar o bucket público nem contornar o vínculo empresarial;
 - [ ] validar pela interface publicada o ciclo `aprovar → gerar PDF → emitir → baixar como Cliente`;
 - [ ] iniciar a execução somente a partir da pré-proposta emitida e permitir que a equipe atualize etapas visíveis ao Cliente;
 
