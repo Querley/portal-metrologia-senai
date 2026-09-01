@@ -1,8 +1,8 @@
 # Etapas sugeridas por serviço
 
-**Status:** proposta para validação; ainda não automatizada no banco.
+**Status:** macroetapas aprovadas para homologação em 1º de setembro de 2026; automação preparada na migration `202609010022`.
 
-Estas etapas são macroetapas simples para a visualização oferecida ao Cliente. A equipe pode manter atividades técnicas internas adicionais sem expô-las. Os nomes finais, critérios de conclusão e entregáveis devem ser confirmados antes de criar os modelos persistentes.
+Estas etapas são macroetapas simples para a visualização oferecida ao Cliente. A equipe pode manter atividades técnicas internas adicionais sem expô-las. Cada execução recebe uma cópia do modelo vigente, preservando seu histórico quando o modelo for alterado no futuro.
 
 ## 1. Escaneamento 3D e digitalização de peças
 
@@ -84,12 +84,12 @@ Estas etapas são macroetapas simples para a visualização oferecida ao Cliente
 4. Validação
 5. Disponibilização
 
-## Decisões necessárias antes da automação
+## Decisões para evoluções futuras
 
-- confirmar se todos os nomes acima são compreensíveis para o Cliente;
-- definir quais etapas são visíveis ao Cliente e quais ficam somente na equipe;
+- revisar com clientes se os nomes continuam compreensíveis após os primeiros testes;
+- definir se etapas técnicas adicionais devem ficar somente na equipe;
 - definir o entregável que comprova a conclusão de cada etapa;
 - confirmar se algum serviço precisa de caminhos opcionais, repetição de etapa ou aprovação intermediária do Cliente;
 - definir quem pode editar o progresso: Técnico, Validador e Administrador, mantendo a hierarquia cumulativa já aprovada.
 
-Após a confirmação, uma migração criará modelos versionados por serviço. Ao confirmar o início, o sistema copiará o modelo vigente para a execução, preservando o histórico mesmo que o modelo seja alterado depois.
+A migration `202609010022` cria os modelos versionados. Ao confirmar o início, o sistema copia o modelo vigente para a execução. Neste primeiro recorte, Técnico atualiza execuções originadas por seus próprios trabalhos; Validador e Administrador podem atualizar todas as execuções demonstrativas.

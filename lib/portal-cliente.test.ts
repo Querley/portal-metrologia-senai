@@ -23,6 +23,7 @@ describe('resumo do portal do Cliente', () => {
     expect(situacaoEtapasCliente([], null, 'publicada').titulo).toBe('Aguardando sua decisão');
     expect(situacaoEtapasCliente([], null, 'aceita').titulo).toBe('Aceite registrado');
     expect(situacaoEtapasCliente([], 'em_execucao', 'aceita').titulo).toBe('Início confirmado');
+    expect(situacaoEtapasCliente([etapa({ estado: 'a_fazer', progresso: 0 })], 'em_execucao', 'aceita').titulo).toBe('Trabalho liberado');
   });
 
   it('permite o aceite somente da pré-proposta emitida', () => {
@@ -36,7 +37,7 @@ describe('resumo do portal do Cliente', () => {
       titulo: 'Digitalização',
       descricao: 'Etapa em andamento: 50% concluída.',
     });
-    expect(situacaoEtapasCliente([etapa({ estado: 'concluida', progresso: 100 })]).titulo).toBe('Serviço concluído');
+    expect(situacaoEtapasCliente([etapa({ estado: 'concluida', progresso: 100 })]).titulo).toBe('Etapas concluídas');
   });
 
   it('traduz o slug técnico para o título público', () => {

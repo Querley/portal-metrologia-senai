@@ -74,6 +74,15 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       .subscribe();
     return () => { void cliente.removeChannel(canal); };
   }, [carregarMensagens, cliente, demonstracao, selecionadaId]);
+  useEffect(() => {
+    if (!cliente || demonstracao) return;
+    const canal = cliente
+      .channel('etapas-portal-cliente')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'etapas_execucao' }, () => void carregar())
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'etapas_execucao' }, () => void carregar())
+      .subscribe();
+    return () => { void cliente.removeChannel(canal); };
+  }, [carregar, cliente, demonstracao]);
 
   const selecionada = useMemo(() => solicitacoes.find((item) => item.id === selecionadaId) ?? solicitacoes[0], [selecionadaId, solicitacoes]);
   const situacaoAtual = useMemo(() => selecionada

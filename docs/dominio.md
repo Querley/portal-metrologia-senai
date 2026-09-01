@@ -32,6 +32,7 @@ A aprovação não emite a pré-proposta. Somente Administrador promove `aprovad
 - O acompanhamento exige usuário autenticado e vínculo empresarial previamente aprovado.
 - Cliente externo nunca vê rascunhos internos, custos ou margens; vê somente pré-proposta emitida, etapas marcadas como visíveis e mensagens da própria empresa.
 - Cada etapa tem ordem, estado `a_fazer | em_andamento | concluida`, progresso de 0 a 100 e data de atualização.
+- Concluir todas as etapas não encerra automaticamente o trabalho. O Técnico registra o fechamento; Validador ou Administrador aprova e conclui definitivamente, ou devolve ao Técnico com justificativa.
 - A ciência do aviso de privacidade registra versão e data no vínculo empresarial.
 
 ## Cálculos

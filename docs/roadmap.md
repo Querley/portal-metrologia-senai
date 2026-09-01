@@ -51,8 +51,11 @@
 - [x] corrigir a autorização de leitura do PDF pelo Cliente sem tornar o bucket público nem contornar o vínculo empresarial;
 - [ ] validar pela interface publicada o ciclo `aprovar → gerar PDF → emitir → baixar como Cliente`;
 - [x] aplicar a migration `202609010021`: Cliente aceita a pré-proposta emitida e somente Administrador confirma o início auditado;
-- [ ] validar pela interface publicada o aceite do Cliente e a confirmação de início pelo Administrador;
-- [ ] validar e automatizar os modelos de etapas propostos em `docs/etapas-sugeridas-servicos.md`, permitindo que a equipe atualize apenas a execução autorizada;
+- [x] validar pela interface publicada o aceite do Cliente e a confirmação de início pelo Administrador;
+- [x] aprovar as macroetapas simples dos dez serviços em `docs/etapas-sugeridas-servicos.md`;
+- [x] aplicar e registrar a migration `202609010022`, com modelos versionados, atualização auditada e acompanhamento em tempo real;
+- [ ] validar na interface publicada a atualização das etapas pelos três perfis internos e sua leitura pelo Cliente;
+- [ ] implementar fechamento persistente: Técnico registra; Validador ou Administrador aprova ou devolve;
 
 ## Dependências institucionais
 

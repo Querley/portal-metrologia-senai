@@ -101,8 +101,15 @@ export function situacaoEtapasCliente(
 
   if (etapas.every((etapa) => etapa.estado === 'concluida')) {
     return {
-      titulo: 'Serviço concluído',
-      descricao: 'Todas as etapas visíveis foram concluídas pela equipe.',
+      titulo: 'Etapas concluídas',
+      descricao: 'A equipe concluiu as etapas visíveis e está preparando o encerramento do trabalho.',
+    };
+  }
+
+  if (execucaoEstado === 'em_execucao' && etapas.every((etapa) => etapa.estado === 'a_fazer')) {
+    return {
+      titulo: 'Trabalho liberado',
+      descricao: 'O laboratório confirmou o início; a primeira etapa ainda será iniciada pela equipe.',
     };
   }
 
