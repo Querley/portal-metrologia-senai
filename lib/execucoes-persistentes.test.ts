@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { calcularProgressoExecucao, normalizarAtualizacaoEtapa, podeOperarExecucoes, type EtapaExecucaoInterna } from './execucoes-persistentes';
+import { calcularProgressoExecucao, etapasConcluidas, normalizarAtualizacaoEtapa, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EtapaExecucaoInterna } from './execucoes-persistentes';
 
 function etapa(progresso: number): EtapaExecucaoInterna {
   return {
@@ -23,6 +23,29 @@ describe('execuções persistentes', () => {
     expect(podeOperarExecucoes('administrador')).toBe(true);
   });
 
+  it('reserva a decisão do fechamento ao Validador e Administrador', () => {
+    expect(podeDecidirFechamento('tecnico')).toBe(false);
+    expect(podeDecidirFechamento('validador')).toBe(true);
+    expect(podeDecidirFechamento('administrador')).toBe(true);
+  });
+
+  it('só libera fechamento depois de todas as etapas', () => {
+    expect(etapasConcluidas([])).toBe(false);
+    expect(etapasConcluidas([etapa(100)])).toBe(true);
+    expect(etapasConcluidas([etapa(100), etapa(40)])).toBe(false);
+  });
+
+  it('valida horas, observação e causa condicional', () => {
+    const base = {
+      equipamentos: [{ equipamento_id: 'eq-1', nome: 'Equipamento', horas_estimadas: 2, horas_reais: null }],
+      horas: { 'eq-1': 2.5 }, custosExtras: 0, retrabalho: false, mudancaEscopo: false,
+      causa: '', observacoes: 'Serviço executado conforme o plano.', aprendizado: '',
+    };
+    expect(validarFechamento(base)).toBeNull();
+    expect(validarFechamento({ ...base, retrabalho: true })).toMatch(/causa principal/i);
+    expect(validarFechamento({ ...base, horas: { 'eq-1': -1 } })).toMatch(/horas reais/i);
+  });
+
   it('calcula o progresso médio das macroetapas', () => {
     expect(calcularProgressoExecucao([])).toBe(0);
     expect(calcularProgressoExecucao([etapa(100), etapa(50), etapa(0)])).toBe(50);
@@ -42,5 +65,12 @@ describe('execuções persistentes', () => {
     expect(migracao).toContain("perfil = 'tecnico' and autor_proposta is distinct from usuario");
     expect(migracao).toContain("'atualizar_etapa_execucao_demonstrativa'");
     expect(migracao).not.toMatch(/delete\s+from/i);
+  });
+
+  it('fecha somente por decisão de Validador ou Administrador no servidor', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202609010023_fechamento_execucao_aprovado.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain("perfil not in ('validador', 'administrador')");
+    expect(migracao).toContain("fechamento_estado = case when decisao = 'aprovar' then 'aprovado' else 'devolvido' end");
+    expect(migracao).toContain("estado = case when decisao = 'aprovar' then 'concluido'::estado_servico else estado end");
   });
 });

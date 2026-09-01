@@ -207,6 +207,50 @@
 .acoes-etapa-operacional button.concluir { color:#176b48; border-color:#93c7ab; }
 .acoes-etapa-operacional button.concluir:hover { background:#edf8f3; }
 .acoes-etapa-operacional button:disabled { cursor:wait; opacity:.55; }
+.fechamento-execucao { margin:0 20px 20px; padding:18px; background:#f7fafb; border:1px solid #d5e2e7; }
+.fechamento-execucao > header { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:15px; }
+.fechamento-execucao > header span { display:flex; align-items:center; gap:6px; color:#0876aa; font-size:8px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.fechamento-execucao > header h3 { margin:5px 0 0; color:#173e52; font-size:15px; }
+.fechamento-execucao > header > strong { padding:6px 8px; color:#496b79; background:white; border:1px solid #cadbe2; font-size:8px; text-transform:uppercase; }
+.fechamento-aprovado { background:#f0f8f4; border-color:#a9d2ba; }
+.fechamento-em_validacao { background:#f2f8fb; border-color:#b9d8e4; }
+.fechamento-devolvido { background:#fff8f0; border-color:#edc9a5; }
+.orientacao-fechamento { margin:0; color:#617b88; font-size:10px; line-height:1.55; }
+.devolucao-fechamento { display:flex; align-items:flex-start; gap:9px; margin-bottom:14px; padding:11px; color:#8a4d1f; background:#fff3e4; border:1px solid #edc9a5; }
+.devolucao-fechamento svg { flex:0 0 auto; }
+.devolucao-fechamento p { display:grid; gap:3px; margin:0; font-size:10px; line-height:1.45; }
+.formulario-fechamento { display:grid; gap:12px; }
+.grade-horas-fechamento { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.grade-horas-fechamento label { display:grid; grid-template-columns:minmax(0,1fr) 90px auto; align-items:center; gap:9px; padding:10px; background:white; border:1px solid #d2e0e5; }
+.grade-horas-fechamento label > span { display:grid; gap:3px; color:#244e61; font-size:10px; font-weight:800; }
+.grade-horas-fechamento label small { color:#708690; font-size:8px; font-weight:600; }
+.grade-horas-fechamento input, .campo-fechamento input, .campo-fechamento textarea, .decisao-fechamento textarea { width:100%; color:#173e52; background:white; border:1px solid #b9ced7; font:inherit; font-size:10px; }
+.grade-horas-fechamento input, .campo-fechamento input { min-height:38px; padding:0 9px; }
+.grade-horas-fechamento em { color:#6c838d; font-size:8px; font-style:normal; }
+.campo-fechamento { display:grid; gap:6px; color:#355d70; font-size:9px; font-weight:800; }
+.campo-fechamento textarea, .decisao-fechamento textarea { min-height:78px; padding:9px; resize:vertical; line-height:1.45; }
+.campo-fechamento span small { color:#758b95; font-weight:600; }
+.marcadores-fechamento { display:flex; flex-wrap:wrap; gap:16px; padding:4px 0; }
+.marcadores-fechamento label { display:flex; align-items:center; gap:7px; color:#355d70; font-size:9px; font-weight:750; }
+.marcadores-fechamento input { width:16px; height:16px; accent-color:#087db5; }
+.enviar-fechamento, .decisao-fechamento button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:40px; padding:0 13px; font:inherit; font-size:9px; font-weight:850; cursor:pointer; }
+.enviar-fechamento { justify-self:start; color:white; background:#0879ad; border:1px solid #0879ad; }
+.enviar-fechamento:disabled, .decisao-fechamento button:disabled { cursor:wait; opacity:.55; }
+.resumo-fechamento { display:grid; gap:12px; }
+.resumo-fechamento dl { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0; }
+.resumo-fechamento dl div { padding:10px; background:white; border:1px solid #d1e0e6; }
+.resumo-fechamento dt { color:#6d8490; font-size:8px; }
+.resumo-fechamento dd { margin:4px 0 0; color:#1d4b60; font-size:10px; font-weight:800; }
+.resumo-fechamento > p { margin:0; color:#456775; font-size:10px; line-height:1.5; }
+.decisao-fechamento { display:grid; gap:9px; padding-top:12px; border-top:1px solid #d1e0e6; }
+.decisao-fechamento label { display:grid; gap:6px; color:#355d70; font-size:9px; font-weight:800; }
+.decisao-fechamento > div { display:flex; justify-content:flex-end; gap:8px; }
+.decisao-fechamento button.devolver { color:#8a4d1f; background:white; border:1px solid #d5a878; }
+.decisao-fechamento button.aprovar { color:white; background:#277c58; border:1px solid #277c58; }
+.aprovacao-fechamento { display:flex; align-items:flex-start; gap:10px; color:#176b48; }
+.aprovacao-fechamento svg { flex:0 0 auto; }
+.aprovacao-fechamento strong { color:#145b3e; font-size:11px; }
+.aprovacao-fechamento p { margin:4px 0 0; color:#4c7563; font-size:9px; line-height:1.5; }
 
 @media (max-width:650px) {
   .solicitacao-vinculada { align-items:flex-start; flex-direction:column; }
@@ -221,6 +265,14 @@
   .acoes-etapa-operacional { align-items:stretch; flex-direction:column; }
   .acoes-etapa-operacional label { justify-content:space-between; }
   .acoes-etapa-operacional button { justify-content:center; min-height:42px; }
+  .fechamento-execucao { margin:0 12px 14px; padding:14px; }
+  .fechamento-execucao > header { align-items:flex-start; flex-direction:column; }
+  .grade-horas-fechamento { grid-template-columns:1fr; }
+  .grade-horas-fechamento label { grid-template-columns:minmax(0,1fr) 76px; }
+  .grade-horas-fechamento em { grid-column:2; }
+  .resumo-fechamento dl { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .decisao-fechamento > div { align-items:stretch; flex-direction:column; }
+  .decisao-fechamento button, .enviar-fechamento { width:100%; min-height:44px; }
 }
 .painel-mensagens-persistentes { display:grid; gap:14px; }
 .mensagens-reais { min-height:620px; }

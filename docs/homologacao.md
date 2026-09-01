@@ -15,6 +15,8 @@ As migrations `202608220001` até `202609010022` estão aplicadas e registradas 
 
 O mantenedor validou pela interface publicada o aceite do Cliente e a confirmação de início pelo Administrador. A migration `202609010022` foi executada e registrada em 1º de setembro. A presença da RPC foi confirmada pela API anônima, que respondeu `401 permission denied`, como esperado para uma função exclusiva de usuários autenticados.
 
+A migration `202609010023` está preparada, mas ainda não aplicada. Ela adiciona o fechamento operacional com horas reais por equipamento, custos extras, ocorrências e aprendizado; Técnico registra e Validador ou Administrador aprova ou devolve. A execução só muda para `concluido` após a aprovação.
+
 ## Dados e autorização
 
 - Homologação contém somente massa sintética: dez serviços, sete equipamentos e sete custos demonstrativos.
