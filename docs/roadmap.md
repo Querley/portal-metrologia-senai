@@ -56,7 +56,8 @@
 - [x] aplicar e registrar a migration `202609010022`, com modelos versionados, atualização auditada e acompanhamento em tempo real;
 - [ ] validar na interface publicada a atualização das etapas pelos três perfis internos e sua leitura pelo Cliente;
 - [x] preparar fechamento persistente: Técnico registra; Validador ou Administrador aprova ou devolve;
-- [ ] aplicar e registrar a migration `202609010023`, validar fechamento e publicar o recorte;
+- [x] aplicar e registrar a migration `202609010023` e validar suas RPCs protegidas;
+- [ ] publicar e validar o fluxo de fechamento pelos três perfis internos;
 
 ## Dependências institucionais
 
