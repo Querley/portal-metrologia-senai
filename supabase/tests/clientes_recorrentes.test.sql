@@ -52,6 +52,7 @@ select lives_ok(
   $$select ativar_solicitacao_cliente_demonstrativa(repeat('a', 64))$$,
   'Cliente com empresa ativa vincula outro trabalho sem criar nova empresa'
 );
+reset role;
 select is(
   (select count(*) from solicitacoes where empresa_id = 'a2000000-0000-0000-0000-000000000001'),
   1::bigint,
@@ -63,6 +64,9 @@ select is(
   'Ativacao recorrente nao duplica a empresa'
 );
 
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'a1000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"a1000000-0000-0000-0000-000000000001","email":"recorrente@example.test","role":"authenticated"}', true);
 select lives_ok(
   $$select criar_solicitacao_cliente_demonstrativa(jsonb_build_object(
     'necessidade', 'analise-falha-desgaste',
@@ -74,11 +78,16 @@ select lives_ok(
   ))$$,
   'Cliente cria outro trabalho diretamente na area protegida'
 );
+reset role;
 select is(
   (select count(*) from solicitacoes where empresa_id = 'a2000000-0000-0000-0000-000000000001'),
   2::bigint,
   'Empresa mantem dois trabalhos simultaneos'
 );
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'a1000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"a1000000-0000-0000-0000-000000000001","email":"recorrente@example.test","role":"authenticated"}', true);
 select is(
   jsonb_array_length(listar_portal_cliente()),
   2,
