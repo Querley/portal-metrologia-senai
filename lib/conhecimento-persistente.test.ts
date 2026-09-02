@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { formatarDesvio, podeFormalizarLicao, recomendacaoExigeJustificativa, type RecomendacaoPersistente } from './conhecimento-persistente';
+import { formatarDesvio, normalizarJustificativaEstimativa, podeFormalizarLicao, recomendacaoExigeJustificativa, type RecomendacaoPersistente } from './conhecimento-persistente';
 
 const base: RecomendacaoPersistente = {
   quantidade_casos: 5, confianca: 'media', q1: '8', mediana: '10', q3: '12',
@@ -24,6 +24,21 @@ describe('conhecimento persistente', () => {
 
   it('não exige faixa estatística antes de cinco casos', () => {
     expect(recomendacaoExigeJustificativa('999', { ...base, quantidade_casos: 4 })).toBe(false);
+  });
+
+  it('normaliza a justificativa estatística dentro dos limites persistidos', () => {
+    expect(normalizarJustificativaEstimativa('  Mudança de escopo prevista.  ')).toBe('Mudança de escopo prevista.');
+    expect(normalizarJustificativaEstimativa('curt')).toBeNull();
+    expect(normalizarJustificativaEstimativa('x'.repeat(1001))).toBeNull();
+  });
+
+  it('impõe a justificativa no servidor antes da validação', () => {
+    const sql = readFileSync('supabase/migrations/202609010027_justificativa_estimativa_estatistica.sql', 'utf8');
+    expect(sql).toContain("new.estado = 'em_validacao'");
+    expect(sql).toContain('total >= 5');
+    expect(sql).toContain('horas_novas < q1 or horas_novas > q3');
+    expect(sql).toContain("raise exception 'Estimativa fora da faixa Q1-Q3 exige justificativa");
+    expect(sql).toContain('Somente o autor pode justificar esta estimativa.');
   });
 
   it('mantém as barreiras de origem, conclusão, formalização e custo na migration', () => {

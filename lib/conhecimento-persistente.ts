@@ -62,3 +62,8 @@ export function recomendacaoExigeJustificativa(horas: number | string, recomenda
     return false;
   }
 }
+
+export function normalizarJustificativaEstimativa(valor: string): string | null {
+  const normalizada = valor.trim();
+  return normalizada.length >= 5 && normalizada.length <= 1000 ? normalizada : null;
+}

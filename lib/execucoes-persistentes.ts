@@ -31,7 +31,9 @@ export type ExecucaoInterna = {
   empresa_nome: string;
   servico_slug: string;
   descricao: string;
+  responsavel_id: string | null;
   responsavel_nome: string;
+  responsavel_atribuido_em: string | null;
   fechamento_estado: EstadoFechamento;
   custos_extras_reais: number | null;
   retrabalho: boolean | null;
@@ -46,12 +48,22 @@ export type ExecucaoInterna = {
   etapas: EtapaExecucaoInterna[];
 };
 
+export type ResponsavelOperacional = {
+  usuario_id: string;
+  nome: string;
+  perfil: 'tecnico';
+};
+
 export function podeOperarExecucoes(perfil: PerfilInterno): boolean {
   return perfil === 'tecnico' || perfil === 'validador' || perfil === 'administrador';
 }
 
 export function podeDecidirFechamento(perfil: PerfilInterno): boolean {
   return perfil === 'validador' || perfil === 'administrador';
+}
+
+export function podeAtribuirResponsavel(perfil: PerfilInterno): boolean {
+  return perfil === 'administrador';
 }
 
 export function etapasConcluidas(etapas: EtapaExecucaoInterna[]): boolean {

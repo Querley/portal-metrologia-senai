@@ -62,7 +62,9 @@
 - [x] aplicar a migration `202609010024` e confirmar que o Técnico visualiza trabalhos criados por outro perfil;
 - [x] corrigir o roteiro E2E público e manter os mesmos cenários em Chrome desktop e Pixel 7;
 - [x] preparar lições persistentes, comparação estimado versus realizado e recomendação estatística sem mistura de origem;
-- [ ] modelar futuramente a atribuição de responsável por execução antes de operar com dados reais;
+- [x] persistir a justificativa de estimativa fora de Q1–Q3 e bloquear o envio sem justificativa no servidor;
+- [x] substituir o acesso provisório da migration `024` por atribuição formal de Técnico, exclusiva do Administrador e coberta por RPC, gatilhos e RLS;
+- [x] adicionar testes automatizados de autorização e RLS sobre leitura, operação e reatribuição de execuções;
 
 ## Dependências institucionais
 

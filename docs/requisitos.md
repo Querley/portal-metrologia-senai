@@ -11,8 +11,8 @@
 7. Registrar aceite autenticado da pré-proposta com pessoa, empresa, versão do texto e data; em produção, capturar também o endereço de rede por endpoint protegido e juridicamente aprovado.
 8. Registrar execução, fechamento, realizado, causas, retrabalho, mudança de escopo e lição.
    - O Técnico registra e envia o fechamento; Validador ou Administrador aprova ou devolve com justificativa.
-   - Enquanto não houver atribuição formal, Técnico, Validador e Administrador acessam todas as execuções demonstrativas.
-9. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; exigir justificativa fora de Q1–Q3.
+   - Somente Administrador atribui ou reatribui o Técnico responsável; o Técnico acessa apenas execuções atribuídas, enquanto Validador e Administrador supervisionam todas as execuções demonstrativas.
+9. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; com ao menos cinco casos elegíveis, persistir e exigir justificativa fora de Q1–Q3 antes da validação.
 10. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
 11. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
 12. Permitir que Validador e Administrador consultem custos-hora e que somente Administrador versione esses valores, sempre na origem ativa e sem exclusão de histórico.

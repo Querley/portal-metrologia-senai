@@ -14,7 +14,7 @@
 - A carga real inicial da planilha restrita usa como `vigente_desde` a data da primeira carga, pois os valores já estão em vigor e a fonte não informa uma data anterior.
 - Custo-hora é versionado: uma correção encerra a vigência anterior e cria outra, sem apagar o histórico.
 - Lição formalizada não é editada; revisão cria versão em validação.
-- Enquanto não existir atribuição formal, os três perfis operacionais acessam todas as execuções demonstrativas; essa exceção não amplia acesso a custos nem a decisões de aprovação.
+- Cada execução demonstrativa possui no máximo um Técnico responsável. Somente Administrador atribui ou reatribui; Validador e Administrador mantêm visibilidade de supervisão.
 
 ## Estados
 
@@ -34,7 +34,7 @@ A aprovação não emite a pré-proposta. Somente Administrador promove `aprovad
 - Cliente externo nunca vê rascunhos internos, custos ou margens; vê somente pré-proposta emitida, etapas marcadas como visíveis e mensagens da própria empresa.
 - Cada etapa tem ordem, estado `a_fazer | em_andamento | concluida`, progresso de 0 a 100 e data de atualização.
 - Concluir todas as etapas não encerra automaticamente o trabalho. O Técnico registra o fechamento; Validador ou Administrador aprova e conclui definitivamente, ou devolve ao Técnico com justificativa.
-- Enquanto não houver atribuição formal de responsável, Técnico, Validador e Administrador visualizam e operam todas as execuções demonstrativas. A autoria original e o usuário de cada alteração permanecem na auditoria.
+- O Técnico visualiza e opera somente execuções formalmente atribuídas a ele. Validador e Administrador visualizam todas as execuções demonstrativas; atribuições e alterações permanecem na auditoria.
 - A ciência do aviso de privacidade registra versão e data no vínculo empresarial.
 
 ## Cálculos
@@ -57,4 +57,4 @@ Casos devem ter o mesmo tipo de serviço, origem compatível, serviço concluíd
 - 5–14: Q1, mediana, Q3 e confiança média.
 - 15+: quartis, fator de correção e confiança alta.
 
-Fator de correção = mediana de `horas realizadas ÷ horas estimadas`. Estimativa fora de Q1–Q3 exige justificativa.
+Fator de correção = mediana de `horas realizadas ÷ horas estimadas`. Com cinco ou mais casos elegíveis, estimativa fora de Q1–Q3 exige justificativa persistente de 5 a 1.000 caracteres antes do envio para validação; o servidor recalcula a faixa e bloqueia omissões.

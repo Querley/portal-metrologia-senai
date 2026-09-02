@@ -1,10 +1,10 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Activity, CheckCircle2, Circle, ClipboardCheck, Clock3, Eye, Play, RefreshCw, RotateCcw, Save, Send, ShieldCheck } from 'lucide-react';
+import { Activity, CheckCircle2, Circle, ClipboardCheck, Clock3, Eye, Play, RefreshCw, RotateCcw, Save, Send, ShieldCheck, UserRoundCog } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
-import { calcularProgressoExecucao, etapasConcluidas, normalizarAtualizacaoEtapa, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EstadoEtapaExecucao, type ExecucaoInterna } from '../lib/execucoes-persistentes';
+import { calcularProgressoExecucao, etapasConcluidas, normalizarAtualizacaoEtapa, podeAtribuirResponsavel, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EstadoEtapaExecucao, type ExecucaoInterna, type ResponsavelOperacional } from '../lib/execucoes-persistentes';
 import { tituloServicoCliente } from '../lib/portal-cliente';
 
 const apresentacaoEtapa = {
@@ -35,6 +35,8 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
   const [justificativa, setJustificativa] = useState('');
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
+  const [responsaveis, setResponsaveis] = useState<ResponsavelOperacional[]>([]);
+  const [responsavelSelecionado, setResponsavelSelecionado] = useState('');
 
   const preencherFormulario = useCallback((execucao: ExecucaoInterna) => {
     setHorasReais(Object.fromEntries(execucao.equipamentos.map((item) => [item.equipamento_id, Number(item.horas_reais ?? item.horas_estimadas)])));
@@ -51,18 +53,28 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
     if (!podeOperarExecucoes(perfil)) return;
     setCarregando(true);
     setErro('');
-    const { data, error } = await cliente.rpc('listar_execucoes_demonstrativas');
-    if (error) {
+    const [respostaExecucoes, respostaResponsaveis] = await Promise.all([
+      cliente.rpc('listar_execucoes_demonstrativas'),
+      podeAtribuirResponsavel(perfil)
+        ? cliente.rpc('listar_responsaveis_demonstrativos')
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (respostaExecucoes.error || respostaResponsaveis.error) {
       setErro('Não foi possível carregar as execuções de homologação.');
       setCarregando(false);
       return;
     }
-    const lista = (Array.isArray(data) ? data : []) as ExecucaoInterna[];
+    const lista = (Array.isArray(respostaExecucoes.data) ? respostaExecucoes.data : []) as ExecucaoInterna[];
+    const tecnicos = (respostaResponsaveis.data ?? []) as ResponsavelOperacional[];
     setExecucoes(lista);
+    setResponsaveis(tecnicos);
     const alvo = lista.find((item) => item.execucao_id === selecionadaIdRef.current) ?? lista[0];
     selecionadaIdRef.current = alvo?.execucao_id ?? '';
     setSelecionadaId(selecionadaIdRef.current);
-    if (alvo) preencherFormulario(alvo);
+    if (alvo) {
+      preencherFormulario(alvo);
+      setResponsavelSelecionado(alvo.responsavel_id ?? tecnicos[0]?.usuario_id ?? '');
+    }
     setProgressos(Object.fromEntries(lista.flatMap((execucao) => execucao.etapas.map((etapa) => [etapa.id, etapa.progresso]))));
     setCarregando(false);
   }, [cliente, perfil, preencherFormulario]);
@@ -86,6 +98,25 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
     selecionadaIdRef.current = execucao.execucao_id;
     setSelecionadaId(execucao.execucao_id);
     preencherFormulario(execucao);
+    setResponsavelSelecionado(execucao.responsavel_id ?? responsaveis[0]?.usuario_id ?? '');
+  }
+
+  async function atribuirResponsavel() {
+    if (!selecionada || !responsavelSelecionado || !podeAtribuirResponsavel(perfil)) return;
+    setProcessandoId('atribuicao'); setErro(''); setMensagem('');
+    const { error } = await cliente.rpc('atribuir_responsavel_execucao_demonstrativa', {
+      execucao: selecionada.execucao_id,
+      responsavel: responsavelSelecionado,
+    });
+    if (error) {
+      setErro(error.code === '42501'
+        ? 'Somente o Administrador pode atribuir o responsável.'
+        : 'Não foi possível atribuir o Técnico. Confirme o estado da execução e tente novamente.');
+    } else {
+      setMensagem('Responsável Técnico atribuído com registro na auditoria.');
+      await carregar();
+    }
+    setProcessandoId('');
   }
 
   async function atualizarEtapa(etapaId: string, estado: EstadoEtapaExecucao, progresso: number) {
@@ -170,6 +201,7 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
 
       <section className="bloco execucao-operacional">
         <header><div><p className="passo">DEM-SOL-{String(selecionada.solicitacao_codigo).padStart(4, '0')} · {selecionada.estado.replace('_', ' ').toUpperCase()}</p><h2>{tituloServicoCliente(selecionada.servico_slug)}</h2><span>{selecionada.empresa_nome} · responsável: {selecionada.responsavel_nome}</span></div><span className={`estado estado-${selecionada.estado.replace('_', '-')}`}>{selecionada.estado === 'concluido' ? 'Concluído' : 'Em execução'}</span></header>
+        {podeAtribuirResponsavel(perfil) && selecionada.estado !== 'concluido' && selecionada.estado !== 'cancelado' && <div className="atribuicao-responsavel-execucao"><UserRoundCog size={18} /><label htmlFor="responsavel-execucao">Responsável Técnico<select id="responsavel-execucao" value={responsavelSelecionado} onChange={(evento) => setResponsavelSelecionado(evento.target.value)}><option value="">Selecione um Técnico</option>{responsaveis.map((responsavel) => <option key={responsavel.usuario_id} value={responsavel.usuario_id}>{responsavel.nome}</option>)}</select></label><button type="button" disabled={!responsavelSelecionado || responsavelSelecionado === selecionada.responsavel_id || processandoId === 'atribuicao'} onClick={() => void atribuirResponsavel()}>{processandoId === 'atribuicao' ? 'Atribuindo…' : selecionada.responsavel_id ? 'Reatribuir' : 'Atribuir'}</button></div>}
         <div className="resumo-progresso-execucao"><div><small>Progresso geral</small><strong>{progressoGeral}%</strong></div><div className="barra-progresso"><i style={{ width: `${progressoGeral}%` }} /></div><small>Início confirmado em {dataHora(selecionada.inicio_real)}</small></div>
 
         <ol className="etapas-operacionais">{selecionada.etapas.map((etapa) => {

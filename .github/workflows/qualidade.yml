@@ -43,3 +43,15 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  banco-e-rls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - run: supabase db reset
+      - run: supabase test db

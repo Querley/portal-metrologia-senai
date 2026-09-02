@@ -181,6 +181,7 @@
 .execucao-operacional { overflow:hidden; }
 .execucao-operacional > header { align-items:flex-start; }
 .execucao-operacional > header > div > span { display:block; margin-top:6px; color:#65808d; font-size:9px; }
+.atribuicao-responsavel-execucao { display:flex; align-items:flex-end; gap:12px; padding:14px 20px; color:#174f68; background:#f7fbfc; border-bottom:1px solid #dce6eb; }.atribuicao-responsavel-execucao label { display:grid; flex:1; gap:5px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }.atribuicao-responsavel-execucao select { min-height:40px; padding:0 10px; color:#173b4c; background:white; border:1px solid #bad0d9; }.atribuicao-responsavel-execucao button { min-height:40px; padding:0 16px; color:white; background:#096c99; border:0; font-weight:800; cursor:pointer; }.atribuicao-responsavel-execucao button:disabled { opacity:.45; cursor:not-allowed; }
 .resumo-progresso-execucao { display:grid; grid-template-columns:auto minmax(140px,1fr) auto; align-items:center; gap:18px; padding:17px 20px; background:#f2f7f9; border-bottom:1px solid #dce6eb; }
 .resumo-progresso-execucao > div:first-child { display:flex; align-items:baseline; gap:8px; }
 .resumo-progresso-execucao small { color:#657f8c; font-size:9px; }
@@ -260,6 +261,7 @@
   .lista-execucoes-internas button { min-width:230px; border-top:0; border-left:1px solid #e3eaed; }
   .lista-execucoes-internas button.ativo { padding-left:17px; border-left:4px solid #0798c8; }
   .resumo-progresso-execucao { grid-template-columns:1fr; gap:8px; }
+  .atribuicao-responsavel-execucao { align-items:stretch; flex-wrap:wrap; }.atribuicao-responsavel-execucao label { min-width:calc(100% - 32px); }.atribuicao-responsavel-execucao button { width:100%; }
   .etapas-operacionais { padding:17px 14px; }
   .etapas-operacionais li > div > header { flex-direction:column; gap:7px; }
   .acoes-etapa-operacional { align-items:stretch; flex-direction:column; }

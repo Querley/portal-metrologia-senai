@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { calcularProgressoExecucao, etapasConcluidas, normalizarAtualizacaoEtapa, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EtapaExecucaoInterna } from './execucoes-persistentes';
+import { calcularProgressoExecucao, etapasConcluidas, normalizarAtualizacaoEtapa, podeAtribuirResponsavel, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EtapaExecucaoInterna } from './execucoes-persistentes';
 
 function etapa(progresso: number): EtapaExecucaoInterna {
   return {
@@ -27,6 +27,12 @@ describe('execuções persistentes', () => {
     expect(podeDecidirFechamento('tecnico')).toBe(false);
     expect(podeDecidirFechamento('validador')).toBe(true);
     expect(podeDecidirFechamento('administrador')).toBe(true);
+  });
+
+  it('reserva a atribuição formal ao Administrador', () => {
+    expect(podeAtribuirResponsavel('tecnico')).toBe(false);
+    expect(podeAtribuirResponsavel('validador')).toBe(false);
+    expect(podeAtribuirResponsavel('administrador')).toBe(true);
   });
 
   it('só libera fechamento depois de todas as etapas', () => {
@@ -74,11 +80,13 @@ describe('execuções persistentes', () => {
     expect(migracao).toContain("estado = case when decisao = 'aprovar' then 'concluido'::estado_servico else estado end");
   });
 
-  it('remove o filtro de autoria sem alterar a autoria original', () => {
-    const migracao = readFileSync(new URL('../supabase/migrations/202609010024_acesso_tecnico_execucoes.sql', import.meta.url), 'utf8');
-    expect(migracao).toContain("pg_get_functiondef('public.listar_execucoes_demonstrativas()'::regprocedure)");
-    expect(migracao).toContain('Restricao esperada nao encontrada');
-    expect(migracao).not.toMatch(/update\s+propostas/i);
-    expect(migracao).not.toMatch(/update\s+perfis/i);
+  it('restringe Técnico à execução atribuída em RPC, gatilhos e RLS', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202609010028_atribuicao_responsavel_execucao.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain("perfil in ('validador', 'administrador') or ex.responsavel_id = usuario");
+    expect(migracao).toContain('Tecnico pode operar somente execucao demonstrativa atribuida a ele.');
+    expect(migracao).toContain("perfil_interno_atual() = 'tecnico' and ex.responsavel_id = auth.uid()");
+    expect(migracao).toContain('pode_ver_execucao_demonstrativa(execucao_id, visivel_cliente)');
+    expect(migracao).toContain("perfil_atual is distinct from 'administrador'::perfil_interno");
+    expect(migracao).toContain("pf.perfil_interno = 'tecnico'");
   });
 });
