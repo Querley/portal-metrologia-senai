@@ -1,6 +1,6 @@
 # Homologação Supabase
 
-## Estado validado em 1º de setembro de 2026
+## Estado validado em 2 de setembro de 2026
 
 O site publicado está conectado ao projeto Supabase de homologação. O login por e-mail foi testado com sucesso pelo mantenedor usando Administrador e Validador. O perfil Técnico também está provisionado e teve suas autorizações validadas em transação revertida:
 
@@ -11,7 +11,7 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202609010031` estão aplicadas e registradas no histórico remoto, conferido pelo CLI. Elas criam o esquema operacional, perfis, RLS, segregação de origem, versionamento auditado de custos, orçamento demonstrativo persistente e decisões internas. A migration `013` acrescenta os dados mínimos da pré-proposta, etapas visuais, ciência versionada de privacidade e RPCs do Cliente; `014` cria a entrada pública sintética, protocolo e ativação do perfil externo pelo mesmo e-mail; `015` corrige incrementalmente a limitação por e-mail, sem reescrever a migration aplicada; `016` libera a listagem e a resposta de conversas sintéticas ativadas exclusivamente para Técnico, Validador e Administrador; `017` cria a pré-proposta sobre a solicitação Cliente existente e impede uma segunda proposta ativa para o mesmo atendimento; `018` cria o bucket privado e as funções protegidas do PDF; `019` impede sua substituição depois que caminho e SHA-256 forem congelados; `020` corrige a leitura do arquivo pelo Cliente por meio de autorização protegida, sem tornar o bucket público; `021` registra o aceite autenticado da pré-proposta pelo Cliente e reserva ao Administrador a confirmação auditada do início; `022` cria modelos versionados de etapas por serviço, copia o modelo para cada execução e restringe atualizações à RPC auditada; `023` registra horas e ocorrências reais e reserva a aprovação final a Validador ou Administrador; `024` remove temporariamente o filtro de autoria das execuções demonstrativas para Técnico; `025` cria o conhecimento persistente; `026` corrige incrementalmente o gatilho compartilhado de imutabilidade; `027` persiste e exige justificativa estatística; `028` substitui o acesso temporário por atribuição formal; `029`/`030` corrigem apontamentos do analisador estático; e `031` permite vários trabalhos simultâneos, reutiliza a empresa ativa e recupera entradas recorrentes.
+As migrations `202608220001` até `202609020032` estão aplicadas e registradas no histórico remoto, conferido pelo CLI. A migration `031` permite vários trabalhos simultâneos, reutiliza a empresa ativa e recupera entradas recorrentes; a `032` protege anexos por solicitação e recupera, sem sobrescrever, um PDF órfão anterior ao congelamento. As migrations anteriores continuam responsáveis pelo esquema operacional, perfis, RLS, custos versionados, pré-proposta, execução, fechamento, conhecimento persistente e atribuição formal descritos abaixo.
 
 O mantenedor validou pela interface publicada o aceite do Cliente e a confirmação de início pelo Administrador. A migration `202609010022` foi executada e registrada em 1º de setembro. A presença da RPC foi confirmada pela API anônima, que respondeu `401 permission denied`, como esperado para uma função exclusiva de usuários autenticados.
 
@@ -24,6 +24,8 @@ As migrations `202609010025` e `202609010026` foram aplicadas e registradas em 1
 As migrations `202609010027` a `202609010030` foram aplicadas e registradas em 1º de setembro. O envio para validação recalcula a faixa com os mesmos casos elegíveis da recomendação e bloqueia estimativa externa a Q1–Q3 sem justificativa persistente. Somente o Administrador atribui um Técnico ativo da origem demonstrativa; a RPC de listagem, os gatilhos de escrita e as políticas RLS restringem o Técnico às próprias atribuições, preservando a supervisão de Validador e Administrador e a leitura externa apenas da empresa e das etapas visíveis. O lint remoto não encontrou erros; restaram apenas avisos de variáveis legadas sem efeito, criadas antes da substituição do filtro temporário da migration `024`. A prova pgTAP de identidade e RLS roda no GitHub Actions, pois requer Docker indisponível na estação local.
 
 A migration `202609010031` foi aplicada e registrada em 1º de setembro. Ela remove a restrição que bloqueava uma segunda ativação do mesmo Cliente, materializa cada entrada como um trabalho independente na empresa já vinculada, recupera entradas pendentes do mesmo e-mail, preserva o protocolo `DEM-SOL-*` no portal e acrescenta criação autenticada e vínculo administrativo. O lint remoto não encontrou erros novos. A prova pgTAP específica cobre criação simultânea, reutilização da empresa, listagem integral e alçada exclusiva do Administrador; sua execução permanece no GitHub Actions porque o executor local do CLI requer Docker.
+
+A migration `202609020032` foi aplicada e registrada em 2 de setembro. Ela permite ao Cliente enviar até cinco PDFs, imagens ou arquivos CAD para a própria solicitação, grava metadados auditados e autoriza leitura somente à empresa vinculada ou à equipe demonstrativa. Também permite ao Administrador remover apenas um PDF pendente deixado por uma tentativa interrompida; depois do congelamento de caminho e hash, a remoção e a substituição continuam negadas. A prova pgTAP cobre isolamento entre empresas, registro do anexo, recuperação do órfão e imutabilidade posterior.
 
 ## Dados e autorização
 
@@ -49,6 +51,8 @@ A migration `202609010031` foi aplicada e registrada em 1º de setembro. Ela rem
 - O Cliente pode atualizar apenas o próprio nome por função protegida, sem alterar vínculo, função ou empresa.
 - Técnico, Validador e Administrador podem iniciar uma pré-proposta a partir da fila. O servidor valida a solicitação ativada, reaproveita empresa e protocolo, congela o custo vigente e registra auditoria.
 - Somente Administrador envia e congela o PDF privado de uma versão aprovada; depois disso, a política de Storage impede sobrescrita.
+- Antes do congelamento, uma tentativa interrompida pode limpar somente o arquivo órfão do mesmo UUID e reenviá-lo; nenhum PDF congelado pode ser removido por esse caminho.
+- O Cliente envia anexos somente para solicitações que criou na própria empresa demonstrativa. O servidor limita quantidade, extensão e tamanho, e a listagem/download permanecem privados por vínculo.
 - O Cliente recebe a referência e o arquivo somente após a emissão e apenas para a própria empresa. A política do Storage usa função protegida para validar o vínculo apesar das RLS internas; o navegador recalcula o SHA-256 e bloqueia divergências.
 - Reset demonstrativo nunca alcança a origem real.
 

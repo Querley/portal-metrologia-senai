@@ -322,7 +322,14 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
     const caminho = `demonstracao/${orcamento.versao_id}.pdf`;
     const conteudo = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
     const arquivo = new Blob([conteudo], { type: 'application/pdf' });
-    const { error: erroUpload } = await cliente.storage.from('pre-propostas').upload(caminho, arquivo, { contentType: 'application/pdf', upsert: true });
+    const armazenamento = cliente.storage.from('pre-propostas');
+    const { error: erroLimpeza } = await armazenamento.remove([caminho]);
+    if (erroLimpeza) {
+      setMensagem('Não foi possível recuperar o envio anterior do PDF. Atualize a página e tente novamente.');
+      setGerandoPdfId('');
+      return;
+    }
+    const { error: erroUpload } = await armazenamento.upload(caminho, arquivo, { contentType: 'application/pdf', upsert: false });
     if (erroUpload) {
       setMensagem('Não foi possível armazenar o PDF privado. Atualize e tente novamente.');
       setGerandoPdfId('');
@@ -335,6 +342,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
       tamanho_bytes: bytes.byteLength,
     });
     if (erroRegistro) {
+      await armazenamento.remove([caminho]);
       setMensagem(erroRegistro.code === '42501'
         ? 'Somente Administrador pode congelar o PDF final.'
         : 'O arquivo foi enviado, mas não pôde ser congelado. Confirme se a pré-proposta continua aprovada.');

@@ -1,8 +1,9 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Activity, BriefcaseBusiness, Check, CheckCircle2, Circle, Clock3, Download, FileText, LogOut, MessageSquareText, Pencil, Plus, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Activity, BriefcaseBusiness, Check, CheckCircle2, Circle, Clock3, Download, FileText, LogOut, MessageSquareText, Paperclip, Pencil, Plus, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import type { AnexoSolicitacaoCliente } from '../lib/anexos-solicitacao';
 import { formatarDinheiro } from '../lib/calculos';
 import { calcularSha256Hex } from '../lib/pre-proposta-pdf';
 import { contextoClienteDemonstracao, descricaoAceiteCliente, mensagensClienteDemonstracao, podeAceitarPreProposta, protocoloSolicitacaoCliente, situacaoEtapasCliente, solicitacoesClienteDemonstracao, tituloServicoCliente, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE, VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA } from '../lib/portal-cliente';
@@ -45,6 +46,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [aceitandoPreProposta, setAceitandoPreProposta] = useState(false);
   const [confirmouAceite, setConfirmouAceite] = useState(false);
   const [criandoSolicitacao, setCriandoSolicitacao] = useState(false);
+  const [anexosPorSolicitacao, setAnexosPorSolicitacao] = useState<Record<string, AnexoSolicitacaoCliente[]>>({});
+  const [baixandoAnexoId, setBaixandoAnexoId] = useState('');
   const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
 
   const carregar = useCallback(async () => {
@@ -67,8 +70,15 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     if (!error) setMensagens((data ?? []) as MensagemCliente[]);
   }, [cliente, demonstracao]);
 
+  const carregarAnexos = useCallback(async (solicitacaoId: string) => {
+    if (!cliente || demonstracao || !solicitacaoId) return;
+    const { data, error } = await cliente.rpc('listar_anexos_solicitacao_cliente_demonstrativa', { solicitacao: solicitacaoId });
+    if (!error) setAnexosPorSolicitacao((atuais) => ({ ...atuais, [solicitacaoId]: (data ?? []) as AnexoSolicitacaoCliente[] }));
+  }, [cliente, demonstracao]);
+
   useEffect(() => { queueMicrotask(() => void carregar()); }, [carregar]);
   useEffect(() => { queueMicrotask(() => void carregarMensagens(selecionadaId)); }, [carregarMensagens, selecionadaId]);
+  useEffect(() => { queueMicrotask(() => void carregarAnexos(selecionadaId)); }, [carregarAnexos, selecionadaId]);
   useEffect(() => {
     if (!cliente || demonstracao || !selecionadaId) return;
     const canal = cliente
@@ -100,6 +110,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   async function registrarNovaSolicitacao(
     resultado: { solicitacao_id: string; codigo: number; protocolo: string },
     dados: DadosNovaSolicitacaoCliente,
+    anexos: AnexoSolicitacaoCliente[],
   ) {
     if (demonstracao) {
       setSolicitacoes((atuais) => [{
@@ -119,9 +130,30 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     } else {
       await carregar();
     }
+    setAnexosPorSolicitacao((atuais) => ({ ...atuais, [resultado.solicitacao_id]: anexos }));
     setSelecionadaId(resultado.solicitacao_id);
     setCriandoSolicitacao(false);
     setAviso(`${resultado.protocolo} registrada e vinculada à sua empresa. Você já pode alternar entre os trabalhos.`);
+  }
+
+  async function baixarAnexo(anexo: AnexoSolicitacaoCliente) {
+    if (!cliente || demonstracao) {
+      setAviso('Na demonstração local, o arquivo é apenas representativo. Use a homologação autenticada para testar o download privado.');
+      return;
+    }
+    setBaixandoAnexoId(anexo.id);
+    setErro('');
+    const { data, error } = await cliente.storage.from('solicitacoes').download(anexo.caminho_storage);
+    if (error || !data) setErro('Não foi possível baixar este anexo protegido.');
+    else {
+      const url = URL.createObjectURL(data);
+      const ancora = document.createElement('a');
+      ancora.href = url;
+      ancora.download = anexo.nome_original;
+      ancora.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+    setBaixandoAnexoId('');
   }
 
   async function aceitarPrivacidade() {
@@ -262,6 +294,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         <section className="detalhe-projeto-cliente">
           <header><div><span>{protocoloSolicitacaoCliente(selecionada)}</span><h2>{tituloServicoCliente(selecionada.servico)}</h2></div><button type="button" onClick={() => void carregar()}><RefreshCw size={15} /> Atualizar</button></header>
           <div className="resumo-projeto-cliente"><article><small>Pré-proposta comercial</small><strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong><span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : (selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise')}</span>{selecionada.valor_pre_proposta !== null && <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}><Download size={15} /> {baixandoPdf ? 'Baixando…' : 'Baixar PDF emitido'}</button>}{podeAceitarPreProposta(selecionada.proposta_estado) && <div className="aceite-pre-proposta-cliente"><strong>Deseja prosseguir?</strong><p>Este aceite manifesta seu interesse nesta pré-proposta do laboratório. Ele não substitui a proposta oficial emitida pelo SENAI no Nectar, e o serviço só começa após a liberação do laboratório.</p><label><input type="checkbox" checked={confirmouAceite} onChange={(evento) => setConfirmouAceite(evento.target.checked)} /> Li e desejo prosseguir com esta pré-proposta.</label><button type="button" onClick={() => void aceitarPreProposta()} disabled={!confirmouAceite || aceitandoPreProposta}><CheckCircle2 size={16} /> {aceitandoPreProposta ? 'Registrando…' : 'Aceitar pré-proposta'}</button></div>}{selecionada.proposta_estado === 'aceita' && <div className="aceite-pre-proposta-cliente confirmado"><CheckCircle2 size={20} /><div><strong>Aceite registrado</strong><p>{descricaoAceiteCliente(selecionada.aceita_em, selecionada.execucao_estado, dataCurta)}</p></div></div>}</article><article><small>Andamento do serviço</small><strong>{situacaoAtual?.titulo}</strong><span>{situacaoAtual?.descricao}</span></article></div>
+          <section className="anexos-trabalho-cliente"><div className="titulo-bloco-cliente"><div><h3><Paperclip size={18} /> Arquivos da solicitação</h3><p>Documentos privados vinculados somente a este trabalho.</p></div></div>{(anexosPorSolicitacao[selecionada.id] ?? []).length === 0 ? <p className="sem-anexos-cliente">Nenhum arquivo foi anexado a esta solicitação.</p> : <ul>{(anexosPorSolicitacao[selecionada.id] ?? []).map((anexo) => <li key={anexo.id}><Paperclip size={17} /><span><strong>{anexo.nome_original}</strong><small>{(Number(anexo.tamanho_bytes) / 1024 / 1024).toFixed(2)} MB · enviado em {dataCurta(anexo.criado_em)}</small></span><button type="button" onClick={() => void baixarAnexo(anexo)} disabled={baixandoAnexoId === anexo.id}><Download size={15} /> {baixandoAnexoId === anexo.id ? 'Baixando…' : 'Baixar'}</button></li>)}</ul>}</section>
           <section className="acompanhamento-etapas"><div className="titulo-bloco-cliente"><div><h3>Etapas do trabalho</h3><p>A porcentagem indica o progresso da etapa atual, não do contrato inteiro.</p></div></div>{selecionada.etapas.length === 0 ? <div className="sem-etapas-cliente"><Clock3 size={22} /><div><strong>A equipe ainda está preparando o acompanhamento</strong><p>As etapas aparecerão aqui depois da triagem inicial da solicitação.</p></div></div> : <ol>{selecionada.etapas.map((etapa) => { const { rotulo, Icone } = estadoEtapa[etapa.estado]; return <li key={etapa.id} className={`etapa-${etapa.estado}`}><span className="icone-etapa"><Icone size={20} /></span><div><header><strong>{etapa.titulo}</strong><b>{rotulo}{etapa.estado === 'em_andamento' ? ` (${etapa.progresso}%)` : ''}</b></header>{etapa.descricao && <p>{etapa.descricao}</p>}<div className="barra-progresso" aria-label={`${etapa.progresso}% concluído`}><i style={{ width: `${etapa.progresso}%` }} /></div><small>Atualizado em {dataCurta(etapa.atualizada_em)}</small></div></li>; })}</ol>}</section>
           <section className="mensagens-cliente"><div className="titulo-bloco-cliente"><div><h3><MessageSquareText size={18} /> Mensagens</h3><p>Canal vinculado a esta solicitação.</p></div></div><div className="lista-mensagens-cliente">{mensagens.map((mensagem) => <p key={mensagem.id} className={mensagem.autor_proprio ? 'propria' : ''}>{mensagem.conteudo}<small>{dataCurta(mensagem.criada_em)}</small></p>)}</div><form onSubmit={enviarMensagem}><label htmlFor="mensagem-cliente" className="sr-only">Nova mensagem</label><input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para a equipe" /><button type="submit"><Send size={16} /> Enviar</button></form></section>
         </section>

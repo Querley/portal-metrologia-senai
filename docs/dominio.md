@@ -25,13 +25,14 @@
 
 Transições fora desses caminhos só podem ocorrer por função privilegiada e auditada.
 
-A aprovação não emite a pré-proposta. Somente Administrador promove `aprovada` para `publicada`, e apenas depois da geração do PDF privado com hash imutável. `rejeitada` representa decisão interna e exige nova proposta; `recusada` representa a decisão posterior do cliente sobre uma versão emitida.
+A aprovação não emite a pré-proposta. Somente Administrador promove `aprovada` para `publicada`, e apenas depois da geração do PDF privado com hash imutável. Uma tentativa interrompida antes do congelamento pode substituir somente o arquivo órfão da mesma versão; depois do congelamento, nem remoção nem sobrescrita são permitidas. `rejeitada` representa decisão interna e exige nova proposta; `recusada` representa a decisão posterior do cliente sobre uma versão emitida.
 
 ## Área do cliente
 
 - A solicitação inicial é pública e não exige conta.
 - Uma empresa pode possuir várias solicitações e execuções simultâneas. O vínculo representa a relação do usuário com a empresa, não um trabalho selecionado.
 - O Cliente autenticado pode criar outro trabalho diretamente na área protegida e alternar o acompanhamento entre todos os trabalhos da empresa.
+- Cada solicitação pode receber até cinco anexos privados no cadastro autenticado: PDF e imagens de até 10 MB por arquivo, ou CAD de até 50 MB. Metadados, bytes e autorização permanecem vinculados ao trabalho selecionado.
 - Uma solicitação pública recorrente com o mesmo e-mail reutiliza a empresa demonstrativa ativa. O CNPJ informado na triagem é preservado para auditoria, mas não troca nem duplica o vínculo empresarial sem decisão administrativa explícita.
 - O acompanhamento exige usuário autenticado e vínculo empresarial previamente aprovado.
 - Cliente externo nunca vê rascunhos internos, custos ou margens; vê somente pré-proposta emitida, etapas marcadas como visíveis e mensagens da própria empresa.

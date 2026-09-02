@@ -93,11 +93,34 @@ test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page
   await page.getByLabel('Quantidade').fill('2');
   await page.getByLabel('Prazo desejado para o serviço').fill('2026-12-20');
   await page.getByLabel('Descreva o desafio').fill('Inspeção dimensional demonstrativa para validar outro trabalho simultâneo.');
+  await page.getByLabel(/Adicionar imagens ou outros arquivos/i).setInputFiles({
+    name: 'desenho-demonstrativo.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4 arquivo exclusivamente sintetico'),
+  });
+  await expect(page.getByText('desenho-demonstrativo.pdf')).toBeVisible();
   await page.getByRole('button', { name: 'Registrar novo trabalho' }).last().click();
 
   await expect(page.getByText(/registrada e vinculada à sua empresa/i)).toBeVisible();
   await expect(page.getByText('Trabalhos vinculados').locator('..').getByText('2', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /DEM-SOL-0285/i })).toHaveClass(/ativo/);
+  await expect(page.locator('.anexos-trabalho-cliente').getByText('desenho-demonstrativo.pdf')).toBeVisible();
   await page.getByRole('button', { name: /DEM-SOL-0284/i }).click();
   await expect(page.getByRole('button', { name: /DEM-SOL-0284/i })).toHaveClass(/ativo/);
+});
+
+test('área interna mantém navegação, perfil e saída em larguras intermediárias e mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 820, height: 860 });
+  await page.goto('/portal/demonstracao');
+  await expect(page.locator('.acoes-conta-responsivas').getByRole('button', { name: 'Meu perfil' })).toBeVisible();
+  await expect(page.locator('.acoes-conta-responsivas').getByRole('button', { name: 'Sair' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Solicitações' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Orçamentos' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+
+  await page.setViewportSize({ width: 640, height: 860 });
+  await expect(page.locator('.acoes-conta-responsivas').getByRole('button', { name: 'Meu perfil' })).toBeVisible();
+  await expect(page.locator('.acoes-conta-responsivas').getByRole('button', { name: 'Sair' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Módulos internos' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });

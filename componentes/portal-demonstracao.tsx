@@ -77,7 +77,10 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
       <main className="conteudo-interno">
         <header className="cabecalho-interno">
           <div><p>AMBIENTE DE HOMOLOGAÇÃO</p><h1>{menu.find((itemMenu) => itemMenu.id === secao)?.rotulo}</h1></div>
-          {secao !== 'custos' && <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button" onClick={() => setSecao('orcamentos')}>{perfilInterno && !podeCriarRascunhoOrcamento(perfilInterno) ? <><Calculator size={17} /> Ver orçamentos</> : <><Plus size={17} /> Novo orçamento</>}</button></div>}
+          <div className="controles-cabecalho-interno">
+            <div className="acoes-conta-responsivas" aria-label="Conta e sessão"><button type="button" onClick={aoAbrirPerfil} disabled={!aoAbrirPerfil} title="Meu perfil"><Settings size={18} /><span>Meu perfil</span></button><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')} title="Sair"><LogOut size={18} /><span>Sair</span></button></div>
+            {secao !== 'custos' && <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button" onClick={() => setSecao('orcamentos')}>{perfilInterno && !podeCriarRascunhoOrcamento(perfilInterno) ? <><Calculator size={17} /> Ver orçamentos</> : <><Plus size={17} /> Novo orçamento</>}</button></div>}
+          </div>
         </header>
 
         {secao === 'visao' && <VisaoGeral setSecao={setSecao} />}

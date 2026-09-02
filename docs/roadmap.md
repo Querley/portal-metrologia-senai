@@ -48,9 +48,11 @@
 - [x] validar o fluxo externo e o bloqueio de e-mail divergente em transação revertida, sem resíduos;
 - [x] repetir solicitação, ativação e mensagens pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
 - [x] permitir vários trabalhos simultâneos por empresa, criação dentro da área do Cliente, alternância livre e recuperação de solicitações recorrentes pelo mesmo e-mail;
+- [x] enviar, listar e baixar anexos privados na nova solicitação autenticada, com limites e isolamento por empresa;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
 - [x] gerar e armazenar o PDF em bucket privado, congelar seu SHA-256 e verificar a integridade no download; o Nectar permanece fora do escopo;
 - [x] corrigir a autorização de leitura do PDF pelo Cliente sem tornar o bucket público nem contornar o vínculo empresarial;
+- [x] permitir recuperação segura de PDF órfão antes do congelamento, preservando a imutabilidade posterior;
 - [ ] validar pela interface publicada o ciclo `aprovar → gerar PDF → emitir → baixar como Cliente`;
 - [x] aplicar a migration `202609010021`: Cliente aceita a pré-proposta emitida e somente Administrador confirma o início auditado;
 - [x] validar pela interface publicada o aceite do Cliente e a confirmação de início pelo Administrador;
@@ -67,6 +69,7 @@
 - [x] substituir o acesso provisório da migration `024` por atribuição formal de Técnico, exclusiva do Administrador e coberta por RPC, gatilhos e RLS;
 - [x] aplicar a migration `202609010031`, reconciliar o vínculo recorrente e preservar o protocolo público na área do Cliente;
 - [x] adicionar testes automatizados de autorização e RLS sobre leitura, operação e reatribuição de execuções;
+- [x] manter perfil, saída, navegação e ações acessíveis também em larguras intermediárias e mobile;
 
 ## Dependências institucionais
 
