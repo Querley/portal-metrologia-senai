@@ -28,6 +28,8 @@
 .boas-vindas-cliente { display:grid; grid-template-columns:1fr auto; align-items:end; gap:60px; }
 .boas-vindas-cliente h1 { max-width:780px; margin:14px 0 16px; font-size:clamp(36px,5vw,62px); }
 .boas-vindas-cliente > div > p:last-child { max-width:760px; color:#577080; font-size:16px; line-height:1.7; }
+.novo-trabalho-cliente { display:inline-flex; align-items:center; gap:8px; min-height:46px; margin-top:8px; padding:0 18px; color:white; background:#006da9; border:1px solid #006da9; cursor:pointer; font:inherit; font-size:13px; font-weight:800; box-shadow:0 8px 20px rgba(0,109,169,.16); }
+.novo-trabalho-cliente:hover { background:#005f94; }
 .selo-seguranca-cliente { display:flex; align-items:center; gap:13px; max-width:360px; padding:18px 20px; color:#23674d; background:#e8f7ee; border:1px solid #b8ddc6; }
 .selo-seguranca-cliente svg { flex:none; }
 .selo-seguranca-cliente span,.selo-seguranca-cliente strong,.selo-seguranca-cliente small { display:block; }
@@ -44,6 +46,12 @@
 .aviso-cliente.erro { color:#8b3028; background:#fff1ef; border-color:#e8c4c0; }
 .aviso-cliente.sucesso { justify-content:space-between; color:#21664c; background:#e8f7ee; border-color:#b8ddc6; }
 .aviso-cliente.sucesso button { color:inherit; background:transparent; border:0; cursor:pointer; font-size:20px; }
+.indicadores-cliente { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:32px; }
+.indicadores-cliente article { display:flex; align-items:center; gap:14px; padding:18px 20px; background:white; border:1px solid #d7e3e9; }
+.indicadores-cliente article svg { width:38px; height:38px; padding:9px; color:#0873b3; background:#e7f4f8; }
+.indicadores-cliente span,.indicadores-cliente small,.indicadores-cliente strong { display:block; }
+.indicadores-cliente small { color:#667f8c; font-size:11px; }
+.indicadores-cliente strong { margin-top:3px; color:#123e55; font-size:23px; }
 .vazio-cliente { margin-top:36px; padding:70px 24px; text-align:center; background:white; border:1px solid #d7e3e9; }
 .vazio-cliente svg { color:#1689b5; }
 .vazio-cliente h2 { margin:16px 0 8px; font-size:28px; }
@@ -51,7 +59,10 @@
 .grade-cliente { display:grid; grid-template-columns:280px minmax(0,1fr); gap:18px; margin-top:38px; }
 .lista-projetos-cliente,.detalhe-projeto-cliente { background:white; border:1px solid #d7e3e9; }
 .lista-projetos-cliente { align-self:start; padding:18px; }
-.lista-projetos-cliente h2 { margin:4px 6px 16px; font-size:17px; }
+.lista-projetos-cliente > header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:4px 6px 16px; }
+.lista-projetos-cliente h2 { margin:0; font-size:17px; }
+.lista-projetos-cliente > header small { display:block; margin-top:3px; color:#718792; font-size:10px; }
+.lista-projetos-cliente .adicionar-trabalho-lista { width:36px; min-width:36px; height:36px; display:grid; place-items:center; margin:0; padding:0; color:white; background:#0875ad; border:0; }
 .lista-projetos-cliente button { width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:6px; margin-top:8px; padding:16px; color:#426173; background:#f5f8fa; border:1px solid transparent; cursor:pointer; text-align:left; }
 .lista-projetos-cliente button.ativo { color:#173f54; background:#eaf6fa; border-color:#70bed4; box-shadow:inset 3px 0 #00a7d3; }
 .lista-projetos-cliente button span { color:#0873b3; font-size:11px; font-weight:850; letter-spacing:.08em; }
@@ -110,7 +121,31 @@
 .modal-privacidade button { display:inline-flex; align-items:center; gap:7px; min-height:43px; padding:0 18px; color:white; background:#0069a8; border:0; cursor:pointer; font-weight:750; }
 .modal-privacidade > small { display:block; margin-top:18px; color:#748891; font-size:11px; }
 
-@media (max-width:900px) { .boas-vindas-cliente,.grade-cliente { grid-template-columns:1fr; }.selo-seguranca-cliente { max-width:none; }.lista-projetos-cliente { display:flex; align-items:stretch; gap:8px; overflow-x:auto; }.lista-projetos-cliente h2 { min-width:100%; display:none; }.lista-projetos-cliente button { min-width:230px; margin:0; } }
+.fundo-nova-solicitacao { position:fixed; inset:0; z-index:2100; display:grid; place-items:center; padding:20px; background:rgba(2,26,40,.72); backdrop-filter:blur(5px); }
+.nova-solicitacao-cliente { width:min(840px,100%); max-height:calc(100vh - 40px); overflow:auto; color:#173548; background:white; box-shadow:0 26px 90px rgba(1,23,36,.38); }
+.nova-solicitacao-cliente > header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; padding:27px 30px 22px; border-bottom:1px solid #dce6eb; }
+.nova-solicitacao-cliente > header span { display:flex; align-items:center; gap:7px; color:#0873b3; font-size:10px; font-weight:900; letter-spacing:.12em; }
+.nova-solicitacao-cliente > header h2 { margin:8px 0 5px; color:#123e55; font-size:27px; }
+.nova-solicitacao-cliente > header p { margin:0; color:#617985; font-size:13px; line-height:1.55; }
+.nova-solicitacao-cliente > header > button { display:grid; place-items:center; flex:none; width:39px; height:39px; color:#416273; background:#f4f8fa; border:1px solid #cadbe2; cursor:pointer; }
+.seguranca-nova-solicitacao { display:flex; align-items:flex-start; gap:10px; margin:20px 30px 0; padding:13px 15px; color:#23674d; background:#eaf7ef; border:1px solid #bbddc8; }
+.seguranca-nova-solicitacao svg { flex:none; }
+.seguranca-nova-solicitacao p { margin:0; font-size:12px; line-height:1.5; }
+.nova-solicitacao-cliente form { padding:22px 30px 28px; }
+.grade-nova-solicitacao { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.grade-nova-solicitacao label { display:grid; gap:7px; color:#365d70; font-size:11px; font-weight:800; }
+.grade-nova-solicitacao label small { color:#758b95; font-weight:600; }
+.grade-nova-solicitacao .campo-largo { grid-column:1 / -1; }
+.grade-nova-solicitacao input,.grade-nova-solicitacao select,.grade-nova-solicitacao textarea { width:100%; min-height:44px; padding:9px 11px; color:#173d51; background:white; border:1px solid #b8cfd8; font:inherit; font-size:13px; }
+.grade-nova-solicitacao textarea { min-height:112px; resize:vertical; line-height:1.5; }
+.grade-nova-solicitacao input:focus,.grade-nova-solicitacao select:focus,.grade-nova-solicitacao textarea:focus { outline:3px solid rgba(8,117,183,.14); border-color:#0875b7; }
+.erro-nova-solicitacao { margin:16px 0 0; padding:12px 14px; color:#8b3028; background:#fff1ef; border:1px solid #e8c4c0; font-size:12px; }
+.nova-solicitacao-cliente form > footer { display:flex; justify-content:flex-end; gap:9px; margin-top:20px; padding-top:18px; border-top:1px solid #e2eaee; }
+.nova-solicitacao-cliente form > footer button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:43px; padding:0 15px; color:#315c70; background:white; border:1px solid #bdd0d9; cursor:pointer; font:inherit; font-size:12px; font-weight:800; }
+.nova-solicitacao-cliente form > footer button[type='submit'] { color:white; background:#006da9; border-color:#006da9; }
+.nova-solicitacao-cliente form > footer button:disabled { opacity:.55; cursor:not-allowed; }
+
+@media (max-width:900px) { .boas-vindas-cliente,.grade-cliente { grid-template-columns:1fr; }.selo-seguranca-cliente { max-width:none; }.lista-projetos-cliente { display:flex; align-items:stretch; gap:8px; overflow-x:auto; }.lista-projetos-cliente > header { min-width:52px; margin:0; }.lista-projetos-cliente > header > div { display:none; }.lista-projetos-cliente button { min-width:230px; margin:0; } }
 @media (max-width:650px) { .aplicacao { font-size:14px; }.aplicacao small,.aplicacao td,.aplicacao th,.aplicacao label,.aplicacao input,.aplicacao select,.aplicacao textarea,.aplicacao button { font-size:12px!important; }.cabecalho-interno p,.passo,.cards-kpi small,.bloco header p,.cards-kpi p,.marca-interna-legenda,.faixa-demo span { font-size:11px; }.usuario strong,.usuario small,.barra-lateral button,.botao-interno,.busca input { font-size:12px; }.topo-cliente { align-items:flex-start; flex-wrap:wrap; gap:10px; padding:14px 18px; }.topo-cliente .marca-oficial { width:min(250px,72vw); }.topo-cliente > div { width:100%; order:3; align-items:flex-start; margin:0; text-align:left; }.topo-cliente > button { margin-left:auto; }.conteudo-cliente { width:calc(100% - 32px); padding:34px 0 60px; }.boas-vindas-cliente { gap:24px; }.boas-vindas-cliente h1 { font-size:38px; }.boas-vindas-cliente > div > p:last-child { font-size:15px; }.resumo-projeto-cliente { grid-template-columns:1fr; }.detalhe-projeto-cliente > header { align-items:flex-start; flex-direction:column; }.acompanhamento-etapas,.mensagens-cliente { padding:24px 17px; }.acompanhamento-etapas li > div > header { align-items:flex-start; flex-direction:column; gap:5px; }.acompanhamento-etapas li p,.lista-mensagens-cliente p { font-size:14px; }.lista-mensagens-cliente p { max-width:92%; }.mensagens-cliente form { flex-direction:column; }.mensagens-cliente form button { min-height:45px; justify-content:center; }.modal-privacidade { padding:25px 20px; }.modal-privacidade > div { align-items:stretch; flex-direction:column; }.modal-privacidade button { justify-content:center; } }
 
 @media (max-width:650px) {
@@ -133,6 +168,21 @@
   .boas-vindas-cliente h1 { font-size:clamp(30px,10vw,38px); }
   .conteudo-cliente { width:calc(100% - 24px); }
   .lista-projetos-cliente button,.resumo-projeto-cliente article { padding-inline:17px; }
+}
+
+@media (max-width:650px) {
+  .indicadores-cliente { grid-template-columns:1fr; gap:8px; }
+  .novo-trabalho-cliente { width:100%; justify-content:center; }
+  .fundo-nova-solicitacao { align-items:end; padding:0; }
+  .nova-solicitacao-cliente { width:100%; max-height:94vh; }
+  .nova-solicitacao-cliente > header { padding:22px 18px 18px; }
+  .nova-solicitacao-cliente > header h2 { font-size:23px; }
+  .seguranca-nova-solicitacao { margin:16px 18px 0; }
+  .nova-solicitacao-cliente form { padding:18px; }
+  .grade-nova-solicitacao { grid-template-columns:1fr; }
+  .grade-nova-solicitacao .campo-largo { grid-column:auto; }
+  .nova-solicitacao-cliente form > footer { align-items:stretch; flex-direction:column-reverse; }
+  .nova-solicitacao-cliente form > footer button { width:100%; min-height:46px; }
 }
 
 .painel-solicitacoes-persistentes { display:grid; gap:14px; }

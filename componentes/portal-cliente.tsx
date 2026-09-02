@@ -1,12 +1,13 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Check, CheckCircle2, Circle, Clock3, Download, FileText, LogOut, MessageSquareText, Pencil, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Activity, BriefcaseBusiness, Check, CheckCircle2, Circle, Clock3, Download, FileText, LogOut, MessageSquareText, Pencil, Plus, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import { calcularSha256Hex } from '../lib/pre-proposta-pdf';
-import { contextoClienteDemonstracao, descricaoAceiteCliente, mensagensClienteDemonstracao, podeAceitarPreProposta, situacaoEtapasCliente, solicitacoesClienteDemonstracao, tituloServicoCliente, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE, VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA } from '../lib/portal-cliente';
+import { contextoClienteDemonstracao, descricaoAceiteCliente, mensagensClienteDemonstracao, podeAceitarPreProposta, protocoloSolicitacaoCliente, situacaoEtapasCliente, solicitacoesClienteDemonstracao, tituloServicoCliente, type ContextoCliente, type MensagemCliente, type SolicitacaoCliente, VERSAO_AVISO_PRIVACIDADE, VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA } from '../lib/portal-cliente';
 import { MarcaOficial } from './marca-oficial';
+import { NovaSolicitacaoCliente, type DadosNovaSolicitacaoCliente } from './nova-solicitacao-cliente';
 
 type Propriedades = {
   cliente?: SupabaseClient;
@@ -43,6 +44,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [baixandoPdf, setBaixandoPdf] = useState(false);
   const [aceitandoPreProposta, setAceitandoPreProposta] = useState(false);
   const [confirmouAceite, setConfirmouAceite] = useState(false);
+  const [criandoSolicitacao, setCriandoSolicitacao] = useState(false);
+  const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
 
   const carregar = useCallback(async () => {
     if (!cliente || demonstracao) return;
@@ -88,6 +91,38 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const situacaoAtual = useMemo(() => selecionada
     ? situacaoEtapasCliente(selecionada.etapas, selecionada.execucao_estado, selecionada.proposta_estado)
     : null, [selecionada]);
+  const indicadores = useMemo(() => ({
+    total: solicitacoes.length,
+    emExecucao: solicitacoes.filter((item) => item.execucao_estado === 'em_execucao').length,
+    aguardandoCliente: solicitacoes.filter((item) => item.proposta_estado === 'publicada').length,
+  }), [solicitacoes]);
+
+  async function registrarNovaSolicitacao(
+    resultado: { solicitacao_id: string; codigo: number; protocolo: string },
+    dados: DadosNovaSolicitacaoCliente,
+  ) {
+    if (demonstracao) {
+      setSolicitacoes((atuais) => [{
+        id: resultado.solicitacao_id,
+        codigo: resultado.codigo,
+        protocolo: resultado.protocolo,
+        estado: 'nova',
+        criada_em: new Date().toISOString(),
+        servico: dados.necessidade,
+        proposta_estado: null,
+        valor_pre_proposta: null,
+        prazo_pagamento_dias: dados.prazo_pagamento_dias,
+        aceita_em: null,
+        execucao_estado: null,
+        etapas: [],
+      }, ...atuais]);
+    } else {
+      await carregar();
+    }
+    setSelecionadaId(resultado.solicitacao_id);
+    setCriandoSolicitacao(false);
+    setAviso(`${resultado.protocolo} registrada e vinculada à sua empresa. Você já pode alternar entre os trabalhos.`);
+  }
 
   async function aceitarPrivacidade() {
     setAceitando(true);
@@ -210,26 +245,30 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setAceitandoPreProposta(false);
   }
 
-  return <main className="portal-cliente">
+  return <main className="portal-cliente" data-hidratado={hidratado ? 'sim' : 'nao'}>
     <header className="topo-cliente"><a href="/" aria-label="Voltar ao site"><MarcaOficial /></a><div><span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span><strong>{nomeCliente}</strong><small>{contexto.empresa_nome}</small></div><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')}><LogOut size={17} /> Sair</button></header>
     <div className="conteudo-cliente">
-      <section className="boas-vindas-cliente"><div><p className="sobrelinha"><span /> ACOMPANHAMENTO DIGITAL</p><h1>Veja o andamento sem termos complicados.</h1><p>A solicitação pode ser enviada sem login. Esta área protegida reúne apenas os trabalhos, etapas, pré-propostas e mensagens permitidos ao seu perfil Cliente.</p></div><aside className="resumo-acesso-cliente"><div className="selo-seguranca-cliente"><ShieldCheck size={22} /><span><strong>Acesso restrito à sua empresa</strong><small>Dados de homologação permanecem demonstrativos.</small></span></div><div className="perfil-cliente"><UserRound size={20} /><span><small>Perfil</small><strong>{contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'}</strong><em>{contexto.usuario_email}</em></span><button type="button" onClick={() => setEditandoPerfil(true)} aria-label="Editar nome do perfil"><Pencil size={15} /></button></div>{editandoPerfil && <form className="editar-perfil-cliente" onSubmit={salvarPerfil}><label htmlFor="nome-cliente">Nome de exibição</label><input id="nome-cliente" required minLength={2} maxLength={120} value={nomeEmEdicao} onChange={(evento) => setNomeEmEdicao(evento.target.value)} /><div><button type="button" onClick={() => { setNomeEmEdicao(nomeCliente); setEditandoPerfil(false); }}><X size={15} /> Cancelar</button><button type="submit" disabled={salvandoPerfil}><Save size={15} /> {salvandoPerfil ? 'Salvando…' : 'Salvar'}</button></div></form>}</aside></section>
+      <section className="boas-vindas-cliente"><div><p className="sobrelinha"><span /> CENTRAL DO CLIENTE</p><h1>Todos os trabalhos da sua empresa em um só lugar.</h1><p>Abra novas solicitações, acompanhe vários trabalhos ao mesmo tempo e alterne livremente entre pré-propostas, etapas e mensagens sem repetir cadastro ou ativação.</p><button className="novo-trabalho-cliente" type="button" onClick={() => setCriandoSolicitacao(true)}><Plus size={18} /> Registrar novo trabalho</button></div><aside className="resumo-acesso-cliente"><div className="selo-seguranca-cliente"><ShieldCheck size={22} /><span><strong>Acesso restrito à sua empresa</strong><small>Dados de homologação permanecem demonstrativos.</small></span></div><div className="perfil-cliente"><UserRound size={20} /><span><small>Perfil</small><strong>{contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'}</strong><em>{contexto.usuario_email}</em></span><button type="button" onClick={() => setEditandoPerfil(true)} aria-label="Editar nome do perfil"><Pencil size={15} /></button></div>{editandoPerfil && <form className="editar-perfil-cliente" onSubmit={salvarPerfil}><label htmlFor="nome-cliente">Nome de exibição</label><input id="nome-cliente" required minLength={2} maxLength={120} value={nomeEmEdicao} onChange={(evento) => setNomeEmEdicao(evento.target.value)} /><div><button type="button" onClick={() => { setNomeEmEdicao(nomeCliente); setEditandoPerfil(false); }}><X size={15} /> Cancelar</button><button type="submit" disabled={salvandoPerfil}><Save size={15} /> {salvandoPerfil ? 'Salvando…' : 'Salvar'}</button></div></form>}</aside></section>
+
+      <section className="indicadores-cliente" aria-label="Resumo dos trabalhos"><article><BriefcaseBusiness size={21} /><span><small>Trabalhos vinculados</small><strong>{indicadores.total}</strong></span></article><article><Activity size={21} /><span><small>Em execução</small><strong>{indicadores.emExecucao}</strong></span></article><article><CheckCircle2 size={21} /><span><small>Aguardando sua decisão</small><strong>{indicadores.aguardandoCliente}</strong></span></article></section>
 
       {aviso && <div className="aviso-cliente sucesso" role="status">{aviso}<button type="button" onClick={() => setAviso('')} aria-label="Fechar aviso">×</button></div>}
       {erro && <div className="aviso-cliente erro" role="alert">{erro}</div>}
       {carregando && <div className="aviso-cliente" role="status"><RefreshCw size={18} /> Carregando acompanhamento…</div>}
-      {!carregando && solicitacoes.length === 0 && <section className="vazio-cliente"><FileText size={30} /><h2>Nenhum trabalho disponível ainda</h2><p>Quando a equipe vincular uma solicitação à sua empresa, o acompanhamento aparecerá aqui.</p><a className="botao" href="/solicitar">Fazer uma solicitação</a></section>}
+      {!carregando && solicitacoes.length === 0 && <section className="vazio-cliente"><FileText size={30} /><h2>Comece seu primeiro trabalho</h2><p>Registre a solicitação nesta área protegida. Ela já nascerá vinculada à sua empresa e aparecerá aqui imediatamente.</p><button className="botao" type="button" onClick={() => setCriandoSolicitacao(true)}>Registrar solicitação</button></section>}
 
       {selecionada && <div className="grade-cliente">
-        <aside className="lista-projetos-cliente"><h2>Seus trabalhos</h2>{solicitacoes.map((item) => <button key={item.id} type="button" className={item.id === selecionada.id ? 'ativo' : ''} onClick={() => { setSelecionadaId(item.id); setConfirmouAceite(false); }}><span>SOL-{String(item.codigo).padStart(4, '0')}</span><strong>{tituloServicoCliente(item.servico)}</strong><small>Recebida em {dataCurta(item.criada_em)}</small></button>)}</aside>
+        <aside className="lista-projetos-cliente"><header><div><h2>Seus trabalhos</h2><small>Selecione o que deseja acompanhar</small></div><button className="adicionar-trabalho-lista" type="button" onClick={() => setCriandoSolicitacao(true)} aria-label="Registrar novo trabalho"><Plus size={17} /></button></header>{solicitacoes.map((item) => <button key={item.id} type="button" className={item.id === selecionada.id ? 'ativo' : ''} onClick={() => { setSelecionadaId(item.id); setConfirmouAceite(false); }}><span>{protocoloSolicitacaoCliente(item)}</span><strong>{tituloServicoCliente(item.servico)}</strong><small>Recebida em {dataCurta(item.criada_em)}</small></button>)}</aside>
         <section className="detalhe-projeto-cliente">
-          <header><div><span>SOL-{String(selecionada.codigo).padStart(4, '0')}</span><h2>{tituloServicoCliente(selecionada.servico)}</h2></div><button type="button" onClick={() => void carregar()}><RefreshCw size={15} /> Atualizar</button></header>
+          <header><div><span>{protocoloSolicitacaoCliente(selecionada)}</span><h2>{tituloServicoCliente(selecionada.servico)}</h2></div><button type="button" onClick={() => void carregar()}><RefreshCw size={15} /> Atualizar</button></header>
           <div className="resumo-projeto-cliente"><article><small>Pré-proposta comercial</small><strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong><span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : (selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise')}</span>{selecionada.valor_pre_proposta !== null && <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}><Download size={15} /> {baixandoPdf ? 'Baixando…' : 'Baixar PDF emitido'}</button>}{podeAceitarPreProposta(selecionada.proposta_estado) && <div className="aceite-pre-proposta-cliente"><strong>Deseja prosseguir?</strong><p>Este aceite manifesta seu interesse nesta pré-proposta do laboratório. Ele não substitui a proposta oficial emitida pelo SENAI no Nectar, e o serviço só começa após a liberação do laboratório.</p><label><input type="checkbox" checked={confirmouAceite} onChange={(evento) => setConfirmouAceite(evento.target.checked)} /> Li e desejo prosseguir com esta pré-proposta.</label><button type="button" onClick={() => void aceitarPreProposta()} disabled={!confirmouAceite || aceitandoPreProposta}><CheckCircle2 size={16} /> {aceitandoPreProposta ? 'Registrando…' : 'Aceitar pré-proposta'}</button></div>}{selecionada.proposta_estado === 'aceita' && <div className="aceite-pre-proposta-cliente confirmado"><CheckCircle2 size={20} /><div><strong>Aceite registrado</strong><p>{descricaoAceiteCliente(selecionada.aceita_em, selecionada.execucao_estado, dataCurta)}</p></div></div>}</article><article><small>Andamento do serviço</small><strong>{situacaoAtual?.titulo}</strong><span>{situacaoAtual?.descricao}</span></article></div>
           <section className="acompanhamento-etapas"><div className="titulo-bloco-cliente"><div><h3>Etapas do trabalho</h3><p>A porcentagem indica o progresso da etapa atual, não do contrato inteiro.</p></div></div>{selecionada.etapas.length === 0 ? <div className="sem-etapas-cliente"><Clock3 size={22} /><div><strong>A equipe ainda está preparando o acompanhamento</strong><p>As etapas aparecerão aqui depois da triagem inicial da solicitação.</p></div></div> : <ol>{selecionada.etapas.map((etapa) => { const { rotulo, Icone } = estadoEtapa[etapa.estado]; return <li key={etapa.id} className={`etapa-${etapa.estado}`}><span className="icone-etapa"><Icone size={20} /></span><div><header><strong>{etapa.titulo}</strong><b>{rotulo}{etapa.estado === 'em_andamento' ? ` (${etapa.progresso}%)` : ''}</b></header>{etapa.descricao && <p>{etapa.descricao}</p>}<div className="barra-progresso" aria-label={`${etapa.progresso}% concluído`}><i style={{ width: `${etapa.progresso}%` }} /></div><small>Atualizado em {dataCurta(etapa.atualizada_em)}</small></div></li>; })}</ol>}</section>
           <section className="mensagens-cliente"><div className="titulo-bloco-cliente"><div><h3><MessageSquareText size={18} /> Mensagens</h3><p>Canal vinculado a esta solicitação.</p></div></div><div className="lista-mensagens-cliente">{mensagens.map((mensagem) => <p key={mensagem.id} className={mensagem.autor_proprio ? 'propria' : ''}>{mensagem.conteudo}<small>{dataCurta(mensagem.criada_em)}</small></p>)}</div><form onSubmit={enviarMensagem}><label htmlFor="mensagem-cliente" className="sr-only">Nova mensagem</label><input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para a equipe" /><button type="submit"><Send size={16} /> Enviar</button></form></section>
         </section>
       </div>}
     </div>
+
+    {criandoSolicitacao && <NovaSolicitacaoCliente cliente={cliente} demonstracao={demonstracao} empresaNome={contexto.empresa_nome} aoFechar={() => setCriandoSolicitacao(false)} aoCriada={registrarNovaSolicitacao} />}
 
     {!aceitouPrivacidade && <div className="fundo-modal-privacidade" role="presentation"><section className="modal-privacidade" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-privacidade"><span><ShieldCheck size={21} /> Proteção de dados</span><h2 id="titulo-modal-privacidade">Antes de acessar sua área</h2><p>Usamos seus dados para identificar a empresa, analisar solicitações, acompanhar trabalhos e manter este canal de mensagens. O acesso é restrito a usuários aprovados e à equipe autorizada.</p><ul><li>Não envie dados pessoais ou industriais que não sejam necessários ao serviço.</li><li>Arquivos e mensagens ficam vinculados à solicitação e protegidos por controle de acesso.</li><li>Você pode consultar a política completa e solicitar correção ou atendimento pelo canal informado nela.</li></ul><label><input type="checkbox" required checked readOnly /> Li e estou ciente deste aviso de privacidade.</label><div><a href="/privacidade" target="_blank" rel="noreferrer">Ler política completa</a><button type="button" onClick={() => void aceitarPrivacidade()} disabled={aceitando}><Check size={16} /> {aceitando ? 'Registrando…' : 'Continuar'}</button></div><small>Versão {VERSAO_AVISO_PRIVACIDADE} · texto de homologação sujeito à validação institucional.</small></section></div>}
   </main>;

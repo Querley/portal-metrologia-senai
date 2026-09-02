@@ -18,6 +18,7 @@ export type SolicitacaoParaPreProposta = {
   prazo_pagamento_dias: number;
   tem_pre_proposta: boolean;
   estado_pre_proposta: string | null;
+  cliente_existente: boolean;
 };
 
 const apresentacoes = {

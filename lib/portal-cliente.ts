@@ -28,6 +28,7 @@ export type EtapaCliente = {
 export type SolicitacaoCliente = {
   id: string;
   codigo: number;
+  protocolo?: string;
   estado: string;
   criada_em: string;
   servico: string;
@@ -49,6 +50,10 @@ export type MensagemCliente = {
 export function tituloServicoCliente(slug: string): string {
   return servicosOficiais.find((servico) => servico.slug === slug)?.titulo
     ?? slug.replaceAll('-', ' ');
+}
+
+export function protocoloSolicitacaoCliente(solicitacao: Pick<SolicitacaoCliente, 'codigo' | 'protocolo'>): string {
+  return solicitacao.protocolo ?? `SOL-${String(solicitacao.codigo).padStart(4, '0')}`;
 }
 
 export function podeAceitarPreProposta(estado: string | null): boolean {
@@ -161,6 +166,7 @@ export const solicitacoesClienteDemonstracao: SolicitacaoCliente[] = [
   {
     id: 'demo-solicitacao',
     codigo: 284,
+    protocolo: 'DEM-SOL-0284',
     estado: 'em_execucao',
     criada_em: '2026-08-20T12:42:00.000Z',
     servico: 'Digitalização e engenharia reversa',

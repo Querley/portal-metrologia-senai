@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { descricaoAceiteCliente, podeAceitarPreProposta, situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
+import { descricaoAceiteCliente, podeAceitarPreProposta, protocoloSolicitacaoCliente, situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
 
 function etapa(parcial: Partial<EtapaCliente>): EtapaCliente {
   return {
@@ -57,5 +57,10 @@ describe('resumo do portal do Cliente', () => {
 
   it('traduz o slug técnico para o título público', () => {
     expect(tituloServicoCliente('escaneamento-3d-digitalizacao-pecas')).toBe('Escaneamento 3D e digitalização de peças');
+  });
+
+  it('preserva o protocolo público no acompanhamento', () => {
+    expect(protocoloSolicitacaoCliente({ codigo: 5, protocolo: 'DEM-SOL-0005' })).toBe('DEM-SOL-0005');
+    expect(protocoloSolicitacaoCliente({ codigo: 5 })).toBe('SOL-0005');
   });
 });

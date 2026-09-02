@@ -30,6 +30,9 @@ A aprovação não emite a pré-proposta. Somente Administrador promove `aprovad
 ## Área do cliente
 
 - A solicitação inicial é pública e não exige conta.
+- Uma empresa pode possuir várias solicitações e execuções simultâneas. O vínculo representa a relação do usuário com a empresa, não um trabalho selecionado.
+- O Cliente autenticado pode criar outro trabalho diretamente na área protegida e alternar o acompanhamento entre todos os trabalhos da empresa.
+- Uma solicitação pública recorrente com o mesmo e-mail reutiliza a empresa demonstrativa ativa. O CNPJ informado na triagem é preservado para auditoria, mas não troca nem duplica o vínculo empresarial sem decisão administrativa explícita.
 - O acompanhamento exige usuário autenticado e vínculo empresarial previamente aprovado.
 - Cliente externo nunca vê rascunhos internos, custos ou margens; vê somente pré-proposta emitida, etapas marcadas como visíveis e mensagens da própria empresa.
 - Cada etapa tem ordem, estado `a_fazer | em_andamento | concluida`, progresso de 0 a 100 e data de atualização.

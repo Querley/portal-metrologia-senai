@@ -91,8 +91,8 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
     <CheckCircle2 size={42} />
     <h1>Solicitação salva na homologação</h1>
     <p>Protocolo <strong>DEM-SOL-{String(confirmacao.codigo).padStart(4, '0')}</strong>, vinculado ao e-mail sintético <strong>{emailEnviado}</strong>.</p>
-    <p>Depois que uma conta Cliente com esse mesmo e-mail for provisionada, use o acesso abaixo para vincular a solicitação e abrir sua área protegida. Os arquivos selecionados permaneceram neste dispositivo e poderão ser enviados na etapa autenticada.</p>
-    <a className="botao" href={`/portal?ativar=${encodeURIComponent(confirmacao.token_ativacao)}`}>Ativar acompanhamento do Cliente <span>→</span></a>
+    <p>Use o acesso abaixo com o mesmo e-mail. Se o Cliente já estiver cadastrado, este novo trabalho será acrescentado à empresa existente; caso seja o primeiro, a área protegida será ativada. Os arquivos selecionados permaneceram neste dispositivo e poderão ser enviados na etapa autenticada.</p>
+    <a className="botao" href={`/portal?ativar=${encodeURIComponent(confirmacao.token_ativacao)}`}>Vincular ao acompanhamento do Cliente <span>→</span></a>
     <a className="link-confirmacao" href="/portal/cliente-demonstracao">Ver a demonstração antes de ativar</a>
   </section>;
 

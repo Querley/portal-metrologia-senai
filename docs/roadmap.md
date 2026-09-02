@@ -47,6 +47,7 @@
 - [x] vincular a pré-proposta interna à solicitação ativada do Cliente, preservando protocolo, empresa, destinatário e auditoria;
 - [x] validar o fluxo externo e o bloqueio de e-mail divergente em transação revertida, sem resíduos;
 - [x] repetir solicitação, ativação e mensagens pela interface publicada com uma conta Cliente sintética provisionada pelo Auth;
+- [x] permitir vários trabalhos simultâneos por empresa, criação dentro da área do Cliente, alternância livre e recuperação de solicitações recorrentes pelo mesmo e-mail;
 - [ ] implementar o endpoint público de produção com Turnstile, criptografia e limites antes de persistir solicitações reais;
 - [x] gerar e armazenar o PDF em bucket privado, congelar seu SHA-256 e verificar a integridade no download; o Nectar permanece fora do escopo;
 - [x] corrigir a autorização de leitura do PDF pelo Cliente sem tornar o bucket público nem contornar o vínculo empresarial;
@@ -64,6 +65,7 @@
 - [x] preparar lições persistentes, comparação estimado versus realizado e recomendação estatística sem mistura de origem;
 - [x] persistir a justificativa de estimativa fora de Q1–Q3 e bloquear o envio sem justificativa no servidor;
 - [x] substituir o acesso provisório da migration `024` por atribuição formal de Técnico, exclusiva do Administrador e coberta por RPC, gatilhos e RLS;
+- [x] aplicar a migration `202609010031`, reconciliar o vínculo recorrente e preservar o protocolo público na área do Cliente;
 - [x] adicionar testes automatizados de autorização e RLS sobre leitura, operação e reatribuição de execuções;
 
 ## Dependências institucionais

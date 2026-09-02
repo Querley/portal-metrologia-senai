@@ -76,3 +76,28 @@ test('área interna oferece autenticação e alternativa de demonstração', asy
   await expect(page.getByRole('link', { name: 'Abrir demonstração interna' })).toHaveAttribute('href', '/portal/demonstracao');
   await expect(page.getByRole('link', { name: 'Ver demonstração da área do cliente' })).toHaveAttribute('href', '/portal/cliente-demonstracao');
 });
+
+test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page }) => {
+  await page.goto('/portal/cliente-demonstracao');
+  await expect(page.locator('.portal-cliente')).toHaveAttribute('data-hidratado', 'sim');
+  const avisoPrivacidade = page.getByRole('dialog', { name: 'Antes de acessar sua área' });
+  await avisoPrivacidade.getByRole('button', { name: 'Continuar' }).click();
+  await expect(avisoPrivacidade).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Todos os trabalhos da sua empresa em um só lugar.' })).toBeVisible();
+  await expect(page.getByText('Trabalhos vinculados').locator('..').getByText('1', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Registrar novo trabalho' }).first().click();
+  await expect(page.getByRole('dialog', { name: 'Registrar outra solicitação' })).toBeVisible();
+  await page.getByLabel('Tipo de necessidade').selectOption('medicao-inspecao-dimensional');
+  await page.getByLabel('Material da peça').fill('Alumínio demonstrativo');
+  await page.getByLabel('Quantidade').fill('2');
+  await page.getByLabel('Prazo desejado para o serviço').fill('2026-12-20');
+  await page.getByLabel('Descreva o desafio').fill('Inspeção dimensional demonstrativa para validar outro trabalho simultâneo.');
+  await page.getByRole('button', { name: 'Registrar novo trabalho' }).last().click();
+
+  await expect(page.getByText(/registrada e vinculada à sua empresa/i)).toBeVisible();
+  await expect(page.getByText('Trabalhos vinculados').locator('..').getByText('2', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /DEM-SOL-0285/i })).toHaveClass(/ativo/);
+  await page.getByRole('button', { name: /DEM-SOL-0284/i }).click();
+  await expect(page.getByRole('button', { name: /DEM-SOL-0284/i })).toHaveClass(/ativo/);
+});

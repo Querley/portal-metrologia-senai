@@ -18,6 +18,7 @@ function solicitacao(parcial: Partial<SolicitacaoParaPreProposta> = {}): Solicit
     prazo_pagamento_dias: 30,
     tem_pre_proposta: false,
     estado_pre_proposta: null,
+    cliente_existente: true,
     ...parcial,
   };
 }
