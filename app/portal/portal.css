@@ -451,6 +451,7 @@
 }
 
 @media (max-width:650px) {
+  .aplicacao { max-width:100vw; overflow-x:clip; }
   .cabecalho-interno > div:first-child { width:100%; }
   .controles-cabecalho-interno { width:100%; justify-content:space-between; }
   .acoes-conta-responsivas { flex:1; }

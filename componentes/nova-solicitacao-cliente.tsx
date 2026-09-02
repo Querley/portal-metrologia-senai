@@ -43,6 +43,10 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
 
   function selecionarArquivos(lista: FileList | null) {
     const proximos = [...arquivos, ...Array.from(lista ?? [])];
+    if (anexosEnviados.length + proximos.length > 5) {
+      setErro('Envie no máximo cinco arquivos por solicitação, incluindo os que já foram enviados.');
+      return;
+    }
     const falha = validarAnexosSolicitacao(proximos);
     if (falha) {
       setErro(falha);
