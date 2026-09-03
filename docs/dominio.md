@@ -25,7 +25,7 @@
 
 Transições fora desses caminhos só podem ocorrer por função privilegiada e auditada.
 
-A aprovação não emite a pré-proposta. Somente Administrador promove `aprovada` para `publicada`, e apenas depois da geração do PDF privado com hash imutável. Uma tentativa interrompida antes do congelamento pode substituir somente o arquivo órfão da mesma versão; depois do congelamento, nem remoção nem sobrescrita são permitidas. `rejeitada` representa decisão interna e exige nova proposta; `recusada` representa a decisão posterior do cliente sobre uma versão emitida.
+A aprovação não emite a pré-proposta. Somente Administrador promove `aprovada` para `publicada`, e apenas depois da geração do PDF privado com hash imutável. Uma tentativa interrompida antes do congelamento pode substituir somente o arquivo órfão da mesma versão; depois do congelamento, nem remoção nem sobrescrita são permitidas. `rejeitada` representa decisão interna e exige nova proposta; `recusada` representa a decisão posterior do Cliente sobre uma versão emitida, exige motivo e libera outra pré-proposta para a mesma solicitação sem apagar o PDF ou a auditoria da decisão anterior.
 
 ## Área do cliente
 
@@ -40,6 +40,7 @@ A aprovação não emite a pré-proposta. Somente Administrador promove `aprovad
 - Concluir todas as etapas não encerra automaticamente o trabalho. O Técnico registra o fechamento; Validador ou Administrador aprova e conclui definitivamente, ou devolve ao Técnico com justificativa.
 - O Técnico visualiza e opera somente execuções formalmente atribuídas a ele. Validador e Administrador visualizam todas as execuções demonstrativas; atribuições e alterações permanecem na auditoria.
 - A ciência do aviso de privacidade registra versão e data no vínculo empresarial.
+- Pesquisa e filtros operam somente sobre os trabalhos já autorizados para a empresa e nunca ampliam o escopo de leitura.
 
 ## Cálculos
 

@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Ban, Calculator, CheckCircle2, CornerUpLeft, Download, FileCheck2, FileText, FileUp, Pencil, PlayCircle, Printer, RefreshCw, Save, Send, ShieldCheck, Sparkles, UploadCloud, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
+import { correspondeBusca } from '../lib/busca-e-filtros';
 import type { PerfilInterno } from '../lib/contratos';
 import { ORIGEM_CUSTOS_HOMOLOGACAO, podeConsultarCustos } from '../lib/custos-equipamento';
 import { formatarHoras, normalizarJustificativaEstimativa, recomendacaoExigeJustificativa, type RecomendacaoPersistente } from '../lib/conhecimento-persistente';
@@ -12,6 +13,7 @@ import { calcularSha256Hex, gerarPdfPreProposta } from '../lib/pre-proposta-pdf'
 import { servicosOficiais } from '../lib/servicos';
 import type { SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
 import { MarcaOficial } from './marca-oficial';
+import { BarraBuscaFiltros } from './barra-busca-filtros';
 
 type Servico = { id: string; slug: string; ativo: boolean };
 type Equipamento = { id: string; codigo: string; nome: string; ativo: boolean };
@@ -39,7 +41,7 @@ type JustificativaEstimativa = { versao_id: string; justificativa_estimativa: st
 type Orcamento = {
   versao_id: string;
   numero: number;
-  estado: 'rascunho' | 'em_validacao' | 'devolvida' | 'rejeitada' | 'aprovada' | 'publicada' | 'aceita';
+  estado: 'rascunho' | 'em_validacao' | 'devolvida' | 'rejeitada' | 'aprovada' | 'publicada' | 'aceita' | 'recusada';
   criada_em: string;
   descricao: string;
   servico_slug: string;
@@ -76,6 +78,7 @@ const apresentacaoEstado = {
   aprovada: { rotulo: 'Aprovada', classe: 'estado-formalizada' },
   publicada: { rotulo: 'Pré-proposta emitida', classe: 'estado-formalizada' },
   aceita: { rotulo: 'Aceita pelo Cliente', classe: 'estado-formalizada' },
+  recusada: { rotulo: 'Recusada pelo Cliente', classe: 'estado-rejeitada' },
 } as const;
 
 function tituloServico(slug: string): string {
@@ -115,6 +118,9 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
   const [recomendacao, setRecomendacao] = useState<RecomendacaoPersistente | null>(null);
   const [consultandoRecomendacao, setConsultandoRecomendacao] = useState(false);
   const [justificativaEstimativa, setJustificativaEstimativa] = useState('');
+  const [busca, setBusca] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [filtroTipo, setFiltroTipo] = useState('todos');
 
   const carregar = useCallback(async () => {
     if (!podeConsultarOrcamentos(perfil)) return;
@@ -165,6 +171,13 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
   }, [carregar]);
 
   const custosPorEquipamento = useMemo(() => new Map(custos.map((custo) => [custo.equipamento_id, custo])), [custos]);
+  const orcamentosVisiveis = useMemo(() => orcamentos.filter((orcamento) => {
+    if (!correspondeBusca(busca, orcamento.descricao, orcamento.servico_slug, orcamento.equipamento_nome, orcamento.empresa_nome, orcamento.solicitacao_codigo, orcamento.destinatario, orcamento.estado)) return false;
+    if (filtroEstado !== 'todos' && orcamento.estado !== filtroEstado) return false;
+    if (filtroTipo === 'vinculados' && !orcamento.cliente_vinculado) return false;
+    if (filtroTipo === 'internos' && orcamento.cliente_vinculado) return false;
+    return true;
+  }), [busca, filtroEstado, filtroTipo, orcamentos]);
   const custoSelecionado = custosPorEquipamento.get(equipamentoId);
   const entrada = { descricao, quantidade, horas, custosExtras, percentualLucro };
   const previa = custoSelecionado ? calcularPreviaOrcamento(entrada, custoSelecionado.custo_hora) : null;
@@ -218,7 +231,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
     const respostaSalvamento = versaoEmEdicao
       ? await cliente.rpc('revisar_pre_proposta_demonstrativa', { versao: versaoEmEdicao, ...argumentos })
       : solicitacaoVinculada?.solicitacao_id
-        ? await cliente.rpc('criar_pre_proposta_para_solicitacao_demonstrativa', { solicitacao: solicitacaoVinculada.solicitacao_id, ...argumentos })
+        ? await cliente.rpc('criar_nova_pre_proposta_para_solicitacao_demonstrativa', { solicitacao: solicitacaoVinculada.solicitacao_id, ...argumentos })
         : await cliente.rpc('criar_pre_proposta_demonstrativa', argumentos);
     const error = respostaSalvamento.error;
 
@@ -499,11 +512,13 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
       </div>
 
       <section className="bloco tabela-orcamentos-persistentes">
-        <header><div><h2>Pré-propostas salvas</h2><p>{orcamentos.length} registros demonstrativos persistidos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
-        <div className="tabela-wrap"><table><thead><tr><th>Criação</th><th>Descrição</th><th>Equipamento</th><th>Horas</th>{podeConsultarCustos(perfil) && <th>Custo-hora congelado</th>}<th>Preço</th><th>Estado</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{orcamentos.map((orcamento) => {
+        <header><div><h2>Pré-propostas salvas</h2><p>{orcamentosVisiveis.length} de {orcamentos.length} registros demonstrativos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
+        <BarraBuscaFiltros busca={busca} aoMudarBusca={setBusca} placeholder="Pesquisar protocolo, empresa, serviço ou equipamento" total={orcamentosVisiveis.length} filtros={[{ id: 'estado-orcamento', rotulo: 'Estado', valor: filtroEstado, aoMudar: setFiltroEstado, opcoes: [{ valor: 'todos', rotulo: 'Todos os estados' }, ...Object.entries(apresentacaoEstado).map(([valor, item]) => ({ valor, rotulo: item.rotulo }))] }, { id: 'tipo-orcamento', rotulo: 'Tipo', valor: filtroTipo, aoMudar: setFiltroTipo, opcoes: [{ valor: 'todos', rotulo: 'Todos os tipos' }, { valor: 'vinculados', rotulo: 'Vinculados ao Cliente' }, { valor: 'internos', rotulo: 'Rascunhos internos' }] }]} />
+        <div className="tabela-wrap"><table><thead><tr><th>Criação</th><th>Descrição</th><th>Equipamento</th><th>Horas</th>{podeConsultarCustos(perfil) && <th>Custo-hora congelado</th>}<th>Preço</th><th>Estado</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{orcamentosVisiveis.map((orcamento) => {
           const estado = apresentacaoEstado[orcamento.estado] ?? apresentacaoEstado.rascunho;
           return <tr key={orcamento.versao_id}><td>{formatarDataHora(orcamento.criada_em)}</td><td><strong>{orcamento.descricao}</strong><small>{tituloServico(orcamento.servico_slug)}</small><small>{orcamento.cliente_vinculado ? `DEM-SOL-${String(orcamento.solicitacao_codigo).padStart(4, '0')} · ${orcamento.empresa_nome}` : 'Rascunho interno sem solicitação Cliente'}</small><small>Para: {orcamento.destinatario ?? '—'} · pagamento em {orcamento.prazo_pagamento_dias ?? '—'} dias</small>{orcamento.ultima_justificativa_interna && <small className="justificativa-decisao">Motivo: {orcamento.ultima_justificativa_interna}</small>}</td><td>{orcamento.equipamento_nome}</td><td>{String(orcamento.horas).replace('.', ',')} h</td>{podeConsultarCustos(perfil) && <td>{orcamento.custo_hora_congelado === null ? '—' : formatarDinheiro(orcamento.custo_hora_congelado)}</td>}<td><strong>{formatarDinheiro(orcamento.preco_final)}</strong></td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span>{orcamento.execucao_estado === 'em_execucao' && <small className="situacao-execucao-orcamento">Trabalho iniciado</small>}{orcamento.execucao_estado === 'concluido' && <small className="situacao-execucao-orcamento">Trabalho concluído</small>}</td><td><div className="acoes-orcamento"><button className="acao-orcamento" type="button" onClick={() => setPrevisualizando(orcamento)}><FileText size={14} /> Prévia PDF</button>{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void carregarParaEdicao(orcamento)}><Pencil size={14} /> Editar</button>}{orcamento.pode_enviar && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'enviar')}><Send size={14} /> {orcamento.estado === 'devolvida' ? 'Reenviar' : 'Enviar'}</button>}{orcamento.pode_aprovar && podeAprovarOrcamento(perfil) && <button className="acao-orcamento aprovar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void alterarEstado(orcamento, 'aprovar')}><CheckCircle2 size={14} /> Aprovar</button>}{orcamento.pode_devolver && podeDecidirOrcamento(perfil) && <button className="acao-orcamento devolver" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'devolver')}><CornerUpLeft size={14} /> Devolver</button>}{orcamento.pode_rejeitar && podeDecidirOrcamento(perfil) && <button className="acao-orcamento rejeitar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => abrirDecisao(orcamento, 'rejeitar')}><Ban size={14} /> Rejeitar</button>}{orcamento.pode_publicar && podePublicarOrcamento(perfil) && !orcamento.publicacao_pronta && <button className="acao-orcamento publicar" type="button" disabled={gerandoPdfId === orcamento.versao_id} onClick={() => void gerarPdfFinal(orcamento)}><FileUp size={14} /> {gerandoPdfId === orcamento.versao_id ? 'Gerando…' : 'Gerar PDF final'}</button>}{orcamento.publicacao_pronta && <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void baixarPdfInterno(orcamento)}><Download size={14} /> Baixar PDF</button>}{orcamento.pode_publicar && podePublicarOrcamento(perfil) && orcamento.publicacao_pronta && <button className="acao-orcamento publicar" type="button" disabled={processandoId === orcamento.versao_id} title="Emitir pré-proposta aprovada" onClick={() => void alterarEstado(orcamento, 'publicar')}><UploadCloud size={14} /> Emitir</button>}{podeConfirmarInicioTrabalho(perfil, orcamento.estado, orcamento.execucao_estado ?? null) && <button className="acao-orcamento publicar" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void confirmarInicio(orcamento)}><PlayCircle size={14} /> Confirmar início</button>}</div>{decisaoAberta?.versaoId === orcamento.versao_id && <form className="decisao-orcamento" onSubmit={confirmarDecisao}><label htmlFor={`justificativa-${orcamento.versao_id}`}>{decisaoAberta.tipo === 'devolver' ? 'Motivo da devolução' : 'Motivo da rejeição'}</label><textarea id={`justificativa-${orcamento.versao_id}`} autoFocus required minLength={5} maxLength={500} value={justificativa} onChange={(evento) => setJustificativa(evento.target.value)} /><div><button className="acao-orcamento" type="button" onClick={() => setDecisaoAberta(null)}>Cancelar</button><button className={`acao-orcamento ${decisaoAberta.tipo === 'devolver' ? 'devolver' : 'rejeitar'}`} type="submit" disabled={!normalizarJustificativaDecisao(justificativa) || processandoId === orcamento.versao_id}>Confirmar</button></div></form>}</td></tr>;
         })}</tbody></table></div>
+        {orcamentosVisiveis.length === 0 && <div className="estado-vazio"><Calculator size={18} /><span>Nenhuma pré-proposta corresponde à pesquisa e aos filtros.</span></div>}
         {orcamentos.length === 0 && <div className="estado-vazio"><FileCheck2 size={18} /><span>Nenhum orçamento persistente foi criado nesta origem.</span></div>}
       </section>
     </>}

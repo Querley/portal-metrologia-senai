@@ -46,3 +46,7 @@ Uma tarefa diária exporta banco e metadados, cifra antes do envio e aplica rete
 ## Desvio consciente do plano original
 
 O scaffold oficial de hospedagem utiliza Vinext sobre Vite, mantendo React, TypeScript, Tailwind e compatibilidade Cloudflare. A regra de domínio permanece desacoplada do framework.
+
+## Recusa e pesquisa operacional
+
+O Cliente recusa uma versão emitida por RPC protegida, com motivo persistido e auditoria. A versão e seu PDF continuam consultáveis como histórico; a fila interna passa a permitir outra pré-proposta para a mesma solicitação. Pesquisa e filtros são aplicados na interface somente depois que as RPCs e a RLS delimitam o conjunto autorizado.

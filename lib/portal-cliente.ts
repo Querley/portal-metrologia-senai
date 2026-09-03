@@ -36,6 +36,8 @@ export type SolicitacaoCliente = {
   valor_pre_proposta: number | null;
   prazo_pagamento_dias: number | null;
   aceita_em: string | null;
+  recusada_em?: string | null;
+  recusa_motivo?: string | null;
   execucao_estado: 'planejado' | 'em_execucao' | 'concluido' | 'cancelado' | null;
   etapas: EtapaCliente[];
 };
@@ -58,6 +60,15 @@ export function protocoloSolicitacaoCliente(solicitacao: Pick<SolicitacaoCliente
 
 export function podeAceitarPreProposta(estado: string | null): boolean {
   return estado === 'publicada';
+}
+
+export function podeRecusarPreProposta(estado: string | null): boolean {
+  return estado === 'publicada';
+}
+
+export function normalizarMotivoRecusa(valor: string): string | null {
+  const motivo = valor.trim();
+  return motivo.length >= 5 && motivo.length <= 1000 ? motivo : null;
 }
 
 export function situacaoEtapasCliente(
@@ -102,6 +113,12 @@ export function situacaoEtapasCliente(
       return {
         titulo: 'Aguardando sua decisão',
         descricao: 'Analise a pré-proposta emitida e informe se deseja prosseguir.',
+      };
+    }
+    if (propostaEstado === 'recusada') {
+      return {
+        titulo: 'Revisão solicitada',
+        descricao: 'A equipe recebeu sua decisão e poderá preparar uma nova pré-proposta para este trabalho.',
       };
     }
     return {
@@ -174,6 +191,8 @@ export const solicitacoesClienteDemonstracao: SolicitacaoCliente[] = [
     valor_pre_proposta: 12840,
     prazo_pagamento_dias: 45,
     aceita_em: null,
+    recusada_em: null,
+    recusa_motivo: null,
     execucao_estado: null,
     etapas: [
       { id: '1', titulo: 'Recebimento e preparação', descricao: 'Conferência dos arquivos e preparação da peça.', ordem: 1, estado: 'concluida', progresso: 100, atualizada_em: '2026-08-21T12:00:00.000Z' },

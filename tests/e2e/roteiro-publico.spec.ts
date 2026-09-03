@@ -43,6 +43,8 @@ test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
   await page.goto('/solicitar?servico=outro');
   await expect(page.getByLabel('Tipo de necessidade')).toHaveValue('outro');
   await expect(page.getByLabel('Qual resultado você espera?')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Também é possível enviar por e-mail' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Abrir Gmail' })).toHaveAttribute('href', /mail\.google\.com/);
 });
 
 test('serviço oficial abre uma solicitação já classificada', async ({ page }) => {
@@ -107,6 +109,16 @@ test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page
   await expect(page.locator('.anexos-trabalho-cliente').getByText('desenho-demonstrativo.pdf')).toBeVisible();
   await page.getByRole('button', { name: /DEM-SOL-0284/i }).click();
   await expect(page.getByRole('button', { name: /DEM-SOL-0284/i })).toHaveClass(/ativo/);
+  await expect(page.getByRole('heading', { name: 'Também é possível enviar por e-mail' })).toBeVisible();
+
+  await page.getByPlaceholder('Pesquisar por protocolo, serviço ou estado').fill('0284');
+  await expect(page.getByText('1 resultado', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Recusar e solicitar revisão' }).click();
+  await page.getByLabel('O que precisa ser alterado?').fill('Precisamos revisar o prazo e o escopo demonstrativos.');
+  await page.getByRole('button', { name: 'Confirmar recusa' }).click();
+  await expect(page.locator('.aceite-pre-proposta-cliente.recusada').getByText('Revisão solicitada', { exact: true })).toBeVisible();
+  await page.getByLabel('Situação').selectOption('recusados');
+  await expect(page.getByText('1 resultado', { exact: true })).toBeVisible();
 });
 
 test('área interna mantém navegação, perfil e saída em larguras intermediárias e mobile', async ({ page }) => {

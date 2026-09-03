@@ -2,10 +2,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { BriefcaseBusiness, FileText, Link2, RefreshCw, ShieldCheck } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { correspondeBusca } from '../lib/busca-e-filtros';
 import type { PerfilInterno } from '../lib/contratos';
 import { rotuloNecessidadeCliente } from '../lib/solicitacao';
 import { apresentarEstadoSolicitacao, podeConsultarSolicitacoes, podeCriarPrePropostaDaSolicitacao, type SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
+import { BarraBuscaFiltros } from './barra-busca-filtros';
 
 function formatarDataHora(valor: string): string {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(valor));
@@ -16,6 +18,10 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta }
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [vinculando, setVinculando] = useState<string | null>(null);
+  const [busca, setBusca] = useState('');
+  const [filtroAcesso, setFiltroAcesso] = useState('todos');
+  const [filtroAtendimento, setFiltroAtendimento] = useState('todos');
+  const [filtroNecessidade, setFiltroNecessidade] = useState('todos');
 
   const carregar = useCallback(async () => {
     if (!podeConsultarSolicitacoes(perfil)) {
@@ -37,6 +43,16 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta }
   }, [cliente, perfil]);
 
   useEffect(() => { queueMicrotask(() => void carregar()); }, [carregar]);
+
+  const solicitacoesVisiveis = useMemo(() => solicitacoes.filter((solicitacao) => {
+    if (!correspondeBusca(busca, solicitacao.codigo, solicitacao.empresa, solicitacao.nome, solicitacao.email, solicitacao.necessidade, solicitacao.descricao, solicitacao.estado_pre_proposta)) return false;
+    if (filtroAcesso !== 'todos' && solicitacao.estado !== filtroAcesso) return false;
+    if (filtroNecessidade !== 'todos' && solicitacao.necessidade !== filtroNecessidade) return false;
+    if (filtroAtendimento === 'sem_proposta' && solicitacao.tem_pre_proposta) return false;
+    if (filtroAtendimento === 'com_proposta' && !solicitacao.tem_pre_proposta) return false;
+    if (!['todos', 'sem_proposta', 'com_proposta'].includes(filtroAtendimento) && solicitacao.estado_pre_proposta !== filtroAtendimento) return false;
+    return true;
+  }), [busca, filtroAcesso, filtroAtendimento, filtroNecessidade, solicitacoes]);
 
   async function vincularAoCliente(solicitacao: SolicitacaoParaPreProposta) {
     setVinculando(solicitacao.id);
@@ -63,14 +79,15 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta }
     {carregando && <section className="aviso-custos" role="status"><RefreshCw size={20} /><div><strong>Carregando solicitações</strong><p>Consultando somente registros sintéticos da homologação.</p></div></section>}
 
     {!carregando && !erro && <section className="bloco tabela-solicitacoes-persistentes">
-      <header><div><h2>Fila de atendimento</h2><p>{solicitacoes.length} {solicitacoes.length === 1 ? 'solicitação encontrada' : 'solicitações encontradas'}.</p></div><span className="estado estado-formalizada">Acesso protegido</span></header>
-      <div className="tabela-wrap"><table><thead><tr><th>Protocolo</th><th>Empresa e contato</th><th>Necessidade</th><th>Recebida</th><th>Acesso do Cliente</th><th>Atendimento</th></tr></thead><tbody>{solicitacoes.map((solicitacao) => {
+      <header><div><h2>Fila de atendimento</h2><p>{solicitacoesVisiveis.length} de {solicitacoes.length} solicitações.</p></div><span className="estado estado-formalizada">Acesso protegido</span></header>
+      <BarraBuscaFiltros busca={busca} aoMudarBusca={setBusca} placeholder="Pesquisar protocolo, empresa, contato ou necessidade" total={solicitacoesVisiveis.length} filtros={[{ id: 'acesso-cliente', rotulo: 'Acesso', valor: filtroAcesso, aoMudar: setFiltroAcesso, opcoes: [{ valor: 'todos', rotulo: 'Todos os acessos' }, { valor: 'recebida', rotulo: 'Aguardando ativação' }, { valor: 'ativada', rotulo: 'Portal ativado' }, { valor: 'descartada', rotulo: 'Descartadas' }] }, { id: 'tipo-solicitacao', rotulo: 'Tipo', valor: filtroNecessidade, aoMudar: setFiltroNecessidade, opcoes: [{ valor: 'todos', rotulo: 'Todos os tipos' }, ...Array.from(new Set(solicitacoes.map((item) => item.necessidade))).sort().map((valor) => ({ valor, rotulo: rotuloNecessidadeCliente(valor) }))] }, { id: 'atendimento', rotulo: 'Atendimento', valor: filtroAtendimento, aoMudar: setFiltroAtendimento, opcoes: [{ valor: 'todos', rotulo: 'Todos os atendimentos' }, { valor: 'sem_proposta', rotulo: 'Podem receber pré-proposta' }, { valor: 'com_proposta', rotulo: 'Com pré-proposta ativa' }, { valor: 'publicada', rotulo: 'Emitidas' }, { valor: 'aceita', rotulo: 'Aceitas' }, { valor: 'recusada', rotulo: 'Recusadas pelo Cliente' }, { valor: 'rejeitada', rotulo: 'Rejeitadas internamente' }] }]} />
+      <div className="tabela-wrap"><table><thead><tr><th>Protocolo</th><th>Empresa e contato</th><th>Necessidade</th><th>Recebida</th><th>Acesso do Cliente</th><th>Atendimento</th></tr></thead><tbody>{solicitacoesVisiveis.map((solicitacao) => {
         const estado = apresentarEstadoSolicitacao(solicitacao.estado);
         const podeCriar = podeCriarPrePropostaDaSolicitacao(solicitacao);
         const podeVincular = solicitacao.estado === 'recebida' && solicitacao.cliente_existente;
         return <tr key={solicitacao.id}><td><strong>DEM-SOL-{String(solicitacao.codigo).padStart(4, '0')}</strong></td><td><strong>{solicitacao.empresa}</strong><small>{solicitacao.nome} · {solicitacao.email}</small></td><td>{rotuloNecessidadeCliente(solicitacao.necessidade)}</td><td>{formatarDataHora(solicitacao.criado_em)}</td><td><span className={`estado ${estado.classe}`}>{estado.rotulo}</span><small>{podeVincular ? 'Já existe um Cliente ativo com este e-mail.' : estado.descricao}</small></td><td>{podeCriar ? <button className="acao-orcamento" type="button" onClick={() => aoCriarPreProposta(solicitacao)}><FileText size={14} /> Criar pré-proposta</button> : solicitacao.tem_pre_proposta ? <><span className="estado estado-orçada">Pré-proposta criada</span><small>Estado: {String(solicitacao.estado_pre_proposta ?? 'em processamento').replaceAll('_', ' ')}</small></> : podeVincular && perfil === 'administrador' ? <button className="acao-orcamento" type="button" disabled={vinculando === solicitacao.id} onClick={() => void vincularAoCliente(solicitacao)}><Link2 size={14} /> {vinculando === solicitacao.id ? 'Vinculando…' : 'Vincular ao Cliente'}</button> : podeVincular ? <small>O Administrador pode concluir o vínculo com o Cliente existente.</small> : <small>Aguardando a primeira ativação pelo Cliente.</small>}</td></tr>;
       })}</tbody></table></div>
-      {solicitacoes.length === 0 && <div className="estado-vazio"><BriefcaseBusiness size={18} /><span>Nenhuma solicitação sintética foi recebida nesta origem.</span></div>}
+      {solicitacoesVisiveis.length === 0 && <div className="estado-vazio"><BriefcaseBusiness size={18} /><span>{solicitacoes.length === 0 ? 'Nenhuma solicitação sintética foi recebida nesta origem.' : 'Nenhuma solicitação corresponde à pesquisa e aos filtros.'}</span></div>}
     </section>}
   </div>;
 }

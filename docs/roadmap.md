@@ -82,3 +82,10 @@
 ## Definição de pronto
 
 Mudança funcional inclui estados de erro e vazio, validação, autorização, testes proporcionais, texto nos três idiomas quando público e atualização documental. Nada é considerado concluído apenas porque aparece na interface demonstrativa.
+
+## Replanejamento de usuários e acesso — 2 de setembro
+
+- [x] **2–4 set** — concluir recusa/revisão, contato por e-mail e busca/filtros transversais, incluindo a migration `202609020033`.
+- [ ] **5–7 set** — implementar em homologação o convite administrativo de Clientes, contatos adicionais e gestão de membros internos (convite, função, desativação e auditoria). Membros do laboratório não terão autocadastro público.
+- [ ] **8–10 set** — CMS, idiomas e integrações de IA sanitizadas, preservando o endurecimento do fluxo de contas.
+- [ ] **11–12 set** — MFA, acessibilidade, observabilidade, backup/restauração e ensaio final. A ativação de contas reais em produção depende do projeto de produção, domínio/remetente oficial e textos jurídicos aprovados.

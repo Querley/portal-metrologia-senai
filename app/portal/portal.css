@@ -467,3 +467,32 @@
   .controles-cabecalho-interno { align-items:stretch; flex-direction:column; }
   .acoes-conta-responsivas,.acoes-internas,.acoes-internas .botao-interno { width:100%!important; }
 }
+
+.barra-busca-filtros { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:14px 16px; border-bottom:1px solid #dce6eb; background:#f8fbfc; }
+.campo-busca-lista,.campo-filtro-lista { min-height:42px; display:flex; align-items:center; gap:8px; padding:0 12px; border:1px solid #cbdbe3; background:white; color:#42677b; }
+.campo-busca-lista { flex:1 1 260px; }
+.campo-busca-lista input { min-width:0; width:100%; border:0; outline:0; background:transparent; color:#0b2d40; }
+.campo-filtro-lista span { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+.campo-filtro-lista select { max-width:220px; border:0; outline:0; background:white; color:#163e53; }
+.total-resultados-filtro { margin-left:auto; color:#527487; font-size:11px; font-weight:750; }
+.limpar-filtros { min-height:38px; display:inline-flex; align-items:center; gap:6px; padding:0 11px; border:1px solid #b8ccd7; background:white; color:#1d5876; font-weight:750; cursor:pointer; }
+.sem-resultados-filtro { padding:20px; color:#617d8c; font-size:12px; line-height:1.5; }
+.mensagens-reais > aside .barra-busca-filtros { padding:10px; }
+.mensagens-reais > aside .campo-filtro-lista,.mensagens-reais > aside .campo-busca-lista { width:100%; }
+.acoes-decisao-cliente { display:flex; flex-wrap:wrap; gap:9px; }
+.acoes-decisao-cliente .recusar-pre-proposta { color:#8a2d2d; background:#fff7f6; border-color:#e6b8b3; }
+.formulario-recusa-cliente { display:grid; gap:10px; margin-top:12px; padding:14px; border:1px solid #e2c1bd; background:#fffafa; }
+.formulario-recusa-cliente label { display:grid; gap:7px; color:#53302d; font-weight:750; }
+.formulario-recusa-cliente textarea { min-height:88px; resize:vertical; padding:10px; border:1px solid #d5b0ac; background:white; }
+.formulario-recusa-cliente > div { display:flex; justify-content:flex-end; gap:8px; }
+.aceite-pre-proposta-cliente.recusada { border-color:#e4bbb6; background:#fff8f7; color:#74362f; }
+.portal-cliente .contato-email-compacto { grid-template-columns:1fr auto; }
+
+@media (max-width:760px) {
+  .barra-busca-filtros,.campo-filtro-lista { align-items:stretch; flex-direction:column; }
+  .campo-busca-lista,.campo-filtro-lista { width:100%; flex-basis:auto; }
+  .campo-filtro-lista select { max-width:none; width:100%; min-height:32px; }
+  .total-resultados-filtro { margin-left:0; }
+  .acoes-decisao-cliente > button { width:100%; justify-content:center; }
+  .portal-cliente .contato-email-compacto { grid-template-columns:1fr; padding:24px 18px; }
+}

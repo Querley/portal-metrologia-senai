@@ -11,7 +11,7 @@ O site publicado está conectado ao projeto Supabase de homologação. O login p
 
 Senhas, tokens e chaves não pertencem ao Git nem a este documento. O autocadastro está desabilitado, os três usuários estão confirmados e a autenticação anônima permanece desabilitada.
 
-As migrations `202608220001` até `202609020032` estão aplicadas e registradas no histórico remoto, conferido pelo CLI. A migration `031` permite vários trabalhos simultâneos, reutiliza a empresa ativa e recupera entradas recorrentes; a `032` protege anexos por solicitação e recupera, sem sobrescrever, um PDF órfão anterior ao congelamento. As migrations anteriores continuam responsáveis pelo esquema operacional, perfis, RLS, custos versionados, pré-proposta, execução, fechamento, conhecimento persistente e atribuição formal descritos abaixo.
+As migrations `202608220001` até `202609020033` estão aplicadas e registradas no histórico remoto, conferido pelo CLI. A migration `031` permite vários trabalhos simultâneos, reutiliza a empresa ativa e recupera entradas recorrentes; a `032` protege anexos por solicitação e recupera, sem sobrescrever, um PDF órfão anterior ao congelamento; e a `033` registra a recusa motivada do Cliente, preserva o PDF recusado no histórico e libera outra pré-proposta para a mesma solicitação. As migrations anteriores continuam responsáveis pelo esquema operacional, perfis, RLS, custos versionados, pré-proposta, execução, fechamento, conhecimento persistente e atribuição formal descritos abaixo.
 
 O mantenedor validou pela interface publicada o aceite do Cliente e a confirmação de início pelo Administrador. A migration `202609010022` foi executada e registrada em 1º de setembro. A presença da RPC foi confirmada pela API anônima, que respondeu `401 permission denied`, como esperado para uma função exclusiva de usuários autenticados.
 
@@ -98,3 +98,7 @@ O mantenedor confirmou pela interface publicada que o Cliente cria solicitaçõe
 O formulário público persiste somente entradas demonstrativas e rejeita e-mails que não terminem em `.test`. Arquivos selecionados não são enviados antes da autenticação. Isso impede que a homologação seja apresentada como canal para CNPJ, contatos ou documentos reais.
 
 Custos reais só serão carregados no futuro projeto de produção por processo privado e auditado. A planilha restrita e seus valores nunca entram no Git nem na homologação.
+
+## Migration mais recente
+
+A migration `202609020033` foi aplicada e registrada em 2 de setembro. Ela registra a recusa do Cliente com motivo, mantém o PDF como histórico e libera uma nova pré-proposta para a mesma solicitação. A prova pgTAP cobre isolamento entre empresas, persistência e auditoria da recusa, leitura histórica do PDF e criação da nova versão; sua execução continua delegada ao GitHub Actions porque o executor local exige Docker Desktop.

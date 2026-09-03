@@ -4,7 +4,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { CircleDollarSign, RefreshCw, Save, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
+import { correspondeBusca } from '../lib/busca-e-filtros';
 import { dataPosterior, normalizarCustoHora, ORIGEM_CUSTOS_HOMOLOGACAO, podeConsultarCustos, podeVersionarCustos } from '../lib/custos-equipamento';
+import { BarraBuscaFiltros } from './barra-busca-filtros';
 
 type Equipamento = {
   id: string;
@@ -47,6 +49,8 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
   const [vigencia, setVigencia] = useState(hojeIso());
   const [referencia, setReferencia] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [busca, setBusca] = useState('');
+  const [filtroSituacao, setFiltroSituacao] = useState('todos');
 
   const carregar = useCallback(async () => {
     if (!podeConsultarCustos(perfil)) return;
@@ -86,6 +90,8 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
     [custos],
   );
   const equipamentosAtivos = equipamentos.filter((equipamento) => equipamento.ativo);
+  const equipamentosVisiveis = equipamentos.filter((equipamento) => correspondeBusca(busca, equipamento.nome, equipamento.codigo)
+    && (filtroSituacao === 'todos' || (filtroSituacao === 'ativos' ? equipamento.ativo : !equipamento.ativo)));
   const custoSelecionado = custosPorEquipamento.get(equipamentoId);
   const vigenciaMinima = custoSelecionado ? dataPosterior(custoSelecionado.vigente_desde) : hojeIso();
   const vigenciaEfetiva = vigencia < vigenciaMinima ? vigenciaMinima : vigencia;
@@ -141,14 +147,15 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
 
     {!carregando && !erro && <div className={`grade-custos ${podeVersionarCustos(perfil) ? '' : 'somente-leitura'}`}>
       <section className="bloco tabela-custos">
-        <header><div><h2>Vigências atuais</h2><p>{custos.length} registros demonstrativos encontrados.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
+        <header><div><h2>Vigências atuais</h2><p>{equipamentosVisiveis.length} de {equipamentos.length} equipamentos.</p></div><span className="estado estado-formalizada">RLS ativa</span></header>
+        <BarraBuscaFiltros busca={busca} aoMudarBusca={setBusca} placeholder="Pesquisar equipamento ou código" total={equipamentosVisiveis.length} filtros={[{ id: 'situacao-equipamento', rotulo: 'Situação', valor: filtroSituacao, aoMudar: setFiltroSituacao, opcoes: [{ valor: 'todos', rotulo: 'Todos' }, { valor: 'ativos', rotulo: 'Ativos' }, { valor: 'inativos', rotulo: 'Inativos' }] }]} />
         <div className="tabela-wrap"><table><thead><tr><th>Equipamento</th><th>Código</th><th>Custo-hora</th><th>Vigente desde</th><th>Situação</th></tr></thead><tbody>
-          {equipamentos.map((equipamento) => {
+          {equipamentosVisiveis.map((equipamento) => {
             const custo = custosPorEquipamento.get(equipamento.id);
             return <tr key={equipamento.id}><td><strong>{equipamento.nome}</strong></td><td>{equipamento.codigo}</td><td>{custo ? formatarCusto(custo.custo_hora) : 'Sem custo vigente'}</td><td>{custo ? formatarData(custo.vigente_desde) : '—'}</td><td><span className={`estado ${equipamento.ativo ? 'estado-formalizada' : 'estado-rascunho'}`}>{equipamento.ativo ? 'Ativo' : 'Inativo'}</span></td></tr>;
           })}
         </tbody></table></div>
-        {equipamentos.length === 0 && <div className="estado-vazio"><ShieldCheck size={18} /><span>Nenhum equipamento autorizado foi encontrado.</span></div>}
+        {equipamentosVisiveis.length === 0 && <div className="estado-vazio"><ShieldCheck size={18} /><span>{equipamentos.length === 0 ? 'Nenhum equipamento autorizado foi encontrado.' : 'Nenhum equipamento corresponde à pesquisa e ao filtro.'}</span></div>}
       </section>
 
       {podeVersionarCustos(perfil) ? <aside className="bloco formulario-custo">

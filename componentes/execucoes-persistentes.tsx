@@ -4,8 +4,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Activity, CheckCircle2, Circle, ClipboardCheck, Clock3, Eye, Play, RefreshCw, RotateCcw, Save, Send, ShieldCheck, UserRoundCog } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
+import { correspondeBusca } from '../lib/busca-e-filtros';
 import { calcularProgressoExecucao, etapasConcluidas, normalizarAtualizacaoEtapa, podeAtribuirResponsavel, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EstadoEtapaExecucao, type ExecucaoInterna, type ResponsavelOperacional } from '../lib/execucoes-persistentes';
 import { tituloServicoCliente } from '../lib/portal-cliente';
+import { BarraBuscaFiltros } from './barra-busca-filtros';
 
 const apresentacaoEtapa = {
   a_fazer: { rotulo: 'A fazer', Icone: Circle },
@@ -37,6 +39,9 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
   const [mensagem, setMensagem] = useState('');
   const [responsaveis, setResponsaveis] = useState<ResponsavelOperacional[]>([]);
   const [responsavelSelecionado, setResponsavelSelecionado] = useState('');
+  const [busca, setBusca] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [filtroFechamento, setFiltroFechamento] = useState('todos');
 
   const preencherFormulario = useCallback((execucao: ExecucaoInterna) => {
     setHorasReais(Object.fromEntries(execucao.equipamentos.map((item) => [item.equipamento_id, Number(item.horas_reais ?? item.horas_estimadas)])));
@@ -90,7 +95,10 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
     return () => { void cliente.removeChannel(canal); };
   }, [carregar, cliente, perfil]);
 
-  const selecionada = useMemo(() => execucoes.find((item) => item.execucao_id === selecionadaId) ?? execucoes[0], [execucoes, selecionadaId]);
+  const execucoesVisiveis = useMemo(() => execucoes.filter((execucao) => correspondeBusca(busca, execucao.solicitacao_codigo, execucao.empresa_nome, execucao.servico_slug, execucao.descricao, execucao.responsavel_nome, execucao.estado, execucao.fechamento_estado)
+    && (filtroEstado === 'todos' || execucao.estado === filtroEstado)
+    && (filtroFechamento === 'todos' || execucao.fechamento_estado === filtroFechamento)), [busca, execucoes, filtroEstado, filtroFechamento]);
+  const selecionada = useMemo(() => execucoesVisiveis.find((item) => item.execucao_id === selecionadaId), [execucoesVisiveis, selecionadaId]);
   const progressoGeral = selecionada ? calcularProgressoExecucao(selecionada.etapas) : 0;
   const podeFechar = selecionada ? etapasConcluidas(selecionada.etapas) : false;
 
@@ -196,8 +204,10 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
 
     {!carregando && execucoes.length === 0 && <section className="bloco estado-vazio-execucao"><Activity size={28} /><h3>Nenhum trabalho em execução</h3><p>Uma execução aparecerá depois que o Cliente aceitar a pré-proposta e o Administrador confirmar o início.</p></section>}
 
+    {!carregando && execucoes.length > 0 && <BarraBuscaFiltros busca={busca} aoMudarBusca={setBusca} placeholder="Pesquisar protocolo, empresa, serviço ou responsável" total={execucoesVisiveis.length} filtros={[{ id: 'estado-execucao', rotulo: 'Serviço', valor: filtroEstado, aoMudar: setFiltroEstado, opcoes: [{ valor: 'todos', rotulo: 'Todos os serviços' }, { valor: 'planejado', rotulo: 'Planejados' }, { valor: 'em_execucao', rotulo: 'Em execução' }, { valor: 'concluido', rotulo: 'Concluídos' }, { valor: 'cancelado', rotulo: 'Cancelados' }] }, { id: 'estado-fechamento', rotulo: 'Fechamento', valor: filtroFechamento, aoMudar: setFiltroFechamento, opcoes: [{ valor: 'todos', rotulo: 'Todos os fechamentos' }, { valor: 'nao_iniciado', rotulo: 'Não iniciado' }, { valor: 'em_validacao', rotulo: 'Em validação' }, { valor: 'devolvido', rotulo: 'Devolvido' }, { valor: 'aprovado', rotulo: 'Aprovado' }] }]} />}
+    {!carregando && execucoesVisiveis.length > 0 && !selecionada && <section className="bloco estado-vazio-execucao"><Activity size={24} /><h3>Selecione um trabalho</h3><p>Escolha um dos resultados filtrados para abrir os detalhes operacionais.</p></section>}
     {!carregando && selecionada && <div className="grade-execucoes-persistentes">
-      <aside className="lista-execucoes-internas"><h3>Trabalhos</h3>{execucoes.map((execucao) => <button key={execucao.execucao_id} type="button" className={execucao.execucao_id === selecionada.execucao_id ? 'ativo' : ''} onClick={() => selecionarExecucao(execucao)}><span>DEM-SOL-{String(execucao.solicitacao_codigo).padStart(4, '0')}</span><strong>{tituloServicoCliente(execucao.servico_slug)}</strong><small>{execucao.empresa_nome}</small><em>{calcularProgressoExecucao(execucao.etapas)}% concluído</em></button>)}</aside>
+      <aside className="lista-execucoes-internas"><h3>Trabalhos</h3>{execucoesVisiveis.map((execucao) => <button key={execucao.execucao_id} type="button" className={execucao.execucao_id === selecionada.execucao_id ? 'ativo' : ''} onClick={() => selecionarExecucao(execucao)}><span>DEM-SOL-{String(execucao.solicitacao_codigo).padStart(4, '0')}</span><strong>{tituloServicoCliente(execucao.servico_slug)}</strong><small>{execucao.empresa_nome}</small><em>{calcularProgressoExecucao(execucao.etapas)}% concluído</em></button>)}{execucoesVisiveis.length === 0 && <p className="sem-resultados-filtro">Nenhum trabalho encontrado.</p>}</aside>
 
       <section className="bloco execucao-operacional">
         <header><div><p className="passo">DEM-SOL-{String(selecionada.solicitacao_codigo).padStart(4, '0')} · {selecionada.estado.replace('_', ' ').toUpperCase()}</p><h2>{tituloServicoCliente(selecionada.servico_slug)}</h2><span>{selecionada.empresa_nome} · responsável: {selecionada.responsavel_nome}</span></div><span className={`estado estado-${selecionada.estado.replace('_', '-')}`}>{selecionada.estado === 'concluido' ? 'Concluído' : 'Em execução'}</span></header>

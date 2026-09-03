@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 export const EMAIL_CONTATO_PROVISORIO = 'querleyjuniorodriguesferreira@gmail.com';
 
-export function ContatoEmail() {
+export function ContatoEmail({ compacto = false, contexto }: { compacto?: boolean; contexto?: string } = {}) {
   const [copiado, setCopiado] = useState(false);
   const [mensagem, setMensagem] = useState('');
 
@@ -28,9 +28,9 @@ export function ContatoEmail() {
     window.setTimeout(() => setCopiado(false), 2200);
   }
 
-  const assunto = 'Solicitação de análise metrológica';
+  const assunto = contexto ? `Solicitação de análise metrológica — ${contexto}` : 'Solicitação de análise metrológica';
   const mailto = `mailto:${EMAIL_CONTATO_PROVISORIO}?subject=${encodeURIComponent(assunto)}`;
   const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CONTATO_PROVISORIO)}&su=${encodeURIComponent(assunto)}`;
 
-  return <section className="contato-email" aria-labelledby="titulo-contato-email"><div><p className="sobrelinha"><span /> CONTATO DIRETO</p><h2 id="titulo-contato-email">Prefere falar por e-mail?</h2><p>Abra seu aplicativo de e-mail, escreva pelo Gmail no navegador ou copie o endereço. O canal exibido ainda é provisório.</p></div><div className="acoes-email"><strong>{EMAIL_CONTATO_PROVISORIO}</strong><div><a className="botao" href={mailto} onClick={() => setMensagem('Se nada abriu, seu dispositivo não possui um aplicativo de e-mail associado. Use Gmail ou copie o endereço.')}><Mail size={17} /> Abrir aplicativo</a><a className="botao-secundario-email" href={gmail} target="_blank" rel="noreferrer"><ExternalLink size={17} /> Abrir Gmail</a><button type="button" onClick={() => void copiar()}>{copiado ? <Check size={17} /> : <Copy size={17} />}{copiado ? 'Copiado' : 'Copiar'}</button></div>{mensagem && <p className="mensagem-email" role="status">{mensagem}</p>}</div></section>;
+  return <section className={`contato-email${compacto ? ' contato-email-compacto' : ''}`} aria-label="Contato por e-mail"><div><p className="sobrelinha"><span /> OUTRO CANAL</p><h2>Também é possível enviar por e-mail</h2><p>Se preferir, descreva sua necessidade e envie os arquivos diretamente à equipe. Mensagens por e-mail não geram protocolo automaticamente; o laboratório fará a triagem e orientará o próximo passo. O endereço exibido ainda é provisório.</p></div><div className="acoes-email"><strong>{EMAIL_CONTATO_PROVISORIO}</strong><div><a className="botao" href={mailto} onClick={() => setMensagem('Se nada abriu, seu dispositivo não possui um aplicativo de e-mail associado. Use Gmail ou copie o endereço.')}><Mail size={17} /> Abrir aplicativo</a><a className="botao-secundario-email" href={gmail} target="_blank" rel="noreferrer"><ExternalLink size={17} /> Abrir Gmail</a><button type="button" onClick={() => void copiar()}>{copiado ? <Check size={17} /> : <Copy size={17} />}{copiado ? 'Copiado' : 'Copiar'}</button></div>{mensagem && <p className="mensagem-email" role="status">{mensagem}</p>}</div></section>;
 }

@@ -2,7 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useMemo, useState, useSyncExternalStore } from 'react';
-import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, ChevronRight, CircleDollarSign, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
+import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, ChevronRight, CircleDollarSign, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Settings, ShieldCheck, Sparkles } from 'lucide-react';
 import { calcularProposta, formatarDinheiro } from '../lib/calculos';
 import type { PerfilInterno } from '../lib/contratos';
 import { podeConsultarCustos } from '../lib/custos-equipamento';
@@ -79,7 +79,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
           <div><p>AMBIENTE DE HOMOLOGAÇÃO</p><h1>{menu.find((itemMenu) => itemMenu.id === secao)?.rotulo}</h1></div>
           <div className="controles-cabecalho-interno">
             <div className="acoes-conta-responsivas" aria-label="Conta e sessão"><button type="button" onClick={aoAbrirPerfil} disabled={!aoAbrirPerfil} title="Meu perfil"><Settings size={18} /><span>Meu perfil</span></button><button type="button" onClick={() => aoSair ? void aoSair() : window.location.assign('/')} title="Sair"><LogOut size={18} /><span>Sair</span></button></div>
-            {secao !== 'custos' && <div className="acoes-internas"><label className="busca"><Search size={17} /><input aria-label="Buscar no portal" placeholder="Buscar serviços, empresas..." /></label><button className="icone-botao" type="button" aria-label="Abrir mensagens"><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button" onClick={() => setSecao('orcamentos')}>{perfilInterno && !podeCriarRascunhoOrcamento(perfilInterno) ? <><Calculator size={17} /> Ver orçamentos</> : <><Plus size={17} /> Novo orçamento</>}</button></div>}
+            {secao !== 'custos' && <div className="acoes-internas"><button className="icone-botao" type="button" aria-label="Abrir mensagens" onClick={() => setSecao('mensagens')}><MessageSquareText size={19} /><i /></button><button className="botao-interno" type="button" onClick={() => setSecao('orcamentos')}>{perfilInterno && !podeCriarRascunhoOrcamento(perfilInterno) ? <><Calculator size={17} /> Ver orçamentos</> : <><Plus size={17} /> Novo orçamento</>}</button></div>}
           </div>
         </header>
 

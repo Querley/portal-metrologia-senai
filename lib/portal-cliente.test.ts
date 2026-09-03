@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { descricaoAceiteCliente, podeAceitarPreProposta, protocoloSolicitacaoCliente, situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
+import { descricaoAceiteCliente, normalizarMotivoRecusa, podeAceitarPreProposta, podeRecusarPreProposta, protocoloSolicitacaoCliente, situacaoEtapasCliente, tituloServicoCliente, type EtapaCliente } from './portal-cliente';
 
 function etapa(parcial: Partial<EtapaCliente>): EtapaCliente {
   return {
@@ -30,6 +30,17 @@ describe('resumo do portal do Cliente', () => {
     expect(podeAceitarPreProposta('publicada')).toBe(true);
     expect(podeAceitarPreProposta('aceita')).toBe(false);
     expect(podeAceitarPreProposta(null)).toBe(false);
+  });
+
+  it('permite recusar somente a pré-proposta emitida e exige motivo útil', () => {
+    expect(podeRecusarPreProposta('publicada')).toBe(true);
+    expect(podeRecusarPreProposta('recusada')).toBe(false);
+    expect(normalizarMotivoRecusa('  Preciso revisar o prazo. ')).toBe('Preciso revisar o prazo.');
+    expect(normalizarMotivoRecusa('não')).toBeNull();
+  });
+
+  it('mostra que a recusa aguarda uma nova pré-proposta', () => {
+    expect(situacaoEtapasCliente([], null, 'recusada').titulo).toBe('Revisão solicitada');
   });
 
   it('distingue etapa em andamento de serviço concluído', () => {

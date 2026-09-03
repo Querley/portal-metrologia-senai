@@ -23,6 +23,8 @@
 16. Convidar o cliente para a área autenticada somente após a análise, com vínculo aprovado à empresa, aviso de privacidade versionado, etapas visuais do trabalho e mensagens persistentes.
 17. Organizar a descoberta pública por setor — indústria e processos, automotivo e mobilidade, aeronáutico, ferramentaria e desenvolvimento de produto — filtrando os serviços técnicos aplicáveis.
 18. Oferecer contato por `mailto:` e cópia do endereço, VLibras na versão em português, copyright, tipografia móvel legível e vídeos sem corte de conteúdo.
+19. Oferecer pesquisa textual e filtros de estado/contexto nas listas operacionais do laboratório e nos trabalhos do Cliente, sem ampliar o conjunto autorizado pela RLS.
+20. Ao recusar uma pré-proposta emitida, o Cliente informa o ajuste necessário; a decisão é auditada e libera a equipe para criar e emitir outra pré-proposta sem apagar o histórico.
 
 ## IA
 
