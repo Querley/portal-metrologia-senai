@@ -39,9 +39,13 @@ select throws_ok($$select recusar_pre_proposta_cliente('c4000000-0000-0000-0000-
 
 select set_config('request.jwt.claim.sub', 'c1000000-0000-0000-0000-000000000001', true);
 select lives_ok($$select recusar_pre_proposta_cliente('c4000000-0000-0000-0000-000000000001', 'Preciso revisar o prazo de entrega.')$$, 'Cliente vinculado recusa a proposta emitida');
+reset role;
 select is((select estado::text from versoes_proposta where id = 'c6000000-0000-0000-0000-000000000001'), 'recusada', 'Estado recusada e persistido');
 select is((select recusa_motivo from versoes_proposta where id = 'c6000000-0000-0000-0000-000000000001'), 'Preciso revisar o prazo de entrega.', 'Motivo da recusa e persistido');
 select is((select count(*) from auditoria where entidade_id = 'c6000000-0000-0000-0000-000000000001' and acao = 'recusar_pre_proposta_cliente'), 1::bigint, 'Recusa gera auditoria');
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'c1000000-0000-0000-0000-000000000001', true);
 select ok(pode_ler_pdf_pre_proposta('demonstracao/c6000000-0000-0000-0000-000000000001.pdf'), 'Cliente ainda consulta o PDF recusado como historico');
 select is(listar_portal_cliente()->0->>'proposta_estado', 'recusada', 'Portal do Cliente exibe a decisao recusada');
 
@@ -56,6 +60,7 @@ select lives_ok(
   )$$,
   'Equipe cria uma nova pre-proposta depois da recusa do Cliente'
 );
+reset role;
 select is((select estado::text from versoes_proposta where id = 'c6000000-0000-0000-0000-000000000001'), 'recusada', 'Versao recusada permanece imutavel no historico');
 select is((select count(*) from versoes_proposta v join propostas p on p.id = v.proposta_id where p.solicitacao_id = 'c4000000-0000-0000-0000-000000000001' and v.estado = 'rascunho'), 1::bigint, 'Nova pre-proposta inicia em rascunho');
 select is((select count(*) from auditoria where acao = 'criar_pre_proposta_apos_recusa_cliente' and dados->>'solicitacao_id' = 'c4000000-0000-0000-0000-000000000001'), 1::bigint, 'Nova versao depois da recusa gera auditoria especifica');
