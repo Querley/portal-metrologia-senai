@@ -42,3 +42,14 @@ Gerar rascunho de lição, responder publicamente apenas com conteúdo publicado
 ## Critérios críticos de aceite
 
 Devem falhar com segurança: exclusão de dado real por reset, acesso entre empresas, aceite sem autorização, proposta expirada, arquivo inválido, lição não formalizada na recomendação, mistura de origens e vazamento de dado proibido para IA.
+
+## Revisão operacional de 7 de setembro de 2026
+
+- Pré-propostas novas devem nascer de uma solicitação ativada; rascunhos comerciais sem vínculo não são aceitos.
+- Uma pré-proposta informa horas e data estimada de entrega e pode reservar de um a dez equipamentos distintos.
+- Macroetapas só avançam em ordem, com bloqueio também no banco.
+- Telefone aceita somente números, espaços, parênteses, hífen e `+` inicial, com no mínimo oito dígitos.
+- Material e causa de retrabalho usam vocabulário controlado com a alternativa `Outros`.
+- Cliente e membro interno podem atualizar nome e e-mail próprios; o Administrador altera funções de outros membros com auditoria.
+- O Técnico não visualiza valores monetários nem prévia comercial. O Administrador consulta o histórico de custos.
+- O limite é de cinco anexos: PDF/imagens até 10 MB; CAD até 50 MB por arquivo.

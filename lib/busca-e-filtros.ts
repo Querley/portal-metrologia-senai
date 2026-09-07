@@ -13,3 +13,13 @@ export function correspondeBusca(termo: string, ...valores: unknown[]): boolean 
   const conteudo = normalizarBusca(valores.flat().join(' '));
   return consulta.split(/\s+/).every((parte) => conteudo.includes(parte));
 }
+
+export function formatosDataParaBusca(valor: string | null | undefined): string {
+  if (!valor) return '';
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return String(valor);
+  return `${String(valor).slice(0, 10)} ${new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: valor.includes('T') ? 'short' : undefined,
+  }).format(data)}`;
+}

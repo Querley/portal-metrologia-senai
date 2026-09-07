@@ -70,16 +70,7 @@ export function etapasConcluidas(etapas: EtapaExecucaoInterna[]): boolean {
   return etapas.length > 0 && etapas.every((etapa) => etapa.estado === 'concluida' && etapa.progresso === 100);
 }
 
-export function validarFechamento(entrada: {
-  equipamentos: EquipamentoExecucao[];
-  horas: Record<string, number>;
-  custosExtras: number;
-  retrabalho: boolean;
-  mudancaEscopo: boolean;
-  causa: string;
-  observacoes: string;
-  aprendizado: string;
-}): string | null {
+export function validarFechamento(entrada: { equipamentos: EquipamentoExecucao[]; horas: Record<string, number>; custosExtras: number; retrabalho: boolean; mudancaEscopo: boolean; causa: string; observacoes: string; aprendizado: string }): string | null {
   if (!Number.isFinite(entrada.custosExtras) || entrada.custosExtras < 0) return 'Informe custos extras válidos.';
   if (entrada.equipamentos.some((item) => !Number.isFinite(entrada.horas[item.equipamento_id]) || entrada.horas[item.equipamento_id] < 0)) return 'Informe as horas reais de todos os equipamentos.';
   if (entrada.observacoes.trim().length < 5 || entrada.observacoes.trim().length > 2000) return 'Descreva o fechamento em pelo menos 5 caracteres.';
@@ -94,13 +85,16 @@ export function calcularProgressoExecucao(etapas: EtapaExecucaoInterna[]): numbe
   return Math.round(total / etapas.length);
 }
 
-export function normalizarAtualizacaoEtapa(
-  estado: EstadoEtapaExecucao,
-  progresso: number,
-): { estado: EstadoEtapaExecucao; progresso: number } | null {
+export function normalizarAtualizacaoEtapa(estado: EstadoEtapaExecucao, progresso: number): { estado: EstadoEtapaExecucao; progresso: number } | null {
   if (!Number.isInteger(progresso)) return null;
   if (estado === 'a_fazer' && progresso === 0) return { estado, progresso };
   if (estado === 'em_andamento' && progresso >= 1 && progresso <= 99) return { estado, progresso };
   if (estado === 'concluida' && progresso === 100) return { estado, progresso };
   return null;
+}
+
+export function etapaPodeAvancar(etapas: EtapaExecucaoInterna[], etapaId: string): boolean {
+  const etapa = etapas.find((item) => item.id === etapaId);
+  if (!etapa) return false;
+  return etapas.filter((item) => item.ordem < etapa.ordem).every((item) => item.estado === 'concluida' && item.progresso === 100);
 }

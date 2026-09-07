@@ -7,6 +7,7 @@ export type DadosPdfPreProposta = {
   descricao: string;
   valor: string;
   prazoPagamentoDias: number;
+  entregaEstimada?: string | null;
   emitidaEm: Date;
 };
 
@@ -124,6 +125,7 @@ export function gerarPdfPreProposta(dados: DadosPdfPreProposta): Uint8Array {
     comandoTexto(dados.valor, 56, 420, 20, true, '0.02 0.35 0.63'),
     comandoTexto('Prazo de pagamento desejado pelo Cliente', 330, 446, 9),
     comandoTexto(`${dados.prazoPagamentoDias} dias`, 330, 420, 15, true),
+    ...(dados.entregaEstimada ? [comandoTexto(`Entrega estimada: ${new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(`${dados.entregaEstimada}T00:00:00Z`))}`, 42, 374, 9, true)] : []),
     comandoTexto(`Emitida em: ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(dados.emitidaEm)}`, 42, 350, 9),
     'q 0.84 0.89 0.92 rg 42 98 511 1 re f Q',
     comandoTexto('Portal de Metrologia SENAI - Ambiente de homologacao - Dados sinteticos', 42, 78, 8),

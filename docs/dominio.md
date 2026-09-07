@@ -63,3 +63,7 @@ Casos devem ter o mesmo tipo de serviço, origem compatível, serviço concluíd
 - 15+: quartis, fator de correção e confiança alta.
 
 Fator de correção = mediana de `horas realizadas ÷ horas estimadas`. Com cinco ou mais casos elegíveis, estimativa fora de Q1–Q3 exige justificativa persistente de 5 a 1.000 caracteres antes do envio para validação; o servidor recalcula a faixa e bloqueia omissões.
+
+## Complemento do domínio — 7 de setembro de 2026
+
+A solicitação é a raiz obrigatória da pré-proposta. A recusa preserva versão, data e motivo e libera uma nova versão no mesmo trabalho. `entrega_estimada` é o compromisso temporal preliminar; horas representam esforço. Um item pode utilizar vários equipamentos, sem repetição, com horas e custo-hora congelado por uso. A lição formalizada habilita o caso concluído para a amostra e preserva contexto, sem alterar cálculos.

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { calcularProgressoExecucao, etapasConcluidas, normalizarAtualizacaoEtapa, podeAtribuirResponsavel, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EtapaExecucaoInterna } from './execucoes-persistentes';
+import { calcularProgressoExecucao, etapaPodeAvancar, etapasConcluidas, normalizarAtualizacaoEtapa, podeAtribuirResponsavel, podeDecidirFechamento, podeOperarExecucoes, validarFechamento, type EtapaExecucaoInterna } from './execucoes-persistentes';
 
 function etapa(progresso: number): EtapaExecucaoInterna {
   return {
@@ -39,6 +39,14 @@ describe('execuções persistentes', () => {
     expect(etapasConcluidas([])).toBe(false);
     expect(etapasConcluidas([etapa(100)])).toBe(true);
     expect(etapasConcluidas([etapa(100), etapa(40)])).toBe(false);
+  });
+
+  it('libera uma etapa somente quando todas as anteriores foram concluídas', () => {
+    const primeira = { ...etapa(100), id: 'etapa-1', ordem: 1 };
+    const segunda = { ...etapa(0), id: 'etapa-2', ordem: 2 };
+    const terceira = { ...etapa(0), id: 'etapa-3', ordem: 3 };
+    expect(etapaPodeAvancar([primeira, segunda, terceira], 'etapa-2')).toBe(true);
+    expect(etapaPodeAvancar([primeira, segunda, terceira], 'etapa-3')).toBe(false);
   });
 
   it('valida horas, observação e causa condicional', () => {

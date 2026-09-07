@@ -91,7 +91,7 @@ test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page
   await page.getByRole('button', { name: 'Registrar novo trabalho' }).first().click();
   await expect(page.getByRole('dialog', { name: 'Registrar outra solicitação' })).toBeVisible();
   await page.getByLabel('Tipo de necessidade').selectOption('medicao-inspecao-dimensional');
-  await page.getByLabel('Material da peça').fill('Alumínio demonstrativo');
+  await page.getByLabel('Material da peça').selectOption('Alumínio');
   await page.getByLabel('Quantidade').fill('2');
   await page.getByLabel('Prazo desejado para o serviço').fill('2026-12-20');
   await page.getByLabel('Descreva o desafio').fill('Inspeção dimensional demonstrativa para validar outro trabalho simultâneo.');
@@ -105,13 +105,15 @@ test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page
 
   await expect(page.getByText(/registrada e vinculada à sua empresa/i)).toBeVisible();
   await expect(page.getByText('Trabalhos vinculados').locator('..').getByText('2', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /Trabalhos vinculados/i }).click();
+  await expect(page.getByLabel('Pesquisa e filtros')).toBeInViewport();
   await expect(page.getByRole('button', { name: /DEM-SOL-0285/i })).toHaveClass(/ativo/);
   await expect(page.locator('.anexos-trabalho-cliente').getByText('desenho-demonstrativo.pdf')).toBeVisible();
   await page.getByRole('button', { name: /DEM-SOL-0284/i }).click();
   await expect(page.getByRole('button', { name: /DEM-SOL-0284/i })).toHaveClass(/ativo/);
   await expect(page.getByRole('heading', { name: 'Também é possível enviar por e-mail' })).toBeVisible();
 
-  await page.getByPlaceholder('Pesquisar por protocolo, serviço ou estado').fill('0284');
+  await page.getByPlaceholder('Pesquisar por protocolo, serviço, estado ou data').fill('0284');
   await expect(page.getByText('1 resultado', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Recusar e solicitar revisão' }).click();
   await page.getByLabel('O que precisa ser alterado?').fill('Precisamos revisar o prazo e o escopo demonstrativos.');

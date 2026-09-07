@@ -63,7 +63,6 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
         .from('custos_equipamento')
         .select('id,equipamento_id,custo_hora,vigente_desde,vigente_ate,origem')
         .eq('origem', ORIGEM_CUSTOS_HOMOLOGACAO)
-        .is('vigente_ate', null)
         .order('vigente_desde', { ascending: false }),
     ]);
 
@@ -86,7 +85,7 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
   }, [carregar]);
 
   const custosPorEquipamento = useMemo(
-    () => new Map(custos.map((custo) => [custo.equipamento_id, custo])),
+    () => new Map(custos.filter((custo) => custo.vigente_ate === null).map((custo) => [custo.equipamento_id, custo])),
     [custos],
   );
   const equipamentosAtivos = equipamentos.filter((equipamento) => equipamento.ativo);
@@ -176,5 +175,6 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
         </form>
       </aside> : <aside className="aviso-custos leitura"><ShieldCheck size={20} /><div><strong>Consulta em modo somente leitura</strong><p>O perfil Validador pode visualizar os custos vigentes. Somente o Administrador pode criar uma nova vigência.</p></div></aside>}
     </div>}
+    {!carregando && !erro && perfil === 'administrador' && <section className="bloco tabela-custos"><header><div><h2>Histórico de custos</h2><p>Versões demonstrativas preservadas por equipamento.</p></div><span className="estado estado-formalizada">Somente Administrador</span></header><div className="tabela-wrap"><table><thead><tr><th>Equipamento</th><th>Custo-hora</th><th>Início</th><th>Fim</th></tr></thead><tbody>{custos.map((custo) => { const equipamento = equipamentos.find((item) => item.id === custo.equipamento_id); return <tr key={custo.id}><td>{equipamento?.nome ?? custo.equipamento_id}</td><td>{formatarCusto(custo.custo_hora)}</td><td>{formatarData(custo.vigente_desde)}</td><td>{custo.vigente_ate ? formatarData(custo.vigente_ate) : 'Vigente'}</td></tr>; })}</tbody></table></div></section>}
   </div>;
 }

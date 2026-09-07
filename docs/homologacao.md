@@ -102,3 +102,15 @@ Custos reais só serão carregados no futuro projeto de produção por processo 
 ## Migration mais recente
 
 A migration `202609020033` foi aplicada e registrada em 2 de setembro. Ela registra a recusa do Cliente com motivo, mantém o PDF como histórico e libera uma nova pré-proposta para a mesma solicitação. A prova pgTAP cobre isolamento entre empresas, persistência e auditoria da recusa, leitura histórica do PDF e criação da nova versão; sua execução continua delegada ao GitHub Actions porque o executor local exige Docker Desktop.
+
+## Verificações da revisão de 7 de setembro de 2026
+
+1. Confirme o pop-up de sucesso e o formulário de pré-proposta recolhível.
+2. Crie uma pré-proposta, sempre pela solicitação, com dois equipamentos e data estimada.
+3. Recuse no Cliente e confirme o motivo na área interna antes da nova versão.
+4. Tente iniciar a segunda etapa antes da primeira; interface e banco devem impedir.
+5. Pesquise datas em `dd/mm/aaaa` e `aaaa-mm-dd`.
+6. Clique nos três indicadores do Cliente e confirme rolagem e filtro.
+7. Tente telefone com letras e mais de cinco anexos.
+8. Como Técnico, confirme que valores monetários e PDF comercial não aparecem.
+9. Como Administrador, altere a função de outro usuário sintético e consulte o histórico de custos.

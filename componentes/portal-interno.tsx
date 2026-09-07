@@ -27,11 +27,7 @@ const rotulosPerfil: Record<PerfilInterno, string> = {
 };
 
 async function buscarPerfil(cliente: SupabaseClient, usuarioId: string): Promise<Perfil | null> {
-  const { data, error } = await cliente
-    .from('perfis')
-    .select('usuario_id,nome,perfil_interno,origem_ativa')
-    .eq('usuario_id', usuarioId)
-    .maybeSingle();
+  const { data, error } = await cliente.from('perfis').select('usuario_id,nome,perfil_interno,origem_ativa').eq('usuario_id', usuarioId).maybeSingle();
   if (error) throw error;
   if (!data?.perfil_interno || data.origem_ativa !== 'demonstracao') return null;
   return data as Perfil;
@@ -40,7 +36,7 @@ async function buscarPerfil(cliente: SupabaseClient, usuarioId: string): Promise
 async function buscarContextoCliente(cliente: SupabaseClient): Promise<ContextoCliente | null> {
   const { data, error } = await cliente.rpc('obter_contexto_cliente');
   if (error) return null;
-  return data && typeof data === 'object' ? data as ContextoCliente : null;
+  return data && typeof data === 'object' ? (data as ContextoCliente) : null;
 }
 
 export function PortalInterno() {
@@ -51,50 +47,54 @@ export function PortalInterno() {
   const [mensagem, setMensagem] = useState('');
   const [editandoPerfil, setEditandoPerfil] = useState(false);
 
-  const carregarPerfil = useCallback(async (usuarioId: string) => {
-    if (!cliente) return;
-    try {
-      const perfilEncontrado = await buscarPerfil(cliente, usuarioId);
-      if (perfilEncontrado) {
-        setPerfil(perfilEncontrado);
-        setContextoCliente(null);
-        setEstado('autenticado_interno');
-        return;
-      }
-
-      const tokenAtivacao = typeof window === 'undefined'
-        ? null
-        : new URLSearchParams(window.location.search).get('ativar');
-      if (tokenAtivacao) {
-        const { error: erroAtivacao } = await cliente.rpc('ativar_solicitacao_cliente_demonstrativa', {
-          token_ativacao: tokenAtivacao,
-        });
-        if (erroAtivacao) setMensagem(erroAtivacao.message || 'Não foi possível ativar a solicitação.');
-        else {
-          setMensagem('Solicitação vinculada à sua área Cliente.');
-          window.history.replaceState({}, '', '/portal');
+  const carregarPerfil = useCallback(
+    async (usuarioId: string) => {
+      if (!cliente) return;
+      try {
+        const perfilEncontrado = await buscarPerfil(cliente, usuarioId);
+        if (perfilEncontrado) {
+          setPerfil(perfilEncontrado);
+          setContextoCliente(null);
+          setEstado('autenticado_interno');
+          return;
         }
+
+        const tokenAtivacao = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('ativar');
+        if (tokenAtivacao) {
+          const { error: erroAtivacao } = await cliente.rpc('ativar_solicitacao_cliente_demonstrativa', {
+            token_ativacao: tokenAtivacao,
+          });
+          if (erroAtivacao) setMensagem(erroAtivacao.message || 'Não foi possível ativar a solicitação.');
+          else {
+            setMensagem('Solicitação vinculada à sua área Cliente.');
+            window.history.replaceState({}, '', '/portal');
+          }
+        }
+        const contextoEncontrado = await buscarContextoCliente(cliente);
+        setContextoCliente(contextoEncontrado);
+        setEstado(contextoEncontrado ? 'autenticado_cliente' : 'sem_perfil');
+      } catch {
+        setMensagem('Não foi possível validar seu perfil interno. Tente novamente.');
+        setEstado('erro');
       }
-      const contextoEncontrado = await buscarContextoCliente(cliente);
-      setContextoCliente(contextoEncontrado);
-      setEstado(contextoEncontrado ? 'autenticado_cliente' : 'sem_perfil');
-    } catch {
-      setMensagem('Não foi possível validar seu perfil interno. Tente novamente.');
-      setEstado('erro');
-    }
-  }, [cliente]);
+    },
+    [cliente],
+  );
 
   useEffect(() => {
     if (!cliente) return;
 
     let ativo = true;
-    cliente.auth.getSession().then(({ data }) => {
-      if (!ativo) return;
-      if (!data.session?.user) setEstado('anonimo');
-      else void carregarPerfil(data.session.user.id);
-    }).catch(() => {
-      if (ativo) setEstado('erro');
-    });
+    cliente.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!ativo) return;
+        if (!data.session?.user) setEstado('anonimo');
+        else void carregarPerfil(data.session.user.id);
+      })
+      .catch(() => {
+        if (ativo) setEstado('erro');
+      });
 
     const { data: autenticacao } = cliente.auth.onAuthStateChange((evento) => {
       if (evento === 'SIGNED_OUT') {
@@ -142,7 +142,10 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar }: { estado: Estad
     if (!cliente) return;
     setEnviando(true);
     setErro('');
-    const { data, error } = await cliente.auth.signInWithPassword({ email, password: senha });
+    const { data, error } = await cliente.auth.signInWithPassword({
+      email,
+      password: senha,
+    });
     if (error || !data.user) {
       setErro('E-mail ou senha inválidos. O acesso interno não permite autocadastro.');
       setEnviando(false);
@@ -152,13 +155,115 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar }: { estado: Estad
     setEnviando(false);
   }
 
-  return <main className="acesso-interno"><section className="cartao-acesso"><a href="/" aria-label="Voltar à página pública"><MarcaOficial /></a><span className="selo-acesso"><ShieldCheck size={15} /> Acesso protegido</span>{estado === 'carregando' && <><h1>Validando acesso</h1><p role="status">Aguarde enquanto confirmamos sua sessão e o tipo de acesso.</p></>}{estado === 'sem_configuracao' && <><h1>Integração de homologação pendente</h1><p>O acesso permanece fechado até a URL e a chave pública do Supabase de homologação serem configuradas.</p><a className="link-acesso" href="/portal/cliente-demonstracao">Ver demonstração da área do cliente</a><a className="link-acesso" href="/portal/demonstracao">Abrir demonstração interna</a></>}{estado === 'sem_perfil' && <><h1>Acesso ainda não vinculado</h1><p>Sua identidade foi confirmada, mas não há perfil interno nem vínculo aprovado com uma empresa. Clientes recebem esse vínculo por convite da equipe após a análise da solicitação.</p>{mensagem && <p className="erro-acesso" role="alert">{mensagem}</p>}<button className="botao-acesso" type="button" onClick={() => void cliente?.auth.signOut()}>Sair</button></>}{estado === 'erro' && <><h1>Não foi possível validar o acesso</h1><p role="alert">{mensagem || 'A autenticação está temporariamente indisponível.'}</p><button className="botao-acesso" type="button" onClick={() => window.location.reload()}>Tentar novamente</button></>}{estado === 'anonimo' && <><h1>Entrar no Portal de Metrologia</h1><p>Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.</p><form onSubmit={entrar}><label htmlFor="email-interno">E-mail</label><input id="email-interno" type="email" autoComplete="username" required value={email} onChange={(evento) => setEmail(evento.target.value)} /><label htmlFor="senha-interna">Senha</label><input id="senha-interna" type="password" autoComplete="current-password" required value={senha} onChange={(evento) => setSenha(evento.target.value)} />{erro && <p className="erro-acesso" role="alert">{erro}</p>}<button className="botao-acesso" type="submit" disabled={enviando}><LockKeyhole size={16} />{enviando ? 'Validando…' : 'Entrar'}</button></form><a className="link-acesso" href="/solicitar">Fazer solicitação sem login</a><a className="link-acesso" href="/portal/cliente-demonstracao">Ver demonstração da área do cliente</a><a className="link-acesso" href="/portal/demonstracao">Abrir demonstração interna</a></>}</section></main>;
+  return (
+    <main className="acesso-interno">
+      <section className="cartao-acesso">
+        <a href="/" aria-label="Voltar à página pública">
+          <MarcaOficial />
+        </a>
+        <span className="selo-acesso">
+          <ShieldCheck size={15} /> Acesso protegido
+        </span>
+        {estado === 'carregando' && (
+          <>
+            <h1>Validando acesso</h1>
+            <p role="status">Aguarde enquanto confirmamos sua sessão e o tipo de acesso.</p>
+          </>
+        )}
+        {estado === 'sem_configuracao' && (
+          <>
+            <h1>Integração de homologação pendente</h1>
+            <p>O acesso permanece fechado até a URL e a chave pública do Supabase de homologação serem configuradas.</p>
+            <a className="link-acesso" href="/portal/cliente-demonstracao">
+              Ver demonstração da área do cliente
+            </a>
+            <a className="link-acesso" href="/portal/demonstracao">
+              Abrir demonstração interna
+            </a>
+          </>
+        )}
+        {estado === 'sem_perfil' && (
+          <>
+            <h1>Acesso ainda não vinculado</h1>
+            <p>Sua identidade foi confirmada, mas não há perfil interno nem vínculo aprovado com uma empresa. Clientes recebem esse vínculo por convite da equipe após a análise da solicitação.</p>
+            {mensagem && (
+              <p className="erro-acesso" role="alert">
+                {mensagem}
+              </p>
+            )}
+            <button className="botao-acesso" type="button" onClick={() => void cliente?.auth.signOut()}>
+              Sair
+            </button>
+          </>
+        )}
+        {estado === 'erro' && (
+          <>
+            <h1>Não foi possível validar o acesso</h1>
+            <p role="alert">{mensagem || 'A autenticação está temporariamente indisponível.'}</p>
+            <button className="botao-acesso" type="button" onClick={() => window.location.reload()}>
+              Tentar novamente
+            </button>
+          </>
+        )}
+        {estado === 'anonimo' && (
+          <>
+            <h1>Entrar no Portal de Metrologia</h1>
+            <p>Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.</p>
+            <form onSubmit={entrar}>
+              <label htmlFor="email-interno">E-mail</label>
+              <input id="email-interno" type="email" autoComplete="username" required value={email} onChange={(evento) => setEmail(evento.target.value)} />
+              <label htmlFor="senha-interna">Senha</label>
+              <input id="senha-interna" type="password" autoComplete="current-password" required value={senha} onChange={(evento) => setSenha(evento.target.value)} />
+              {erro && (
+                <p className="erro-acesso" role="alert">
+                  {erro}
+                </p>
+              )}
+              <button className="botao-acesso" type="submit" disabled={enviando}>
+                <LockKeyhole size={16} />
+                {enviando ? 'Validando…' : 'Entrar'}
+              </button>
+            </form>
+            <a className="link-acesso" href="/solicitar">
+              Fazer solicitação sem login
+            </a>
+            <a className="link-acesso" href="/portal/cliente-demonstracao">
+              Ver demonstração da área do cliente
+            </a>
+            <a className="link-acesso" href="/portal/demonstracao">
+              Abrir demonstração interna
+            </a>
+          </>
+        )}
+      </section>
+    </main>
+  );
 }
 
 function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perfil; cliente: SupabaseClient; aoAtualizar: (perfil: Perfil) => void; aoVoltar: () => void }) {
   const [nome, setNome] = useState(perfil.nome);
+  const [email, setEmail] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [usuarios, setUsuarios] = useState<Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>>([]);
+  const [alterandoUsuario, setAlterandoUsuario] = useState('');
+
+  useEffect(() => {
+    void cliente.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ''));
+    if (perfil.perfil_interno === 'administrador') void cliente.rpc('listar_usuarios_internos_demonstrativos').then(({ data }) => setUsuarios((data ?? []) as Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>));
+  }, [cliente, perfil.perfil_interno]);
+
+  async function alterarFuncao(usuarioId: string, novaFuncao: PerfilInterno) {
+    setAlterandoUsuario(usuarioId);
+    setMensagem('');
+    const { error } = await cliente.rpc('alterar_perfil_interno_demonstrativo', { alvo: usuarioId, novo_perfil: novaFuncao });
+    if (error) setMensagem(error.message || 'Não foi possível alterar a função.');
+    else {
+      setUsuarios((atuais) => atuais.map((item) => (item.usuario_id === usuarioId ? { ...item, perfil_interno: novaFuncao } : item)));
+      setMensagem('Função atualizada e registrada na auditoria.');
+    }
+    setAlterandoUsuario('');
+  }
 
   async function salvar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -167,16 +272,84 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
       setMensagem('Informe um nome entre 2 e 120 caracteres.');
       return;
     }
+    const emailNormalizado = email.trim().toLowerCase();
+    if (!emailNormalizado.endsWith('.test')) {
+      setMensagem('Na homologação, use somente um e-mail sintético terminado em .test.');
+      return;
+    }
     setSalvando(true);
     setMensagem('');
     const { data, error } = await cliente.from('perfis').update({ nome: nomeNormalizado }).eq('usuario_id', perfil.usuario_id).select('usuario_id,nome,perfil_interno,origem_ativa').single();
     if (error || !data) setMensagem('Não foi possível salvar o perfil.');
     else {
+      const { data: usuarioAtual } = await cliente.auth.getUser();
+      const emailMudou = emailNormalizado !== usuarioAtual.user?.email?.toLowerCase();
+      if (emailMudou) {
+        const { error: erroEmail } = await cliente.auth.updateUser({ email: emailNormalizado });
+        if (erroEmail) {
+          setMensagem('O nome foi salvo, mas não foi possível iniciar a alteração do e-mail.');
+          setSalvando(false);
+          return;
+        }
+      }
       aoAtualizar(data as Perfil);
-      setMensagem('Perfil salvo no Supabase de homologação.');
+      setMensagem(emailMudou ? 'Perfil salvo. Confirme o novo e-mail no endereço informado.' : 'Perfil salvo no Supabase de homologação.');
     }
     setSalvando(false);
   }
 
-  return <main className="acesso-interno"><section className="cartao-acesso"><button className="voltar-acesso" type="button" onClick={aoVoltar}><ArrowLeft size={16} /> Voltar ao portal</button><span className="selo-acesso"><ShieldCheck size={15} /> Origem: demonstração</span><h1>Meu perfil interno</h1><p>Somente o nome pode ser alterado por você. Função e origem dependem de provisionamento administrativo.</p><form onSubmit={salvar}><label htmlFor="nome-perfil">Nome</label><input id="nome-perfil" required minLength={2} maxLength={120} value={nome} onChange={(evento) => setNome(evento.target.value)} /><label>Perfil interno</label><input value={rotulosPerfil[perfil.perfil_interno]} disabled /><label>Origem ativa</label><input value="Demonstração" disabled />{mensagem && <p className="mensagem-acesso" role="status">{mensagem}</p>}<button className="botao-acesso" type="submit" disabled={salvando}><Save size={16} />{salvando ? 'Salvando…' : 'Salvar perfil'}</button></form></section></main>;
+  return (
+    <main className="acesso-interno">
+      <section className="cartao-acesso">
+        <button className="voltar-acesso" type="button" onClick={aoVoltar}>
+          <ArrowLeft size={16} /> Voltar ao portal
+        </button>
+        <span className="selo-acesso">
+          <ShieldCheck size={15} /> Origem: demonstração
+        </span>
+        <h1>Meu perfil interno</h1>
+        <p>Nome e e-mail podem ser alterados por você. Função e origem dependem de provisionamento administrativo.</p>
+        <form onSubmit={salvar}>
+          <label htmlFor="nome-perfil">Nome</label>
+          <input id="nome-perfil" required minLength={2} maxLength={120} value={nome} onChange={(evento) => setNome(evento.target.value)} />
+          <label htmlFor="email-perfil">E-mail de acesso</label>
+          <input id="email-perfil" type="email" required value={email} onChange={(evento) => setEmail(evento.target.value)} />
+          <label>Perfil interno</label>
+          <input value={rotulosPerfil[perfil.perfil_interno]} disabled />
+          <label>Origem ativa</label>
+          <input value="Demonstração" disabled />
+          {mensagem && (
+            <p className="mensagem-acesso" role="status">
+              {mensagem}
+            </p>
+          )}
+          <button className="botao-acesso" type="submit" disabled={salvando}>
+            <Save size={16} />
+            {salvando ? 'Salvando…' : 'Salvar perfil'}
+          </button>
+        </form>
+        {perfil.perfil_interno === 'administrador' && (
+          <section className="gestao-usuarios-internos">
+            <h2>Funções da equipe</h2>
+            <p>Altere a função de usuários internos existentes. Sua própria função fica protegida contra alteração acidental.</p>
+            {usuarios.map((usuario) => (
+              <label key={usuario.usuario_id}>
+                <span>
+                  <strong>{usuario.nome}</strong>
+                  <small>{usuario.usuario_id === perfil.usuario_id ? 'Você' : 'Usuário interno'}</small>
+                </span>
+                <select value={usuario.perfil_interno} disabled={usuario.usuario_id === perfil.usuario_id || alterandoUsuario === usuario.usuario_id} onChange={(evento) => void alterarFuncao(usuario.usuario_id, evento.target.value as PerfilInterno)}>
+                  {Object.entries(rotulosPerfil).map(([valor, rotulo]) => (
+                    <option key={valor} value={valor}>
+                      {rotulo}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </section>
+        )}
+      </section>
+    </main>
+  );
 }

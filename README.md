@@ -44,3 +44,7 @@ npm run verificar
 A aplicação foi desenhada para negar acesso por padrão. Dados reais e demonstrativos usam origens obrigatórias e não podem aparecer juntos. Os documentos-fonte e a planilha de custos permanecem locais e fora do Git.
 
 Consulte [docs/roadmap.md](docs/roadmap.md) para o plano até a entrega e [docs/roteiro-demonstracao.md](docs/roteiro-demonstracao.md) para validar a versão.
+
+## Revisão de 7 de setembro de 2026
+
+A migration `202609070034` reforça validações, ordem das etapas, vínculo obrigatório de pré-proposta, múltiplos equipamentos, entrega estimada e administração auditada de funções. A interface acrescenta alertas destacados, formulários recolhíveis, atalhos filtrados, pesquisa por data e histórico administrativo de custos.

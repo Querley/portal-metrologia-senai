@@ -89,3 +89,9 @@ Mudança funcional inclui estados de erro e vazio, validação, autorização, t
 - [ ] **5–7 set** — implementar em homologação o convite administrativo de Clientes, contatos adicionais e gestão de membros internos (convite, função, desativação e auditoria). Membros do laboratório não terão autocadastro público.
 - [ ] **8–10 set** — CMS, idiomas e integrações de IA sanitizadas, preservando o endurecimento do fluxo de contas.
 - [ ] **11–12 set** — MFA, acessibilidade, observabilidade, backup/restauração e ensaio final. A ativação de contas reais em produção depende do projeto de produção, domínio/remetente oficial e textos jurídicos aprovados.
+
+### Situação em 7 de setembro
+
+Entregues nesta revisão: alertas destacados, formulário recolhível, atalhos do Cliente, busca por data, campos padronizados iniciais, validação de telefone, recusa visível, vínculo obrigatório, etapas sequenciais, múltiplos equipamentos, entrega estimada, edição do próprio cadastro, alteração auditada de função e histórico administrativo de custos.
+
+Próxima ampliação do conhecimento: importação validada e segregada de históricos, recomendações de duração e ocorrência, recuperação de contexto pelas lições e métricas de qualidade/deriva. Históricos reais só entram no ambiente real, com autorização e saneamento; a homologação permanece sintética.

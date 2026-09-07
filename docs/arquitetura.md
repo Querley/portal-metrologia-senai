@@ -50,3 +50,7 @@ O scaffold oficial de hospedagem utiliza Vinext sobre Vite, mantendo React, Type
 ## Recusa e pesquisa operacional
 
 O Cliente recusa uma versão emitida por RPC protegida, com motivo persistido e auditoria. A versão e seu PDF continuam consultáveis como histórico; a fila interna passa a permitir outra pré-proposta para a mesma solicitação. Pesquisa e filtros são aplicados na interface somente depois que as RPCs e a RLS delimitam o conjunto autorizado.
+
+## Controles da migration 034
+
+A migration `202609070034_validacoes_fluxo_e_visibilidade.sql` valida telefone, retira do papel autenticado a criação avulsa de pré-proposta, expõe recusas somente à equipe, impõe sequência às etapas e audita alterações de função. A criação multiequipamento recalcula e congela custos no servidor. O front-end repete as validações para resposta imediata, mas não é a fonte de autoridade. Trocas de e-mail próprio usam o provedor de identidade; convites continuam dependendo de remetente configurado e nenhum segredo vai ao navegador.
