@@ -26,3 +26,4 @@ footer { min-height:120px; padding:35px 6vw; display:flex; align-items:center; g
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } * { transition:none !important; } }
 .contato-email-compacto { width:100%; margin:38px 0 0; padding:32px; border:1px solid var(--borda); background:#eef6f8; }
 .contato-email-compacto h2 { font-size:clamp(24px,3vw,34px); }
+ .validacao-global { display:contents; }

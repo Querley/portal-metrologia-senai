@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { CheckCircle2, FileUp, ShieldCheck, X } from 'lucide-react';
 import { cnpjValido, formatarCnpj, necessidadeInicial, necessidadesCliente, prazosPagamento } from '../lib/solicitacao';
 import { obterClienteSupabase } from '../lib/supabase/cliente';
 import { MATERIAIS_PECA, normalizarTelefoneDigitado, telefoneValido, valorPadronizado } from '../lib/campos-padronizados';
+import { campoEstaInvalido, mensagemCampoInvalido } from './validacao-global';
 
 const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'application/octet-stream'];
 
@@ -22,6 +23,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
   const [prazoPagamento, setPrazoPagamento] = useState('30');
   const [emailEnviado, setEmailEnviado] = useState('');
   const [material, setMaterial] = useState('');
+  const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
 
   function selecionar(novos: FileList | null) {
     const lista = [...arquivos, ...Array.from(novos ?? [])];
@@ -36,6 +38,14 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
 
   async function enviar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    const campoInvalido = Array.from(evento.currentTarget.elements).find((elemento) =>
+      (elemento instanceof HTMLInputElement || elemento instanceof HTMLTextAreaElement || elemento instanceof HTMLSelectElement) && campoEstaInvalido(elemento),
+    ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined;
+    if (campoInvalido) {
+      setErro(mensagemCampoInvalido(campoInvalido));
+      campoInvalido.focus();
+      return;
+    }
     if (!cnpjValido(cnpj)) {
       setErro('Informe um CNPJ válido. A validação verifica apenas o formato e os dígitos verificadores.');
       return;
@@ -119,7 +129,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
     );
 
   return (
-    <form className="formulario-solicitacao" onSubmit={enviar}>
+    <form className="formulario-solicitacao" data-hidratado={hidratado ? 'sim' : 'nao'} noValidate onSubmit={enviar}>
       <div className="aviso-demo">
         <ShieldCheck size={18} />
         <span>
@@ -135,19 +145,19 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
         <div className="grade-form">
           <label>
             Nome completo
-            <input required name="nome" autoComplete="name" />
+            <input required name="nome" autoComplete="name" minLength={2} maxLength={120} />
           </label>
           <label>
             E-mail sintético para o acesso Cliente
-            <input required name="email" type="email" autoComplete="email" placeholder="cliente.hml@example.test" />
+            <input required name="email" type="email" autoComplete="email" maxLength={254} pattern="[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.test" title="Na homologação, informe um e-mail válido terminado em .test." placeholder="cliente.hml@example.test" />
           </label>
           <label>
             Nome da empresa
-            <input required name="empresa" autoComplete="organization" />
+            <input required name="empresa" autoComplete="organization" minLength={2} maxLength={180} />
           </label>
           <label>
             CNPJ
-            <input required name="cnpj" inputMode="numeric" autoComplete="off" value={cnpj} onChange={(evento) => setCnpj(formatarCnpj(evento.target.value))} placeholder="00.000.000/0000-00" aria-invalid={cnpj.length === 18 && !cnpjValido(cnpj)} />
+            <input required name="cnpj" inputMode="numeric" autoComplete="off" minLength={18} maxLength={18} pattern="[0-9]{2}\.[0-9]{3}\.[0-9]{3}/[0-9]{4}-[0-9]{2}" title="Informe os 14 números do CNPJ no formato 00.000.000/0000-00." value={cnpj} onChange={(evento) => setCnpj(formatarCnpj(evento.target.value))} placeholder="00.000.000/0000-00" aria-invalid={cnpj.length === 18 && !cnpjValido(cnpj)} />
           </label>
           <label>
             Telefone
@@ -220,20 +230,20 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           {(servico === 'outro' || servico === 'orientacao-tecnica' || servicoInicial) && (
             <label className="campo-largo">
               Qual resultado você espera?
-              <input required name="necessidade-personalizada" placeholder="Ex.: modelo STEP, relatório dimensional ou investigação de falha" />
+              <input required name="necessidade-personalizada" minLength={5} maxLength={500} placeholder="Ex.: modelo STEP, relatório dimensional ou investigação de falha" />
             </label>
           )}
           <label>
             Quantidade
-            <input required name="quantidade" type="number" min="1" />
+            <input required name="quantidade" type="number" min="1" max="100000" />
           </label>
           <label>
             Prazo desejado para o serviço
-            <input required name="prazo" type="date" />
+            <input required name="prazo" type="date" min={new Date().toISOString().slice(0, 10)} />
           </label>
           <label className="campo-largo">
             Descreva o desafio
-            <textarea required name="descricao" rows={5} placeholder="Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado." />
+            <textarea required name="descricao" minLength={10} maxLength={5000} rows={5} placeholder="Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado." />
           </label>
         </div>
       </fieldset>
@@ -243,7 +253,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           <FileUp size={26} />
           <strong>Prepare PDF, imagem ou arquivo CAD</strong>
           <span>Na homologação, os arquivos permanecem no dispositivo até o acesso autenticado.</span>
-          <input type="file" multiple onChange={(evento) => selecionar(evento.target.files)} />
+          <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(evento) => selecionar(evento.target.files)} />
         </label>
         {erro && (
           <p className="erro-form" role="alert">

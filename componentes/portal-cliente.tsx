@@ -48,6 +48,9 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [nomeCliente, setNomeCliente] = useState(contexto.usuario_nome);
   const [nomeEmEdicao, setNomeEmEdicao] = useState(contexto.usuario_nome);
   const [emailEmEdicao, setEmailEmEdicao] = useState(contexto.usuario_email);
+  const [emailCliente, setEmailCliente] = useState(contexto.usuario_email);
+  const [cargoCliente, setCargoCliente] = useState(contexto.cargo || (contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'));
+  const [cargoEmEdicao, setCargoEmEdicao] = useState(contexto.cargo || (contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'));
   const [editandoPerfil, setEditandoPerfil] = useState(false);
   const [salvandoPerfil, setSalvandoPerfil] = useState(false);
   const [baixandoPdf, setBaixandoPdf] = useState(false);
@@ -274,6 +277,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     evento.preventDefault();
     const nome = nomeEmEdicao.trim();
     const email = emailEmEdicao.trim().toLowerCase();
+    const cargo = cargoEmEdicao.trim();
     if (nome.length < 2 || nome.length > 120) {
       setErro('Informe um nome entre 2 e 120 caracteres.');
       return;
@@ -282,30 +286,40 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       setErro('Na homologação, use somente um e-mail sintético terminado em .test.');
       return;
     }
+    if (cargo.length < 2 || cargo.length > 120) {
+      setErro('Informe um cargo ou função entre 2 e 120 caracteres.');
+      return;
+    }
     setSalvandoPerfil(true);
     setErro('');
     if (cliente && !demonstracao) {
-      const { data, error } = await cliente.rpc('atualizar_nome_cliente', {
-        nome,
+      const { data, error } = await cliente.rpc('atualizar_perfil_cliente_demonstrativo', {
+        novo_nome: nome,
+        novo_cargo: cargo,
       });
-      if (error || typeof data !== 'string') {
-        setErro('Não foi possível atualizar o nome do perfil.');
+      if (error || !data) {
+        setErro(error?.message || 'Não foi possível atualizar nome e cargo do perfil.');
         setSalvandoPerfil(false);
         return;
       }
-      if (email !== contexto.usuario_email.toLowerCase()) {
-        const { error: erroEmail } = await cliente.auth.updateUser({ email });
+      if (email !== emailCliente.toLowerCase()) {
+        const { error: erroEmail } = await cliente.rpc('atualizar_email_proprio_demonstrativo', { novo_email: email });
         if (erroEmail) {
-          setErro('O nome foi salvo, mas não foi possível iniciar a alteração do e-mail.');
+          setErro(erroEmail.message || 'Nome e cargo foram salvos, mas não foi possível alterar o e-mail.');
           setSalvandoPerfil(false);
           return;
         }
+        await cliente.auth.refreshSession();
       }
     }
     setNomeCliente(nome);
     setNomeEmEdicao(nome);
+    const emailMudou = email !== emailCliente.toLowerCase();
+    setEmailCliente(email);
+    setCargoCliente(cargo);
+    setCargoEmEdicao(cargo);
     setEditandoPerfil(false);
-    setAviso(email !== contexto.usuario_email.toLowerCase() ? 'Dados atualizados. Confirme a alteração do e-mail pelo endereço informado.' : 'Dados do perfil atualizados. Função e empresa permanecem protegidas.');
+    setAviso(emailMudou ? 'Nome, cargo e e-mail de acesso atualizados.' : 'Nome e cargo do perfil atualizados. A empresa e as permissões permanecem protegidas.');
     setSalvandoPerfil(false);
   }
 
@@ -464,10 +478,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
               <UserRound size={20} />
               <span>
                 <small>Perfil</small>
-                <strong>{contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'}</strong>
-                <em>{contexto.usuario_email}</em>
+                <strong>{cargoCliente}</strong>
+                <em>{emailCliente}</em>
               </span>
-              <button type="button" onClick={() => setEditandoPerfil(true)} aria-label="Editar nome do perfil">
+              <button type="button" onClick={() => setEditandoPerfil(true)} aria-label="Editar dados do perfil">
                 <Pencil size={15} />
               </button>
             </div>
@@ -477,12 +491,16 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 <input id="nome-cliente" required minLength={2} maxLength={120} value={nomeEmEdicao} onChange={(evento) => setNomeEmEdicao(evento.target.value)} />
                 <label htmlFor="email-cliente">E-mail de acesso</label>
                 <input id="email-cliente" type="email" required value={emailEmEdicao} onChange={(evento) => setEmailEmEdicao(evento.target.value)} />
+                <label htmlFor="cargo-cliente">Cargo ou função na empresa</label>
+                <input id="cargo-cliente" required minLength={2} maxLength={120} value={cargoEmEdicao} onChange={(evento) => setCargoEmEdicao(evento.target.value)} placeholder="Ex.: Analista da qualidade" />
+                <small>Este campo descreve sua função profissional e não altera suas permissões de acesso.</small>
                 <div>
                   <button
                     type="button"
                     onClick={() => {
                       setNomeEmEdicao(nomeCliente);
-                      setEmailEmEdicao(contexto.usuario_email);
+                      setEmailEmEdicao(emailCliente);
+                      setCargoEmEdicao(cargoCliente);
                       setEditandoPerfil(false);
                     }}
                   >

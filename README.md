@@ -48,3 +48,7 @@ Consulte [docs/roadmap.md](docs/roadmap.md) para o plano até a entrega e [docs/
 ## Revisão de 7 de setembro de 2026
 
 A migration `202609070034` reforça validações, ordem das etapas, vínculo obrigatório de pré-proposta, múltiplos equipamentos, entrega estimada e administração auditada de funções. A interface acrescenta alertas destacados, formulários recolhíveis, atalhos filtrados, pesquisa por data e histórico administrativo de custos.
+
+## Revisão de 8 de setembro de 2026
+
+A migration `202609080035` separa definitivamente cargo empresarial de permissão interna, repara contas Cliente classificadas por engano como equipe, permite troca auditada de e-mail sintético e cria o retorno justificado de um trabalho não finalizado para etapa anterior. A Visão Geral autenticada passa a usar somente registros persistidos autorizados, com indicadores navegáveis.

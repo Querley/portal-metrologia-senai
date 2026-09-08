@@ -47,6 +47,15 @@ test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Abrir Gmail' })).toHaveAttribute('href', /mail\.google\.com/);
 });
 
+test('formulário explica claramente uma entrada inválida', async ({ page }) => {
+  await page.goto('/solicitar');
+  await expect(page.locator('.formulario-solicitacao')).toHaveAttribute('data-hidratado', 'sim');
+  const nome = page.getByLabel('Nome completo');
+  await nome.fill('A');
+  await page.getByRole('button', { name: /Enviar solicitação demonstrativa/ }).click();
+  await expect(page.getByRole('alert')).toContainText('pelo menos 2 caracteres');
+});
+
 test('serviço oficial abre uma solicitação já classificada', async ({ page }) => {
   await page.goto('/catalogo');
   const servicosDoSetor = page.locator('.conteudo-setor a[href^="/solicitar?servico="]');
@@ -112,6 +121,8 @@ test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page
   await page.getByRole('button', { name: /DEM-SOL-0284/i }).click();
   await expect(page.getByRole('button', { name: /DEM-SOL-0284/i })).toHaveClass(/ativo/);
   await expect(page.getByRole('heading', { name: 'Também é possível enviar por e-mail' })).toBeVisible();
+  await page.getByRole('button', { name: 'Editar dados do perfil' }).click();
+  await expect(page.getByLabel('Cargo ou função na empresa')).toHaveValue('Gestora de projetos');
 
   await page.getByPlaceholder('Pesquisar por protocolo, serviço, estado ou data').fill('0284');
   await expect(page.getByText('1 resultado', { exact: true })).toBeVisible();

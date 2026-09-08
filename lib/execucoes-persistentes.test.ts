@@ -97,4 +97,12 @@ describe('execuções persistentes', () => {
     expect(migracao).toContain("perfil_atual is distinct from 'administrador'::perfil_interno");
     expect(migracao).toContain("pf.perfil_interno = 'tecnico'");
   });
+
+  it('permite retorno auditado somente antes da finalização', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202609080035_perfis_fluxo_reversivel_e_painel.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain('retornar_execucao_etapa_demonstrativa');
+    expect(migracao).toContain("estado_execucao in ('concluido','cancelado')");
+    expect(migracao).toContain("order by et.ordem desc");
+    expect(migracao).toContain("'retornar_execucao_etapa'");
+  });
 });

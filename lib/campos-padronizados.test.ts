@@ -26,4 +26,13 @@ describe('campos padronizados', () => {
     expect(migracao).toContain('alterar_perfil_interno_demonstrativo');
     expect(migracao).toContain('revoke execute on function criar_pre_proposta_demonstrativa');
   });
+
+  it('separa cargo empresarial de permissão e protege contas Cliente', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202609080035_perfis_fluxo_reversivel_e_painel.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain('vinculos_empresa_cargo_valido');
+    expect(migracao).toContain('atualizar_perfil_cliente_demonstrativo');
+    expect(migracao).toContain('atualizar_email_proprio_demonstrativo');
+    expect(migracao).toContain('Contas de Cliente não podem receber função interna.');
+    expect(migracao).toContain('set perfil_interno = null');
+  });
 });

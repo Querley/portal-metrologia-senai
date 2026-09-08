@@ -9,6 +9,7 @@ import { obterClienteSupabase } from '../lib/supabase/cliente';
 import { MarcaOficial } from './marca-oficial';
 import { PortalCliente } from './portal-cliente';
 import { PortalDemonstracao } from './portal-demonstracao';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 type Perfil = {
   usuario_id: string;
@@ -51,14 +52,6 @@ export function PortalInterno() {
     async (usuarioId: string) => {
       if (!cliente) return;
       try {
-        const perfilEncontrado = await buscarPerfil(cliente, usuarioId);
-        if (perfilEncontrado) {
-          setPerfil(perfilEncontrado);
-          setContextoCliente(null);
-          setEstado('autenticado_interno');
-          return;
-        }
-
         const tokenAtivacao = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('ativar');
         if (tokenAtivacao) {
           const { error: erroAtivacao } = await cliente.rpc('ativar_solicitacao_cliente_demonstrativa', {
@@ -71,8 +64,16 @@ export function PortalInterno() {
           }
         }
         const contextoEncontrado = await buscarContextoCliente(cliente);
-        setContextoCliente(contextoEncontrado);
-        setEstado(contextoEncontrado ? 'autenticado_cliente' : 'sem_perfil');
+        if (contextoEncontrado) {
+          setPerfil(null);
+          setContextoCliente(contextoEncontrado);
+          setEstado('autenticado_cliente');
+          return;
+        }
+        const perfilEncontrado = await buscarPerfil(cliente, usuarioId);
+        setPerfil(perfilEncontrado);
+        setContextoCliente(null);
+        setEstado(perfilEncontrado ? 'autenticado_interno' : 'sem_perfil');
       } catch {
         setMensagem('Não foi possível validar seu perfil interno. Tente novamente.');
         setEstado('erro');
@@ -244,6 +245,7 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
   const [nome, setNome] = useState(perfil.nome);
   const [email, setEmail] = useState('');
   const [mensagem, setMensagem] = useState('');
+  const [tipoMensagem, setTipoMensagem] = useState<'sucesso' | 'erro'>('sucesso');
   const [salvando, setSalvando] = useState(false);
   const [usuarios, setUsuarios] = useState<Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>>([]);
   const [alterandoUsuario, setAlterandoUsuario] = useState('');
@@ -257,9 +259,13 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
     setAlterandoUsuario(usuarioId);
     setMensagem('');
     const { error } = await cliente.rpc('alterar_perfil_interno_demonstrativo', { alvo: usuarioId, novo_perfil: novaFuncao });
-    if (error) setMensagem(error.message || 'Não foi possível alterar a função.');
+    if (error) {
+      setTipoMensagem('erro');
+      setMensagem(error.message || 'Não foi possível alterar a função.');
+    }
     else {
       setUsuarios((atuais) => atuais.map((item) => (item.usuario_id === usuarioId ? { ...item, perfil_interno: novaFuncao } : item)));
+      setTipoMensagem('sucesso');
       setMensagem('Função atualizada e registrada na auditoria.');
     }
     setAlterandoUsuario('');
@@ -269,37 +275,46 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
     evento.preventDefault();
     const nomeNormalizado = nome.trim();
     if (nomeNormalizado.length < 2 || nomeNormalizado.length > 120) {
+      setTipoMensagem('erro');
       setMensagem('Informe um nome entre 2 e 120 caracteres.');
       return;
     }
     const emailNormalizado = email.trim().toLowerCase();
     if (!emailNormalizado.endsWith('.test')) {
+      setTipoMensagem('erro');
       setMensagem('Na homologação, use somente um e-mail sintético terminado em .test.');
       return;
     }
     setSalvando(true);
     setMensagem('');
     const { data, error } = await cliente.from('perfis').update({ nome: nomeNormalizado }).eq('usuario_id', perfil.usuario_id).select('usuario_id,nome,perfil_interno,origem_ativa').single();
-    if (error || !data) setMensagem('Não foi possível salvar o perfil.');
+    if (error || !data) {
+      setTipoMensagem('erro');
+      setMensagem('Não foi possível salvar o perfil.');
+    }
     else {
       const { data: usuarioAtual } = await cliente.auth.getUser();
       const emailMudou = emailNormalizado !== usuarioAtual.user?.email?.toLowerCase();
       if (emailMudou) {
-        const { error: erroEmail } = await cliente.auth.updateUser({ email: emailNormalizado });
+        const { error: erroEmail } = await cliente.rpc('atualizar_email_proprio_demonstrativo', { novo_email: emailNormalizado });
         if (erroEmail) {
-          setMensagem('O nome foi salvo, mas não foi possível iniciar a alteração do e-mail.');
+          setTipoMensagem('erro');
+          setMensagem(erroEmail.message || 'O nome foi salvo, mas não foi possível alterar o e-mail.');
           setSalvando(false);
           return;
         }
+        await cliente.auth.refreshSession();
       }
       aoAtualizar(data as Perfil);
-      setMensagem(emailMudou ? 'Perfil salvo. Confirme o novo e-mail no endereço informado.' : 'Perfil salvo no Supabase de homologação.');
+      setTipoMensagem('sucesso');
+      setMensagem(emailMudou ? 'Perfil e e-mail de acesso atualizados.' : 'Perfil salvo no Supabase de homologação.');
     }
     setSalvando(false);
   }
 
   return (
     <main className="acesso-interno">
+      <NotificacaoFlutuante mensagem={mensagem} tipo={tipoMensagem} aoFechar={() => setMensagem('')} />
       <section className="cartao-acesso">
         <button className="voltar-acesso" type="button" onClick={aoVoltar}>
           <ArrowLeft size={16} /> Voltar ao portal
@@ -318,11 +333,6 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
           <input value={rotulosPerfil[perfil.perfil_interno]} disabled />
           <label>Origem ativa</label>
           <input value="Demonstração" disabled />
-          {mensagem && (
-            <p className="mensagem-acesso" role="status">
-              {mensagem}
-            </p>
-          )}
           <button className="botao-acesso" type="submit" disabled={salvando}>
             <Save size={16} />
             {salvando ? 'Salvando…' : 'Salvar perfil'}

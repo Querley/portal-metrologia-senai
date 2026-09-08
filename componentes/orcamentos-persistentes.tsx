@@ -115,7 +115,7 @@ function formatarDataHora(valor: string): string {
   }).format(new Date(valor));
 }
 
-export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, aoConsumirSolicitacao }: { cliente: SupabaseClient; perfil: PerfilInterno; solicitacaoInicial?: SolicitacaoParaPreProposta | null; aoConsumirSolicitacao?: () => void }) {
+export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, filtroEstadoInicial = '', aoConsumirSolicitacao }: { cliente: SupabaseClient; perfil: PerfilInterno; solicitacaoInicial?: SolicitacaoParaPreProposta | null; filtroEstadoInicial?: string; aoConsumirSolicitacao?: () => void }) {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [custos, setCustos] = useState<Custo[]>([]);
@@ -149,7 +149,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, ao
   const [consultandoRecomendacao, setConsultandoRecomendacao] = useState(false);
   const [justificativaEstimativa, setJustificativaEstimativa] = useState('');
   const [busca, setBusca] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [filtroEstado, setFiltroEstado] = useState(filtroEstadoInicial || 'todos');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [formularioAberto, setFormularioAberto] = useState(Boolean(solicitacaoInicial));
 

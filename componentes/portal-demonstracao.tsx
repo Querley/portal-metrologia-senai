@@ -18,6 +18,7 @@ import { MarcaOficial } from './marca-oficial';
 import { MensagensPersistentes } from './mensagens-persistentes';
 import { OrcamentosPersistentes } from './orcamentos-persistentes';
 import { SolicitacoesPersistentes } from './solicitacoes-persistentes';
+import { VisaoGeralPersistente } from './visao-geral-persistente';
 
 const menuBase = [
   { id: 'visao', rotulo: 'Visão geral', icone: LayoutDashboard },
@@ -65,6 +66,8 @@ type PropriedadesPortal = {
 
 export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuario = 'Administrador', perfilInterno, clienteSupabase, aoSair, aoAbrirPerfil, autenticado = false }: PropriedadesPortal) {
   const [secao, setSecao] = useState('visao');
+  const [filtroNavegacao, setFiltroNavegacao] = useState('');
+  const [revisaoNavegacao, setRevisaoNavegacao] = useState(0);
   const [horas, setHoras] = useState(12);
   const [lucro, setLucro] = useState(25);
   const [assistenteAberto, setAssistenteAberto] = useState(false);
@@ -120,6 +123,12 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
     licoes: ['Revisar fixação antes de programar a sequência de medição.'],
   });
 
+  function navegar(destino: { secao: string; filtro?: string }) {
+    setFiltroNavegacao(destino.filtro ?? '');
+    setRevisaoNavegacao((valor) => valor + 1);
+    setSecao(destino.secao);
+  }
+
   return (
     <div className="aplicacao" data-hidratado={hidratado ? 'sim' : 'nao'}>
       <aside className="barra-lateral">
@@ -133,7 +142,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         </div>
         <nav aria-label="Módulos internos">
           {menu.map(({ id, rotulo, icone: Icone }) => (
-            <button aria-label={rotulo} title={rotulo} className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => setSecao(id)}>
+            <button aria-label={rotulo} title={rotulo} className={secao === id ? 'ativo' : ''} key={id} type="button" onClick={() => navegar({ secao: id })}>
               <Icone size={18} aria-hidden="true" />
               <span className="menu-rotulo">{rotulo}</span>
               {id === 'mensagens' && !autenticado && <b>2</b>}
@@ -185,11 +194,11 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
             </div>
             {secao !== 'custos' && (
               <div className="acoes-internas">
-                <button className="icone-botao" type="button" aria-label="Abrir mensagens" onClick={() => setSecao('mensagens')}>
+                <button className="icone-botao" type="button" aria-label="Abrir mensagens" onClick={() => navegar({ secao: 'mensagens' })}>
                   <MessageSquareText size={19} />
                   <i />
                 </button>
-                <button className="botao-interno" type="button" onClick={() => setSecao(perfilInterno && podeCriarRascunhoOrcamento(perfilInterno) ? 'solicitacoes' : 'orcamentos')}>
+                <button className="botao-interno" type="button" onClick={() => navegar({ secao: perfilInterno && podeCriarRascunhoOrcamento(perfilInterno) ? 'solicitacoes' : 'orcamentos', filtro: perfilInterno && podeCriarRascunhoOrcamento(perfilInterno) ? 'sem_proposta' : undefined })}>
                   {perfilInterno && !podeCriarRascunhoOrcamento(perfilInterno) ? (
                     <>
                       <Calculator size={17} /> Ver orçamentos
@@ -205,23 +214,25 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
           </div>
         </header>
 
-        {secao === 'visao' && <VisaoGeral setSecao={setSecao} />}
+        {secao === 'visao' && (clienteSupabase && perfilInterno ? <VisaoGeralPersistente cliente={clienteSupabase} perfil={perfilInterno} aoNavegar={navegar} /> : <VisaoGeral setSecao={setSecao} />)}
         {secao === 'solicitacoes' &&
           (solicitacoesPersistentesDisponiveis && clienteSupabase && perfilInterno ? (
             <SolicitacoesPersistentes
+              key={`solicitacoes-${revisaoNavegacao}`}
               cliente={clienteSupabase}
               perfil={perfilInterno}
+              filtroInicial={filtroNavegacao}
               aoCriarPreProposta={(solicitacao) => {
                 setSolicitacaoParaOrcamento(solicitacao);
-                setSecao('orcamentos');
+                navegar({ secao: 'orcamentos' });
               }}
             />
           ) : (
             <TabelaSolicitacoes />
           ))}
-        {secao === 'orcamentos' && (orcamentosPersistentesDisponiveis && clienteSupabase && perfilInterno ? <OrcamentosPersistentes cliente={clienteSupabase} perfil={perfilInterno} solicitacaoInicial={solicitacaoParaOrcamento} aoConsumirSolicitacao={() => setSolicitacaoParaOrcamento(null)} /> : <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />)}
-        {secao === 'servicos' && (clienteSupabase && perfilInterno ? <ExecucoesPersistentes cliente={clienteSupabase} perfil={perfilInterno} /> : <ExecucaoDemonstrativa />)}
-        {secao === 'conhecimento' && (clienteSupabase && perfilInterno ? <ConhecimentoPersistente cliente={clienteSupabase} perfil={perfilInterno} /> : <Conhecimento recomendacao={recomendacao} />)}
+        {secao === 'orcamentos' && (orcamentosPersistentesDisponiveis && clienteSupabase && perfilInterno ? <OrcamentosPersistentes key={`orcamentos-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} solicitacaoInicial={solicitacaoParaOrcamento} filtroEstadoInicial={filtroNavegacao} aoConsumirSolicitacao={() => setSolicitacaoParaOrcamento(null)} /> : <Calculadora horas={horas} setHoras={setHoras} lucro={lucro} setLucro={setLucro} item={item} recomendacao={recomendacao} />)}
+        {secao === 'servicos' && (clienteSupabase && perfilInterno ? <ExecucoesPersistentes key={`servicos-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroEstadoInicial={filtroNavegacao} /> : <ExecucaoDemonstrativa />)}
+        {secao === 'conhecimento' && (clienteSupabase && perfilInterno ? <ConhecimentoPersistente key={`conhecimento-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroInicial={filtroNavegacao} /> : <Conhecimento recomendacao={recomendacao} />)}
         {secao === 'mensagens' && (mensagensPersistentesDisponiveis && clienteSupabase && perfilInterno ? <MensagensPersistentes cliente={clienteSupabase} perfil={perfilInterno} /> : <Mensagens />)}
         {secao === 'conteudo' && <ConteudoPublico />}
         {secao === 'custos' && clienteSupabase && perfilInterno && <CustosEquipamento cliente={clienteSupabase} perfil={perfilInterno} />}

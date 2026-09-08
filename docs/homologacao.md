@@ -114,3 +114,7 @@ A migration `202609020033` foi aplicada e registrada em 2 de setembro. Ela regis
 7. Tente telefone com letras e mais de cinco anexos.
 8. Como Técnico, confirme que valores monetários e PDF comercial não aparecem.
 9. Como Administrador, altere a função de outro usuário sintético e consulte o histórico de custos.
+
+## Revisão de 8 de setembro de 2026
+
+A migration `202609080035` foi aplicada e registrada em 8 de setembro. Ela adiciona cargo profissional ao vínculo empresarial, troca auditada de e-mail próprio, reparo de perfis externos que receberam papel interno e retorno justificado de execução para etapa anterior. A conferência remota encontrou zero Clientes com perfil interno, zero vínculos sem cargo e confirmou as novas funções. A interface autenticada passa a calcular a Visão Geral com dados persistidos e oferece navegação filtrada, barra de progresso clicável e mensagens globais de validação. A conta `cliente.hml@example.test` deve permanecer na área Cliente mesmo após tentativas administrativas de atribuição de papel interno.

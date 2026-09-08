@@ -54,3 +54,7 @@ O Cliente recusa uma versão emitida por RPC protegida, com motivo persistido e 
 ## Controles da migration 034
 
 A migration `202609070034_validacoes_fluxo_e_visibilidade.sql` valida telefone, retira do papel autenticado a criação avulsa de pré-proposta, expõe recusas somente à equipe, impõe sequência às etapas e audita alterações de função. A criação multiequipamento recalcula e congela custos no servidor. O front-end repete as validações para resposta imediata, mas não é a fonte de autoridade. Trocas de e-mail próprio usam o provedor de identidade; convites continuam dependendo de remetente configurado e nenhum segredo vai ao navegador.
+
+## Controles da migration 035
+
+A migration `202609080035_perfis_fluxo_reversivel_e_painel.sql` repara e impede a sobreposição entre vínculo externo e papel interno, armazena o cargo empresarial separado da autorização e atualiza e-mail sintético pelo servidor com auditoria. O retorno de etapa reinicia etapas posteriores em ordem decrescente para respeitar o gatilho sequencial. Indicadores da Visão Geral são derivados no navegador exclusivamente das RPCs protegidas existentes, sem consulta anônima nem combinação de origens.

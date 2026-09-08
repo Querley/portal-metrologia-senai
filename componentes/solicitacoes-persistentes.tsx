@@ -16,14 +16,14 @@ function formatarDataHora(valor: string): string {
   }).format(new Date(valor));
 }
 
-export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta }: { cliente: SupabaseClient; perfil: PerfilInterno; aoCriarPreProposta: (solicitacao: SolicitacaoParaPreProposta) => void }) {
+export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, filtroInicial = '' }: { cliente: SupabaseClient; perfil: PerfilInterno; aoCriarPreProposta: (solicitacao: SolicitacaoParaPreProposta) => void; filtroInicial?: string }) {
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoParaPreProposta[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [vinculando, setVinculando] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroAcesso, setFiltroAcesso] = useState('todos');
-  const [filtroAtendimento, setFiltroAtendimento] = useState('todos');
+  const [filtroAtendimento, setFiltroAtendimento] = useState(filtroInicial === 'sem_proposta' ? 'sem_proposta' : 'todos');
   const [filtroNecessidade, setFiltroNecessidade] = useState('todos');
 
   const carregar = useCallback(async () => {
@@ -53,12 +53,13 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta }
         if (!correspondeBusca(busca, solicitacao.codigo, solicitacao.empresa, solicitacao.nome, solicitacao.email, solicitacao.necessidade, solicitacao.descricao, solicitacao.estado_pre_proposta, formatosDataParaBusca(solicitacao.criado_em))) return false;
         if (filtroAcesso !== 'todos' && solicitacao.estado !== filtroAcesso) return false;
         if (filtroNecessidade !== 'todos' && solicitacao.necessidade !== filtroNecessidade) return false;
+        if (filtroInicial === 'abertas' && (solicitacao.estado === 'descartada' || ['aceita', 'recusada'].includes(solicitacao.estado_pre_proposta ?? ''))) return false;
         if (filtroAtendimento === 'sem_proposta' && solicitacao.tem_pre_proposta) return false;
         if (filtroAtendimento === 'com_proposta' && !solicitacao.tem_pre_proposta) return false;
         if (!['todos', 'sem_proposta', 'com_proposta'].includes(filtroAtendimento) && solicitacao.estado_pre_proposta !== filtroAtendimento) return false;
         return true;
       }),
-    [busca, filtroAcesso, filtroAtendimento, filtroNecessidade, solicitacoes],
+    [busca, filtroAcesso, filtroAtendimento, filtroInicial, filtroNecessidade, solicitacoes],
   );
 
   async function vincularAoCliente(solicitacao: SolicitacaoParaPreProposta) {

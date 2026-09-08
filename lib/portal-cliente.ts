@@ -8,6 +8,7 @@ export type ContextoCliente = {
   empresa_id: string;
   empresa_nome: string;
   perfil: 'contato' | 'gestor_empresa';
+  cargo?: string;
   origem: 'demonstracao';
   usuario_nome: string;
   usuario_email: string;
@@ -172,6 +173,7 @@ export const contextoClienteDemonstracao: ContextoCliente = {
   empresa_id: 'demo-empresa',
   empresa_nome: 'Indústria Horizonte — demonstração',
   perfil: 'contato',
+  cargo: 'Gestora de projetos',
   origem: 'demonstracao',
   usuario_nome: 'Marina Costa',
   usuario_email: 'cliente.hml@example.test',

@@ -53,3 +53,11 @@ Devem falhar com segurança: exclusão de dado real por reset, acesso entre empr
 - Cliente e membro interno podem atualizar nome e e-mail próprios; o Administrador altera funções de outros membros com auditoria.
 - O Técnico não visualiza valores monetários nem prévia comercial. O Administrador consulta o histórico de custos.
 - O limite é de cinco anexos: PDF/imagens até 10 MB; CAD até 50 MB por arquivo.
+
+## Revisão operacional de 8 de setembro de 2026
+
+- A Visão Geral interna calcula solicitações, propostas, execuções, lições e assertividade a partir dos registros persistidos da origem autorizada; cartões aplicam filtros nas áreas de destino.
+- Cargo ou função profissional do Cliente é texto cadastral editável e não concede permissão. Papel externo e perfil interno permanecem mutuamente exclusivos.
+- Trabalho não concluído pode retornar a uma etapa anterior com motivo de 10 a 1.000 caracteres; etapas posteriores são reiniciadas e a operação é auditada. Fechamento em validação deve ser resolvido antes do retorno.
+- A barra da etapa permite atualização direta por clique, preservando sequência, autorização e estados coerentes de progresso.
+- Campos usam restrições compatíveis com o dado esperado e apresentam motivo legível quando a validação do navegador falha; o servidor e o banco continuam como autoridade.

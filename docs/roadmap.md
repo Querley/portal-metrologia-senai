@@ -95,3 +95,12 @@ Mudança funcional inclui estados de erro e vazio, validação, autorização, t
 Entregues nesta revisão: alertas destacados, formulário recolhível, atalhos do Cliente, busca por data, campos padronizados iniciais, validação de telefone, recusa visível, vínculo obrigatório, etapas sequenciais, múltiplos equipamentos, entrega estimada, edição do próprio cadastro, alteração auditada de função e histórico administrativo de custos.
 
 Próxima ampliação do conhecimento: importação validada e segregada de históricos, recomendações de duração e ocorrência, recuperação de contexto pelas lições e métricas de qualidade/deriva. Históricos reais só entram no ambiente real, com autorização e saneamento; a homologação permanece sintética.
+
+### Situação em 8 de setembro
+
+- [x] substituir números estáticos da Visão Geral interna por agregações dos registros persistidos e tornar seus indicadores navegáveis;
+- [x] separar cargo empresarial editável de permissões e restaurar automaticamente contas Cliente contaminadas por papel interno;
+- [x] permitir retorno justificado e auditado a etapa anterior e atualização direta pela barra de progresso;
+- [x] padronizar mensagens de validação dos campos e destacar o resultado da edição do perfil;
+- [ ] concluir gestão administrativa de convites, contatos adicionais e desativação de usuários;
+- [ ] avançar CMS e idiomas, depois importação sanitizada de históricos e integrações de IA.

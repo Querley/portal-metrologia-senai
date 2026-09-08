@@ -25,7 +25,7 @@ function dataHora(valor: string | null): string {
   }).format(new Date(valor));
 }
 
-export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseClient; perfil: PerfilInterno }) {
+export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '' }: { cliente: SupabaseClient; perfil: PerfilInterno; filtroEstadoInicial?: string }) {
   const [execucoes, setExecucoes] = useState<ExecucaoInterna[]>([]);
   const [selecionadaId, setSelecionadaId] = useState('');
   const selecionadaIdRef = useRef('');
@@ -46,8 +46,10 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
   const [responsaveis, setResponsaveis] = useState<ResponsavelOperacional[]>([]);
   const [responsavelSelecionado, setResponsavelSelecionado] = useState('');
   const [busca, setBusca] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [filtroEstado, setFiltroEstado] = useState(filtroEstadoInicial || 'todos');
   const [filtroFechamento, setFiltroFechamento] = useState('todos');
+  const [retornoAberto, setRetornoAberto] = useState('');
+  const [motivoRetorno, setMotivoRetorno] = useState('');
 
   const preencherFormulario = useCallback((execucao: ExecucaoInterna) => {
     setHorasReais(Object.fromEntries(execucao.equipamentos.map((item) => [item.equipamento_id, Number(item.horas_reais ?? item.horas_estimadas)])));
@@ -153,6 +155,34 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
       setErro(error.code === '42501' ? 'Seu perfil não pode atualizar esta execução.' : 'A etapa mudou ou não pôde ser atualizada. Atualize e tente novamente.');
     } else {
       setMensagem(normalizada.estado === 'concluida' ? 'Etapa concluída e acompanhamento do Cliente atualizado.' : 'Progresso salvo e acompanhamento do Cliente atualizado.');
+      await carregar();
+    }
+    setProcessandoId('');
+  }
+
+  function atualizarPelaBarra(evento: React.MouseEvent<HTMLButtonElement>, etapaId: string) {
+    const limites = evento.currentTarget.getBoundingClientRect();
+    const percentual = Math.max(0, Math.min(100, Math.round(((evento.clientX - limites.left) / limites.width) * 100)));
+    const estado: EstadoEtapaExecucao = percentual === 0 ? 'a_fazer' : percentual === 100 ? 'concluida' : 'em_andamento';
+    void atualizarEtapa(etapaId, estado, percentual);
+  }
+
+  async function retornarParaEtapa(etapaId: string) {
+    if (!selecionada) return;
+    const motivo = motivoRetorno.trim();
+    if (motivo.length < 10 || motivo.length > 1000) {
+      setErro('Explique em 10 a 1000 caracteres por que o trabalho precisa retornar.');
+      return;
+    }
+    setProcessandoId(`retorno-${etapaId}`);
+    setErro('');
+    setMensagem('');
+    const { error } = await cliente.rpc('retornar_execucao_etapa_demonstrativa', { execucao: selecionada.execucao_id, etapa_destino: etapaId, motivo });
+    if (error) setErro(error.message || 'Não foi possível retornar o trabalho para esta etapa.');
+    else {
+      setMensagem('Trabalho retornado para a etapa selecionada. As etapas posteriores foram reiniciadas e o motivo foi auditado.');
+      setRetornoAberto('');
+      setMotivoRetorno('');
       await carregar();
     }
     setProcessandoId('');
@@ -393,6 +423,7 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
                 const { rotulo, Icone } = apresentacaoEtapa[etapa.estado];
                 const progressoEditado = progressos[etapa.id] ?? etapa.progresso;
                 const ordemLiberada = etapaPodeAvancar(selecionada.etapas, etapa.id);
+                const possuiEtapaPosteriorIniciada = selecionada.etapas.some((item) => item.ordem > etapa.ordem && item.progresso > 0);
                 return (
                   <li key={etapa.id} className={`etapa-operacional-${etapa.estado}`}>
                     <span className="icone-etapa-operacional">
@@ -416,9 +447,16 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
                         )}
                       </header>
                       {etapa.descricao && <p>{etapa.descricao}</p>}
-                      <div className="barra-progresso">
+                      <button
+                        type="button"
+                        className="barra-progresso barra-progresso-editavel"
+                        disabled={processandoId === etapa.id || !ordemLiberada || possuiEtapaPosteriorIniciada}
+                        onClick={(evento) => atualizarPelaBarra(evento, etapa.id)}
+                        aria-label={`Definir diretamente o progresso de ${etapa.titulo}. Atual: ${etapa.progresso}%`}
+                        title={possuiEtapaPosteriorIniciada ? 'Use “Retornar para esta etapa” para preservar a rastreabilidade.' : 'Clique na posição correspondente à porcentagem desejada.'}
+                      >
                         <i style={{ width: `${etapa.progresso}%` }} />
-                      </div>
+                      </button>
                       {selecionada.estado !== 'concluido' && (
                         <div className="acoes-etapa-operacional">
                           {etapa.estado === 'a_fazer' && (
@@ -454,6 +492,18 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
                               </button>
                             </>
                           )}
+                          {possuiEtapaPosteriorIniciada && (
+                            <button className="retornar-etapa" type="button" onClick={() => { setRetornoAberto(etapa.id); setMotivoRetorno(''); }}>
+                              <RotateCcw size={14} /> Retornar para esta etapa
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {retornoAberto === etapa.id && (
+                        <div className="confirmar-retorno-etapa">
+                          <label htmlFor={`motivo-retorno-${etapa.id}`}>Motivo do retorno</label>
+                          <textarea id={`motivo-retorno-${etapa.id}`} required minLength={10} maxLength={1000} value={motivoRetorno} onChange={(evento) => setMotivoRetorno(evento.target.value)} placeholder="Explique a mudança solicitada ou a correção necessária." />
+                          <div><button type="button" onClick={() => setRetornoAberto('')}>Cancelar</button><button type="button" disabled={processandoId === `retorno-${etapa.id}`} onClick={() => void retornarParaEtapa(etapa.id)}>Confirmar retorno</button></div>
                         </div>
                       )}
                       <small>Atualizada em {dataHora(etapa.atualizada_em)}</small>
@@ -548,14 +598,14 @@ export function ExecucoesPersistentes({ cliente, perfil }: { cliente: SupabaseCl
                       {causaPadronizada === 'Outros' && (
                         <label className="campo-fechamento">
                           <span>Outra causa</span>
-                          <input value={causa} minLength={5} maxLength={500} onChange={(evento) => setCausa(evento.target.value)} placeholder="Descreva a causa" />
+                          <input required value={causa} minLength={5} maxLength={500} onChange={(evento) => setCausa(evento.target.value)} placeholder="Descreva a causa" />
                         </label>
                       )}
                     </>
                   )}
                   <label className="campo-fechamento">
                     <span>Resumo do realizado</span>
-                    <textarea value={observacoes} maxLength={2000} onChange={(evento) => setObservacoes(evento.target.value)} placeholder="Descreva o que foi entregue e ocorrências relevantes." />
+                    <textarea required minLength={10} value={observacoes} maxLength={2000} onChange={(evento) => setObservacoes(evento.target.value)} placeholder="Descreva o que foi entregue e ocorrências relevantes." />
                   </label>
                   <label className="campo-fechamento">
                     <span>

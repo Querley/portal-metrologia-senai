@@ -67,3 +67,7 @@ Fator de correção = mediana de `horas realizadas ÷ horas estimadas`. Com cinc
 ## Complemento do domínio — 7 de setembro de 2026
 
 A solicitação é a raiz obrigatória da pré-proposta. A recusa preserva versão, data e motivo e libera uma nova versão no mesmo trabalho. `entrega_estimada` é o compromisso temporal preliminar; horas representam esforço. Um item pode utilizar vários equipamentos, sem repetição, com horas e custo-hora congelado por uso. A lição formalizada habilita o caso concluído para a amostra e preserva contexto, sem alterar cálculos.
+
+## Complemento do domínio — 8 de setembro de 2026
+
+Cargo empresarial descreve a função profissional do contato e não altera seu papel externo nem concede capacidades internas. Usuário com vínculo empresarial ativo não pode receber perfil interno. Uma execução ainda não finalizada pode retornar justificadamente a uma etapa anterior: a etapa escolhida volta a `em_andamento`, as posteriores voltam a `a_fazer` e o histórico da decisão fica na auditoria. Execução concluída, cancelada ou com fechamento em validação não pode usar esse retorno.

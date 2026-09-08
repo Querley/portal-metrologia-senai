@@ -30,7 +30,7 @@ function Metrica({ titulo, estimado, realizado, desvio, assertivo, moeda = false
   );
 }
 
-export function ConhecimentoPersistente({ cliente, perfil }: { cliente: SupabaseClient; perfil: PerfilInterno }) {
+export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }: { cliente: SupabaseClient; perfil: PerfilInterno; filtroInicial?: string }) {
   const [indicadores, setIndicadores] = useState<IndicadorExecucaoPersistente[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
@@ -42,8 +42,8 @@ export function ConhecimentoPersistente({ cliente, perfil }: { cliente: Supabase
   const [recomendacao, setRecomendacao] = useState<RecomendacaoPersistente | null>(null);
   const [mensagemRecomendacao, setMensagemRecomendacao] = useState('');
   const [busca, setBusca] = useState('');
-  const [filtroLicao, setFiltroLicao] = useState('todos');
-  const [filtroAssertividade, setFiltroAssertividade] = useState('todos');
+  const [filtroLicao, setFiltroLicao] = useState(filtroInicial === 'em_validacao' ? 'em_validacao' : 'todos');
+  const [filtroAssertividade, setFiltroAssertividade] = useState(filtroInicial === 'assertivo' ? 'assertivo' : 'todos');
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -67,6 +67,17 @@ export function ConhecimentoPersistente({ cliente, perfil }: { cliente: Supabase
   const percentualAssertivo = indicadores.length ? Math.round((assertivas / indicadores.length) * 100) : 0;
   const servicos = useMemo(() => [...new Map(indicadores.map((item) => [item.servico_id, item.servico_slug])).entries()], [indicadores]);
   const indicadoresVisiveis = useMemo(() => indicadores.filter((item) => correspondeBusca(busca, item.solicitacao_codigo, item.empresa_nome, item.servico_slug, item.licao_resumo, item.licao_assuntos, formatosDataParaBusca(item.concluida_em)) && (filtroLicao === 'todos' || (filtroLicao === 'sem_licao' ? !item.licao_estado : item.licao_estado === filtroLicao)) && (filtroAssertividade === 'todos' || (filtroAssertividade === 'assertivo' ? item.esforco_assertivo === true : item.esforco_assertivo === false))), [busca, filtroAssertividade, filtroLicao, indicadores]);
+
+  function abrirIndicadores(filtro: 'formalizada' | 'em_validacao' | 'assertivo' | 'todos') {
+    if (filtro === 'assertivo') {
+      setFiltroAssertividade('assertivo');
+      setFiltroLicao('todos');
+    } else {
+      setFiltroLicao(filtro);
+      setFiltroAssertividade('todos');
+    }
+    window.requestAnimationFrame(() => document.getElementById('indicadores-conhecimento')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
 
   async function criarLicao(indicador: IndicadorExecucaoPersistente) {
     const resumo = resumos[indicador.execucao_id]?.trim() ?? '';
@@ -136,16 +147,16 @@ export function ConhecimentoPersistente({ cliente, perfil }: { cliente: Supabase
           {erro}
         </p>
       )}
-      <section className="cards-kpi conhecimento-kpi">
-        <article>
+      <section className="cards-kpi conhecimento-kpi cards-kpi-interativos">
+        <button type="button" onClick={() => abrirIndicadores('formalizada')}>
           <span className="icone-kpi azul">
             <BookOpenCheck />
           </span>
           <small>Lições formalizadas</small>
           <strong>{formalizadas}</strong>
           <p>{indicadores.filter((item) => item.licao_estado === 'em_validacao').length} aguardam validação</p>
-        </article>
-        <article>
+        </button>
+        <button type="button" onClick={() => abrirIndicadores('assertivo')}>
           <span className="icone-kpi verde">
             <Gauge />
           </span>
@@ -154,15 +165,15 @@ export function ConhecimentoPersistente({ cliente, perfil }: { cliente: Supabase
           <p>
             {assertivas} de {indicadores.length} dentro de ±15%
           </p>
-        </article>
-        <article>
+        </button>
+        <button type="button" onClick={() => abrirIndicadores('todos')}>
           <span className="icone-kpi ciano">
             <Activity />
           </span>
           <small>Execuções comparadas</small>
           <strong>{indicadores.length}</strong>
           <p>somente concluídas e demonstrativas</p>
-        </article>
+        </button>
       </section>
       <section className="bloco recomendador-persistente">
         <header>
@@ -235,7 +246,7 @@ export function ConhecimentoPersistente({ cliente, perfil }: { cliente: Supabase
         </ol>
         <p>A lição formalizada torna o caso elegível e preserva o contexto para análise. Hoje o cálculo sugere horas; duração e custo já são comparados, mas ainda não geram recomendação automática.</p>
       </section>
-      <section className="bloco lista-indicadores">
+      <section className="bloco lista-indicadores" id="indicadores-conhecimento">
         <header>
           <div>
             <h2>Estimado versus realizado</h2>
@@ -319,6 +330,8 @@ export function ConhecimentoPersistente({ cliente, perfil }: { cliente: Supabase
                 <label>
                   Lição aprendida
                   <textarea
+                    required
+                    minLength={5}
                     maxLength={2000}
                     value={resumos[item.execucao_id] ?? ''}
                     onChange={(evento) =>
