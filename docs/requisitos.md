@@ -3,6 +3,7 @@
 ## Funcionais prioritários
 
 1. Publicar catálogo, equipamentos, institucional, contato, privacidade e solicitação em três idiomas, com português como conteúdo canônico e fallback.
+   - O escopo trilíngue compreende a área pública e a área autenticada do Cliente: PT-BR, inglês e alemão. A área interna dos funcionários permanece somente em português.
 2. Permitir solicitação personalizada quando a necessidade não estiver classificada no catálogo, sem obrigar o cliente a escolher uma categoria incorreta.
 3. Manter conteúdo estruturado com rascunho, prévia, publicação, arquivo, histórico e restauração.
 4. Permitir cadastro verificado, vínculo aprovado com empresa e múltiplos contatos convidados.
@@ -57,6 +58,10 @@ Devem falhar com segurança: exclusão de dado real por reset, acesso entre empr
 ## Revisão operacional de 8 de setembro de 2026
 
 - A Visão Geral interna calcula solicitações, propostas, execuções, lições e assertividade a partir dos registros persistidos da origem autorizada; cartões aplicam filtros nas áreas de destino.
+- Solicitações, pré-propostas e execuções internas também apresentam cartões-resumo clicáveis que aplicam filtros na própria fila.
+- O acesso oferece recuperação de senha sem revelar se o endereço está cadastrado; o link temporário permite definir uma nova senha com no mínimo dez caracteres.
+- Campos numéricos usam controles numéricos nativos, limites e passos explícitos, além da validação equivalente no servidor e no banco quando persistidos.
+- Enquanto o papel de Consulta não possuir um módulo útil aprovado, a administração oferece somente Técnico, Validador e Administrador.
 - Cargo ou função profissional do Cliente é texto cadastral editável e não concede permissão. Papel externo e perfil interno permanecem mutuamente exclusivos.
 - Trabalho não concluído pode retornar a uma etapa anterior com motivo de 10 a 1.000 caracteres; etapas posteriores são reiniciadas e a operação é auditada. Fechamento em validação deve ser resolvido antes do retorno.
 - A barra da etapa permite atualização direta por clique, preservando sequência, autorização e estados coerentes de progresso.

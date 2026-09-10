@@ -9,6 +9,7 @@ import type { PerfilInterno } from '../lib/contratos';
 import { formatarDesvio, formatarHoras, podeFormalizarLicao, type IndicadorExecucaoPersistente, type RecomendacaoPersistente } from '../lib/conhecimento-persistente';
 import { servicosOficiais } from '../lib/servicos';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 function tituloServico(slug: string): string {
   return servicosOficiais.find((servico) => servico.slug === slug)?.titulo ?? slug;
@@ -34,6 +35,7 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
   const [indicadores, setIndicadores] = useState<IndicadorExecucaoPersistente[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+  const [mensagem, setMensagem] = useState('');
   const [processando, setProcessando] = useState('');
   const [resumos, setResumos] = useState<Record<string, string>>({});
   const [assuntos, setAssuntos] = useState<Record<string, string>>({});
@@ -97,7 +99,10 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
       assuntos: listaAssuntos,
     });
     if (resposta.error) setErro('A lição não pôde ser registrada. Verifique conteúdo e estado da execução.');
-    else await carregar();
+    else {
+      setMensagem('Lição registrada e enviada para validação.');
+      await carregar();
+    }
     setProcessando('');
   }
 
@@ -108,7 +113,10 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
       licao: licaoId,
     });
     if (resposta.error) setErro('A lição não pôde ser formalizada.');
-    else await carregar();
+    else {
+      setMensagem('Lição formalizada. Este caso agora pode alimentar recomendações.');
+      await carregar();
+    }
     setProcessando('');
   }
 
@@ -142,11 +150,8 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
 
   return (
     <div className="painel conhecimento-persistente">
-      {erro && (
-        <p className="aviso-persistencia" role="alert">
-          {erro}
-        </p>
-      )}
+      <NotificacaoFlutuante mensagem={erro || mensagemRecomendacao} tipo="erro" aoFechar={() => { setErro(''); setMensagemRecomendacao(''); }} />
+      <NotificacaoFlutuante mensagem={mensagem} tipo="sucesso" aoFechar={() => setMensagem('')} />
       <section className="cards-kpi conhecimento-kpi cards-kpi-interativos">
         <button type="button" onClick={() => abrirIndicadores('formalizada')}>
           <span className="icone-kpi azul">
@@ -175,6 +180,16 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
           <p>somente concluídas e demonstrativas</p>
         </button>
       </section>
+      <section className="bloco guia-conhecimento">
+        <header><div><h2>Como usar esta página</h2><p>Transforme o encerramento dos serviços em referências auditáveis para os próximos trabalhos.</p></div><BookOpenCheck /></header>
+        <ol>
+          <li><strong>Compare</strong><span>Abra “Estimado versus realizado” e confira esforço, duração e custo de cada serviço concluído.</span></li>
+          <li><strong>Registre</strong><span>Descreva o que deve ser repetido ou evitado e inclua assuntos que facilitem a pesquisa.</span></li>
+          <li><strong>Valide</strong><span>Validador ou Administrador formaliza a lição. Antes disso, ela não influencia recomendações.</span></li>
+          <li><strong>Recomende</strong><span>Escolha serviço e quantidade. O sistema calcula mediana e faixa Q1–Q3 somente com casos elegíveis.</span></li>
+        </ol>
+        <p><strong>Para testar:</strong> conclua uma execução, registre uma lição, formalize-a com Validador ou Administrador e volte ao recomendador. A confiança cresce de baixa para média a partir de cinco casos e para alta a partir de quinze.</p>
+      </section>
       <section className="bloco recomendador-persistente">
         <header>
           <div>
@@ -202,7 +217,6 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
             <Sparkles size={16} /> Recomendar
           </button>
         </form>
-        {mensagemRecomendacao && <p>{mensagemRecomendacao}</p>}
         {recomendacao && (
           <div className="resultado-recomendacao">
             <strong>{recomendacao.horas_sugeridas === null ? 'Sem base elegível' : `${formatarHoras(recomendacao.horas_sugeridas)} sugeridas`}</strong>

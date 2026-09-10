@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EstadoPropostaSchema } from './contratos';
-import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, podeAprovarOrcamento, podeConfirmarInicioTrabalho, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from './orcamentos-persistentes';
+import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, normalizarUsosEquipamentos, podeAprovarOrcamento, podeConfirmarInicioTrabalho, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from './orcamentos-persistentes';
 
 describe('autorização de orçamentos persistentes', () => {
   it('mantém a hierarquia cumulativa para consulta e criação', () => {
@@ -63,6 +63,15 @@ describe('cálculo e persistência do orçamento', () => {
     expect(normalizarEntradaOrcamento({ descricao: 'Teste', quantidade: '0', horas: '1', custosExtras: '0', percentualLucro: '10' })).toBeNull();
     expect(normalizarEntradaOrcamento({ descricao: 'Teste', quantidade: '1', horas: '-1', custosExtras: '0', percentualLucro: '10' })).toBeNull();
     expect(normalizarEntradaOrcamento({ descricao: 'Teste', quantidade: '1', horas: '1', custosExtras: '0', percentualLucro: '-100' })).toBeNull();
+  });
+
+  it('normaliza horas de todos os equipamentos como números e impede duplicidade', () => {
+    expect(normalizarUsosEquipamentos('eq-1', '2,5', [{ equipamento_id: 'eq-2', horas: '1.25' }])).toEqual([
+      { equipamento_id: 'eq-1', horas: 2.5 },
+      { equipamento_id: 'eq-2', horas: 1.25 },
+    ]);
+    expect(normalizarUsosEquipamentos('eq-1', '2', [{ equipamento_id: 'eq-1', horas: '1' }])).toBeNull();
+    expect(normalizarUsosEquipamentos('eq-1', 'texto', [])).toBeNull();
   });
 
   it('protege criação, congela custo vigente e registra auditoria no servidor', () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ArrowLeft, LockKeyhole, Save, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, KeyRound, LockKeyhole, Mail, Save, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
 import type { ContextoCliente } from '../lib/portal-cliente';
@@ -47,6 +47,7 @@ export function PortalInterno() {
   const [contextoCliente, setContextoCliente] = useState<ContextoCliente | null>(null);
   const [mensagem, setMensagem] = useState('');
   const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
 
   const carregarPerfil = useCallback(
     async (usuarioId: string) => {
@@ -104,6 +105,10 @@ export function PortalInterno() {
         setEditandoPerfil(false);
         setEstado('anonimo');
       }
+      if (evento === 'PASSWORD_RECOVERY') {
+        setRecuperandoSenha(true);
+        setEstado('anonimo');
+      }
     });
 
     return () => {
@@ -129,13 +134,17 @@ export function PortalInterno() {
     return <PortalCliente cliente={cliente!} contexto={contextoCliente} aoSair={sair} mensagemInicial={mensagem} />;
   }
 
-  return <TelaAcesso estado={estado} cliente={cliente} mensagem={mensagem} aoAutenticar={carregarPerfil} />;
+  return <TelaAcesso estado={estado} cliente={cliente} mensagem={mensagem} aoAutenticar={carregarPerfil} recuperandoSenha={recuperandoSenha} aoConcluirRecuperacao={() => setRecuperandoSenha(false)} />;
 }
 
-function TelaAcesso({ estado, cliente, mensagem, aoAutenticar }: { estado: Estado; cliente: SupabaseClient | null; mensagem: string; aoAutenticar: (usuarioId: string) => Promise<void> }) {
+function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, recuperandoSenha, aoConcluirRecuperacao }: { estado: Estado; cliente: SupabaseClient | null; mensagem: string; aoAutenticar: (usuarioId: string) => Promise<void>; recuperandoSenha: boolean; aoConcluirRecuperacao: () => void }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState('');
+  const [solicitandoRecuperacao, setSolicitandoRecuperacao] = useState(false);
   const [erro, setErro] = useState('');
+  const [aviso, setAviso] = useState('');
   const [enviando, setEnviando] = useState(false);
 
   async function entrar(evento: React.FormEvent<HTMLFormElement>) {
@@ -156,8 +165,53 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar }: { estado: Estad
     setEnviando(false);
   }
 
+  async function solicitarRecuperacao(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (!cliente) return;
+    setEnviando(true);
+    setErro('');
+    const emailNormalizado = email.trim().toLowerCase();
+    const { error } = await cliente.auth.resetPasswordForEmail(emailNormalizado, {
+      redirectTo: `${window.location.origin}/portal?recuperar=senha`,
+    });
+    if (error) setErro('Não foi possível iniciar a recuperação agora. Aguarde alguns instantes e tente novamente.');
+    else {
+      setAviso('Se o e-mail estiver cadastrado, você receberá um link seguro para criar uma nova senha.');
+      setSolicitandoRecuperacao(false);
+    }
+    setEnviando(false);
+  }
+
+  async function redefinirSenha(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (!cliente) return;
+    if (novaSenha.length < 10) {
+      setErro('A nova senha deve ter pelo menos 10 caracteres.');
+      return;
+    }
+    if (novaSenha !== confirmacaoSenha) {
+      setErro('A confirmação não corresponde à nova senha.');
+      return;
+    }
+    setEnviando(true);
+    setErro('');
+    const { error } = await cliente.auth.updateUser({ password: novaSenha });
+    if (error) setErro('O link expirou ou a senha não pôde ser alterada. Solicite uma nova recuperação.');
+    else {
+      setAviso('Senha alterada. Você já pode continuar com a sessão protegida.');
+      setNovaSenha('');
+      setConfirmacaoSenha('');
+      aoConcluirRecuperacao();
+      const { data } = await cliente.auth.getUser();
+      if (data.user) await aoAutenticar(data.user.id);
+    }
+    setEnviando(false);
+  }
+
   return (
     <main className="acesso-interno">
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
+      <NotificacaoFlutuante mensagem={aviso} tipo="informacao" aoFechar={() => setAviso('')} />
       <section className="cartao-acesso">
         <a href="/" aria-label="Voltar à página pública">
           <MarcaOficial />
@@ -206,7 +260,36 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar }: { estado: Estad
             </button>
           </>
         )}
-        {estado === 'anonimo' && (
+        {estado === 'anonimo' && recuperandoSenha && (
+          <>
+            <h1>Crie uma nova senha</h1>
+            <p>Use uma senha exclusiva com pelo menos 10 caracteres.</p>
+            <form onSubmit={redefinirSenha}>
+              <label htmlFor="nova-senha">Nova senha</label>
+              <input id="nova-senha" type="password" autoComplete="new-password" required minLength={10} value={novaSenha} onChange={(evento) => setNovaSenha(evento.target.value)} />
+              <label htmlFor="confirmar-nova-senha">Confirmar nova senha</label>
+              <input id="confirmar-nova-senha" type="password" autoComplete="new-password" required minLength={10} value={confirmacaoSenha} onChange={(evento) => setConfirmacaoSenha(evento.target.value)} />
+              <button className="botao-acesso" type="submit" disabled={enviando}>
+                <KeyRound size={16} /> {enviando ? 'Alterando…' : 'Salvar nova senha'}
+              </button>
+            </form>
+          </>
+        )}
+        {estado === 'anonimo' && !recuperandoSenha && solicitandoRecuperacao && (
+          <>
+            <h1>Recuperar senha</h1>
+            <p>Informe o e-mail usado no portal. Por segurança, a confirmação não revela se o endereço está cadastrado.</p>
+            <form onSubmit={solicitarRecuperacao}>
+              <label htmlFor="email-recuperacao">E-mail</label>
+              <input id="email-recuperacao" type="email" autoComplete="email" required value={email} onChange={(evento) => setEmail(evento.target.value)} />
+              <button className="botao-acesso" type="submit" disabled={enviando}>
+                <Mail size={16} /> {enviando ? 'Enviando…' : 'Enviar link seguro'}
+              </button>
+              <button className="link-acesso botao-link-acesso" type="button" onClick={() => setSolicitandoRecuperacao(false)}>Voltar ao login</button>
+            </form>
+          </>
+        )}
+        {estado === 'anonimo' && !recuperandoSenha && !solicitandoRecuperacao && (
           <>
             <h1>Entrar no Portal de Metrologia</h1>
             <p>Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.</p>
@@ -215,16 +298,12 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar }: { estado: Estad
               <input id="email-interno" type="email" autoComplete="username" required value={email} onChange={(evento) => setEmail(evento.target.value)} />
               <label htmlFor="senha-interna">Senha</label>
               <input id="senha-interna" type="password" autoComplete="current-password" required value={senha} onChange={(evento) => setSenha(evento.target.value)} />
-              {erro && (
-                <p className="erro-acesso" role="alert">
-                  {erro}
-                </p>
-              )}
               <button className="botao-acesso" type="submit" disabled={enviando}>
                 <LockKeyhole size={16} />
                 {enviando ? 'Validando…' : 'Entrar'}
               </button>
             </form>
+            <button className="link-acesso botao-link-acesso" type="button" onClick={() => setSolicitandoRecuperacao(true)}>Esqueci minha senha</button>
             <a className="link-acesso" href="/solicitar">
               Fazer solicitação sem login
             </a>
@@ -349,9 +428,9 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
                   <small>{usuario.usuario_id === perfil.usuario_id ? 'Você' : 'Usuário interno'}</small>
                 </span>
                 <select value={usuario.perfil_interno} disabled={usuario.usuario_id === perfil.usuario_id || alterandoUsuario === usuario.usuario_id} onChange={(evento) => void alterarFuncao(usuario.usuario_id, evento.target.value as PerfilInterno)}>
-                  {Object.entries(rotulosPerfil).map(([valor, rotulo]) => (
+                  {(['tecnico', 'validador', 'administrador'] as PerfilInterno[]).map((valor) => (
                     <option key={valor} value={valor}>
-                      {rotulo}
+                      {rotulosPerfil[valor]}
                     </option>
                   ))}
                 </select>

@@ -646,14 +646,21 @@ function Mensagens() {
 function ConteudoPublico() {
   return (
     <div className="painel">
+      <section className="bloco status-conteudo-publico">
+        <header><div><h2>Para que serve este módulo</h2><p>Ele será o CMS do portal: conteúdo público, publicação e traduções sem necessidade de alterar o código.</p></div><FileCheck2 /></header>
+        <div>
+          <p><strong>Situação atual:</strong> esta tela é um inventário de planejamento. As páginas públicas ainda são mantidas no código e os botões de edição permanecem desabilitados para não simular uma gravação inexistente.</p>
+          <p><strong>Próxima entrega:</strong> persistência das páginas, revisão antes da publicação, histórico e traduções em PT-BR, inglês e alemão. A área interna dos funcionários continuará somente em português.</p>
+        </div>
+      </section>
       <section className="bloco tabela-licoes">
         <header>
           <div>
             <h2>Páginas e catálogo</h2>
             <p>Português é canônico; traduções ausentes usam fallback sinalizado.</p>
           </div>
-          <button type="button">
-            <Plus size={15} /> Novo conteúdo
+          <button type="button" disabled title="Disponível quando a persistência do CMS for conectada">
+            <Plus size={15} /> Novo conteúdo — em desenvolvimento
           </button>
         </header>
         {[
@@ -668,10 +675,10 @@ function ConteudoPublico() {
             </span>
             <div>
               <strong>{titulo}</strong>
-              <p>{idiomas}</p>
+              <p>{idiomas} · atualmente mantido no código</p>
             </div>
             <span className={`estado estado-${estado.toLowerCase().replace(' ', '-')}`}>{estado}</span>
-            <button type="button" aria-label={`Abrir ${titulo}`}>
+            <button type="button" disabled aria-label={`Edição de ${titulo} ainda não disponível`}>
               <ChevronRight size={17} />
             </button>
           </article>

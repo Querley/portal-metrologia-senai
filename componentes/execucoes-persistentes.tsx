@@ -104,7 +104,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
   }, [carregar, cliente, perfil]);
 
   const execucoesVisiveis = useMemo(() => execucoes.filter((execucao) => correspondeBusca(busca, execucao.solicitacao_codigo, execucao.empresa_nome, execucao.servico_slug, execucao.descricao, execucao.responsavel_nome, execucao.estado, execucao.fechamento_estado, formatosDataParaBusca(execucao.criada_em)) && (filtroEstado === 'todos' || execucao.estado === filtroEstado) && (filtroFechamento === 'todos' || execucao.fechamento_estado === filtroFechamento)), [busca, execucoes, filtroEstado, filtroFechamento]);
-  const selecionada = useMemo(() => execucoesVisiveis.find((item) => item.execucao_id === selecionadaId), [execucoesVisiveis, selecionadaId]);
+  const selecionada = useMemo(() => execucoesVisiveis.find((item) => item.execucao_id === selecionadaId) ?? execucoesVisiveis[0], [execucoesVisiveis, selecionadaId]);
   const progressoGeral = selecionada ? calcularProgressoExecucao(selecionada.etapas) : 0;
   const podeFechar = selecionada ? etapasConcluidas(selecionada.etapas) : false;
 
@@ -267,6 +267,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
   return (
     <div className="painel painel-execucoes-persistentes">
       <NotificacaoFlutuante mensagem={mensagem} tipo="sucesso" aoFechar={() => setMensagem('')} />
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <section className="cabecalho-custos">
         <div>
           <span>
@@ -280,24 +281,6 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
         </button>
       </section>
 
-      {erro && (
-        <section className="aviso-custos erro" role="alert">
-          <ShieldCheck size={20} />
-          <div>
-            <strong>Não foi possível concluir</strong>
-            <p>{erro}</p>
-          </div>
-        </section>
-      )}
-      {mensagem && (
-        <section className="aviso-custos sucesso" role="status">
-          <CheckCircle2 size={20} />
-          <div>
-            <strong>Alteração registrada</strong>
-            <p>{mensagem}</p>
-          </div>
-        </section>
-      )}
       {carregando && (
         <section className="aviso-custos" role="status">
           <RefreshCw size={20} />
@@ -317,6 +300,20 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
       )}
 
       {!carregando && execucoes.length > 0 && (
+        <>
+        <section className="cards-operacionais" aria-label="Resumo e filtros das execuções">
+          {[
+            { rotulo: 'Planejados', valor: execucoes.filter((item) => item.estado === 'planejado').length, filtro: 'planejado', fechamento: 'todos' },
+            { rotulo: 'Em execução', valor: execucoes.filter((item) => item.estado === 'em_execucao' && item.fechamento_estado !== 'aprovado').length, filtro: 'em_execucao', fechamento: 'todos' },
+            { rotulo: 'Fechamentos em validação', valor: execucoes.filter((item) => item.fechamento_estado === 'em_validacao').length, filtro: 'todos', fechamento: 'em_validacao' },
+            { rotulo: 'Finalizados', valor: execucoes.filter((item) => item.estado === 'concluido' || item.fechamento_estado === 'aprovado').length, filtro: 'concluido', fechamento: 'todos' },
+          ].map((indicador) => (
+            <button key={indicador.rotulo} type="button" onClick={() => { setFiltroEstado(indicador.filtro); setFiltroFechamento(indicador.fechamento); window.requestAnimationFrame(() => document.getElementById('lista-execucoes')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>
+              <small>{indicador.rotulo}</small><strong>{indicador.valor}</strong><span>Ver trabalhos</span>
+            </button>
+          ))}
+        </section>
+        <div id="lista-execucoes" />
         <BarraBuscaFiltros
           busca={busca}
           aoMudarBusca={setBusca}
@@ -351,6 +348,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
             },
           ]}
         />
+        </>
       )}
       {!carregando && execucoesVisiveis.length > 0 && !selecionada && (
         <section className="bloco estado-vazio-execucao">

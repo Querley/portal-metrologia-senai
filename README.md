@@ -52,3 +52,5 @@ A migration `202609070034` reforça validações, ordem das etapas, vínculo obr
 ## Revisão de 8 de setembro de 2026
 
 A migration `202609080035` separa definitivamente cargo empresarial de permissão interna, repara contas Cliente classificadas por engano como equipe, permite troca auditada de e-mail sintético e cria o retorno justificado de um trabalho não finalizado para etapa anterior. A Visão Geral autenticada passa a usar somente registros persistidos autorizados, com indicadores navegáveis.
+
+A migration `202609090036` reforça a invariável de que fechamento aprovado significa execução concluída e limita a gestão administrativa atual aos papéis úteis de Técnico, Validador e Administrador. O portal inicia a etapa de gestão de contas com recuperação segura de senha pelo Supabase, corrige a criação multiequipamento, uniformiza notificações flutuantes e acrescenta indicadores filtráveis nas filas internas.

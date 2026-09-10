@@ -87,7 +87,7 @@ Mudança funcional inclui estados de erro e vazio, validação, autorização, t
 
 - [x] **2–4 set** — concluir recusa/revisão, contato por e-mail e busca/filtros transversais, incluindo a migration `202609020033`.
 - [ ] **5–7 set** — implementar em homologação o convite administrativo de Clientes, contatos adicionais e gestão de membros internos (convite, função, desativação e auditoria). Membros do laboratório não terão autocadastro público.
-- [ ] **8–10 set** — CMS, idiomas e integrações de IA sanitizadas, preservando o endurecimento do fluxo de contas.
+- [~] **8–10 set** — gestão de contas iniciada com recuperação de senha e papéis operacionais coerentes; preparar CMS e idiomas e, depois, integrações de IA sanitizadas.
 - [ ] **11–12 set** — MFA, acessibilidade, observabilidade, backup/restauração e ensaio final. A ativação de contas reais em produção depende do projeto de produção, domínio/remetente oficial e textos jurídicos aprovados.
 
 ### Situação em 7 de setembro
@@ -104,3 +104,6 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] padronizar mensagens de validação dos campos e destacar o resultado da edição do perfil;
 - [ ] concluir gestão administrativa de convites, contatos adicionais e desativação de usuários;
 - [ ] avançar CMS e idiomas, depois importação sanitizada de históricos e integrações de IA.
+- [x] iniciar a etapa de gestão de contas com recuperação segura de senha e restrição temporária aos papéis Técnico, Validador e Administrador;
+- [ ] configurar e testar o remetente de homologação para entrega real dos links de recuperação;
+- [ ] conectar o CMS persistente e localizar somente as áreas pública e do Cliente em PT-BR, inglês e alemão;

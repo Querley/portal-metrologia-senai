@@ -105,4 +105,11 @@ describe('execuções persistentes', () => {
     expect(migracao).toContain("order by et.ordem desc");
     expect(migracao).toContain("'retornar_execucao_etapa'");
   });
+
+  it('impede divergência entre fechamento aprovado e execução concluída', () => {
+    const migracao = readFileSync(new URL('../supabase/migrations/202609090036_consistencia_conclusao_e_funcoes.sql', import.meta.url), 'utf8');
+    expect(migracao).toContain('execucoes_fechamento_aprovado_concluido');
+    expect(migracao).toContain("fechamento_estado <> 'aprovado'");
+    expect(migracao).toContain("novo_perfil not in ('tecnico', 'validador', 'administrador')");
+  });
 });

@@ -58,3 +58,9 @@ A migration `202609070034_validacoes_fluxo_e_visibilidade.sql` valida telefone, 
 ## Controles da migration 035
 
 A migration `202609080035_perfis_fluxo_reversivel_e_painel.sql` repara e impede a sobreposição entre vínculo externo e papel interno, armazena o cargo empresarial separado da autorização e atualiza e-mail sintético pelo servidor com auditoria. O retorno de etapa reinicia etapas posteriores em ordem decrescente para respeitar o gatilho sequencial. Indicadores da Visão Geral são derivados no navegador exclusivamente das RPCs protegidas existentes, sem consulta anônima nem combinação de origens.
+
+## Controles da migration 036 e contas
+
+A migration `202609090036_consistencia_conclusao_e_funcoes.sql` repara eventual fechamento aprovado ainda marcado como em execução e cria uma restrição para impedir nova divergência. A função administrativa de troca de papel aceita apenas Técnico, Validador e Administrador e mantém bloqueados Clientes e a própria conta do Administrador. A recuperação de senha usa tokens temporários do Supabase Auth, resposta que não enumera usuários e redirecionamento para a mesma origem publicada; a entrega real de e-mail depende do remetente e das URLs autorizadas de cada ambiente.
+
+O CMS ainda não é fonte de verdade para as páginas públicas. A tela interna de Conteúdo Público é um inventário explicitamente não editável até que persistência, revisão, publicação e histórico sejam conectados. O conteúdo público e do Cliente será localizado em PT-BR, inglês e alemão; módulos operacionais de funcionários não serão localizados.

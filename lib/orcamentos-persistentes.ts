@@ -10,6 +10,15 @@ export type EntradaOrcamentoPersistente = {
   percentualLucro: string;
 };
 
+export type UsoEquipamentoEntrada = { equipamento_id: string; horas: string | number };
+
+export function normalizarUsosEquipamentos(equipamentoPrincipal: string, horasPrincipais: string | number, adicionais: UsoEquipamentoEntrada[]): Array<{ equipamento_id: string; horas: number }> | null {
+  const usos = [{ equipamento_id: equipamentoPrincipal, horas: Number(String(horasPrincipais).replace(',', '.')) }, ...adicionais.map((item) => ({ equipamento_id: item.equipamento_id, horas: Number(String(item.horas).replace(',', '.')) }))];
+  if (usos.some((item) => !item.equipamento_id || !Number.isFinite(item.horas) || item.horas < 0)) return null;
+  if (new Set(usos.map((item) => item.equipamento_id)).size !== usos.length) return null;
+  return usos;
+}
+
 export function podeConsultarOrcamentos(perfil: PerfilInterno): boolean {
   return perfil === 'tecnico' || perfil === 'validador' || perfil === 'administrador';
 }

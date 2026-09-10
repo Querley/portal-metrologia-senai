@@ -8,6 +8,7 @@ import { correspondeBusca } from '../lib/busca-e-filtros';
 import { iniciaisEmpresa, podeAcessarConversas, type ConversaInterna } from '../lib/mensagens-persistentes';
 import { rotuloNecessidadeCliente } from '../lib/solicitacao';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 function dataHora(valor: string): string {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(valor));
@@ -20,6 +21,7 @@ export function MensagensPersistentes({ cliente, perfil }: { cliente: SupabaseCl
   const [carregando, setCarregando] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState('');
+  const [mensagem, setMensagem] = useState('');
   const [busca, setBusca] = useState('');
   const [filtroConversa, setFiltroConversa] = useState('todos');
 
@@ -79,6 +81,7 @@ export function MensagensPersistentes({ cliente, perfil }: { cliente: SupabaseCl
         : 'Não foi possível enviar a mensagem.');
     } else {
       setMensagemNova('');
+      setMensagem('Mensagem enviada ao Cliente.');
       await carregar();
     }
     setEnviando(false);
@@ -89,11 +92,12 @@ export function MensagensPersistentes({ cliente, perfil }: { cliente: SupabaseCl
   }
 
   return <div className="painel painel-mensagens-persistentes">
+    <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
+    <NotificacaoFlutuante mensagem={mensagem} tipo="sucesso" aoFechar={() => setMensagem('')} />
     <section className="cabecalho-custos">
       <div><span><MessageSquareText size={17} /> Canal persistente</span><h2>Mensagens com Clientes</h2><p>Somente conversas de solicitações sintéticas ativadas na homologação.</p></div>
       <button type="button" onClick={() => void carregar()} disabled={carregando}><RefreshCw size={16} /> Atualizar</button>
     </section>
-    {erro && <section className="aviso-custos erro" role="alert"><ShieldCheck size={20} /><div><strong>Falha na conversa</strong><p>{erro}</p></div></section>}
     {carregando && <section className="aviso-custos" role="status"><RefreshCw size={20} /><div><strong>Carregando conversas</strong><p>Consultando mensagens protegidas pela origem demonstrativa.</p></div></section>}
     {!carregando && !erro && conversas.length === 0 && <section className="bloco estado-vazio"><MessageSquareText size={18} /><span>Nenhuma solicitação ativada possui canal Cliente disponível.</span></section>}
     {!carregando && conversas.length > 0 && <section className="bloco mensagens mensagens-reais">

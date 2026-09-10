@@ -2,6 +2,7 @@
 
 import { Check, Copy, ExternalLink, Mail } from 'lucide-react';
 import { useState } from 'react';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 export const EMAIL_CONTATO_PROVISORIO = 'querleyjuniorodriguesferreira@gmail.com';
 
@@ -32,5 +33,5 @@ export function ContatoEmail({ compacto = false, contexto }: { compacto?: boolea
   const mailto = `mailto:${EMAIL_CONTATO_PROVISORIO}?subject=${encodeURIComponent(assunto)}`;
   const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CONTATO_PROVISORIO)}&su=${encodeURIComponent(assunto)}`;
 
-  return <section className={`contato-email${compacto ? ' contato-email-compacto' : ''}`} aria-label="Contato por e-mail"><div><p className="sobrelinha"><span /> OUTRO CANAL</p><h2>Também é possível enviar por e-mail</h2><p>Se preferir, descreva sua necessidade e envie os arquivos diretamente à equipe. Mensagens por e-mail não geram protocolo automaticamente; o laboratório fará a triagem e orientará o próximo passo. O endereço exibido ainda é provisório.</p></div><div className="acoes-email"><strong>{EMAIL_CONTATO_PROVISORIO}</strong><div><a className="botao" href={mailto} onClick={() => setMensagem('Se nada abriu, seu dispositivo não possui um aplicativo de e-mail associado. Use Gmail ou copie o endereço.')}><Mail size={17} /> Abrir aplicativo</a><a className="botao-secundario-email" href={gmail} target="_blank" rel="noreferrer"><ExternalLink size={17} /> Abrir Gmail</a><button type="button" onClick={() => void copiar()}>{copiado ? <Check size={17} /> : <Copy size={17} />}{copiado ? 'Copiado' : 'Copiar'}</button></div>{mensagem && <p className="mensagem-email" role="status">{mensagem}</p>}</div></section>;
+  return <section className={`contato-email${compacto ? ' contato-email-compacto' : ''}`} aria-label="Contato por e-mail"><NotificacaoFlutuante mensagem={mensagem} tipo="informacao" aoFechar={() => setMensagem('')} /><div><p className="sobrelinha"><span /> OUTRO CANAL</p><h2>Também é possível enviar por e-mail</h2><p>Se preferir, descreva sua necessidade e envie os arquivos diretamente à equipe. Mensagens por e-mail não geram protocolo automaticamente; o laboratório fará a triagem e orientará o próximo passo. O endereço exibido ainda é provisório.</p></div><div className="acoes-email"><strong>{EMAIL_CONTATO_PROVISORIO}</strong><div><a className="botao" href={mailto} onClick={() => setMensagem('Se nada abriu, seu dispositivo não possui um aplicativo de e-mail associado. Use Gmail ou copie o endereço.')}><Mail size={17} /> Abrir aplicativo</a><a className="botao-secundario-email" href={gmail} target="_blank" rel="noreferrer"><ExternalLink size={17} /> Abrir Gmail</a><button type="button" onClick={() => void copiar()}>{copiado ? <Check size={17} /> : <Copy size={17} />}{copiado ? 'Copiado' : 'Copiar'}</button></div></div></section>;
 }

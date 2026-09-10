@@ -86,6 +86,11 @@ test('área interna oferece autenticação e alternativa de demonstração', asy
   await expect(page.getByRole('heading', { name: /Entrar no Portal de Metrologia|Integração de homologação pendente/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Abrir demonstração interna' })).toHaveAttribute('href', '/portal/demonstracao');
   await expect(page.getByRole('link', { name: 'Ver demonstração da área do cliente' })).toHaveAttribute('href', '/portal/cliente-demonstracao');
+  await page.getByRole('button', { name: 'Esqueci minha senha' }).click();
+  await expect(page.getByRole('heading', { name: 'Recuperar senha' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Enviar link seguro' })).toBeVisible();
+  await page.getByRole('button', { name: 'Voltar ao login' }).click();
+  await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
 });
 
 test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page }) => {

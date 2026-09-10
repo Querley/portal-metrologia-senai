@@ -2,13 +2,13 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Ban, Calculator, CheckCircle2, ChevronDown, ChevronUp, CornerUpLeft, Download, FileCheck2, FileText, FileUp, Pencil, PlayCircle, Plus, Printer, RefreshCw, Save, Send, ShieldCheck, Sparkles, Trash2, UploadCloud, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import { correspondeBusca, formatosDataParaBusca } from '../lib/busca-e-filtros';
 import type { PerfilInterno } from '../lib/contratos';
 import { ORIGEM_CUSTOS_HOMOLOGACAO, podeConsultarCustos } from '../lib/custos-equipamento';
 import { formatarHoras, normalizarJustificativaEstimativa, recomendacaoExigeJustificativa, type RecomendacaoPersistente } from '../lib/conhecimento-persistente';
-import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, podeAprovarOrcamento, podeConfirmarInicioTrabalho, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from '../lib/orcamentos-persistentes';
+import { calcularPreviaOrcamento, normalizarEntradaOrcamento, normalizarJustificativaDecisao, normalizarUsosEquipamentos, podeAprovarOrcamento, podeConfirmarInicioTrabalho, podeConsultarOrcamentos, podeCriarRascunhoOrcamento, podeDecidirOrcamento, podePublicarOrcamento } from '../lib/orcamentos-persistentes';
 import { calcularSha256Hex, gerarPdfPreProposta } from '../lib/pre-proposta-pdf';
 import { servicosOficiais } from '../lib/servicos';
 import type { SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
@@ -152,6 +152,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
   const [filtroEstado, setFiltroEstado] = useState(filtroEstadoInicial || 'todos');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [formularioAberto, setFormularioAberto] = useState(Boolean(solicitacaoInicial));
+  const campoEntregaRef = useRef<HTMLInputElement>(null);
 
   const carregar = useCallback(async () => {
     if (!podeConsultarOrcamentos(perfil)) return;
@@ -249,11 +250,34 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
       return;
     }
     const normalizada = normalizarEntradaOrcamento(entrada);
+    if (!normalizada) {
+      setMensagem('Revise o item: informe uma descrição com ao menos 3 caracteres, quantidade positiva e valores numéricos não negativos. O lucro deve ser maior que -100%.');
+      return;
+    }
+    if (!servicoId) {
+      setMensagem('Selecione o tipo de serviço desta pré-proposta.');
+      return;
+    }
+    if (!equipamentoId) {
+      setMensagem('Selecione o equipamento principal desta pré-proposta.');
+      return;
+    }
+    if (destinatario.trim().length < 2) {
+      setMensagem('Informe o nome do destinatário com pelo menos 2 caracteres.');
+      return;
+    }
     const prazoNormalizado = Number(prazoPagamentoDias);
-    const usosEquipamentos = [{ equipamento_id: equipamentoId, horas: normalizada?.horas ?? 0 }, ...equipamentosAdicionais.map((item) => ({ equipamento_id: item.equipamento_id, horas: Number(item.horas.replace(',', '.')) }))];
-    const equipamentosUnicos = new Set(usosEquipamentos.map((item) => item.equipamento_id));
-    if (!normalizada || !servicoId || !equipamentoId || destinatario.trim().length < 2 || !Number.isInteger(prazoNormalizado) || prazoNormalizado < 1 || prazoNormalizado > 365 || (!versaoEmEdicao && (!entregaEstimada || entregaEstimada < new Date().toISOString().slice(0, 10))) || equipamentosUnicos.size !== usosEquipamentos.length || usosEquipamentos.some((item) => !item.equipamento_id || !Number.isFinite(item.horas) || item.horas < 0)) {
-      setMensagem('Revise os campos. Quantidade deve ser positiva e os demais valores não podem ser negativos.');
+    if (!Number.isInteger(prazoNormalizado) || prazoNormalizado < 1 || prazoNormalizado > 365) {
+      setMensagem('O prazo de pagamento deve ser um número inteiro entre 1 e 365 dias.');
+      return;
+    }
+    if (!versaoEmEdicao && (!entregaEstimada || entregaEstimada < new Date().toISOString().slice(0, 10))) {
+      setMensagem('Selecione uma data estimada de entrega igual ou posterior à data de hoje.');
+      return;
+    }
+    const usosEquipamentos = normalizarUsosEquipamentos(equipamentoId, normalizada.horas, equipamentosAdicionais);
+    if (!usosEquipamentos) {
+      setMensagem('Revise os equipamentos: cada equipamento deve aparecer uma só vez e ter horas numéricas iguais ou maiores que zero.');
       return;
     }
     const justificativaNormalizada = normalizarJustificativaEstimativa(justificativaEstimativa);
@@ -529,6 +553,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
   return (
     <div className="painel painel-orcamentos-persistentes">
       <NotificacaoFlutuante mensagem={mensagem} tipo={/^(Alterações|Rascunho salvo|Proposta |PDF |Pré-proposta |Trabalho )/.test(mensagem) ? 'sucesso' : 'erro'} aoFechar={() => setMensagem('')} />
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <section className="cabecalho-custos">
         <div>
           <span>
@@ -542,15 +567,6 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
         </button>
       </section>
 
-      {erro && (
-        <section className="aviso-custos erro" role="alert">
-          <ShieldCheck size={20} />
-          <div>
-            <strong>Falha na consulta</strong>
-            <p>{erro}</p>
-          </div>
-        </section>
-      )}
       {carregando && (
         <section className="aviso-custos" role="status">
           <RefreshCw size={20} />
@@ -563,6 +579,18 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
 
       {!carregando && !erro && (
         <>
+          <section className="cards-operacionais" aria-label="Resumo e filtros de orçamentos">
+            {[
+              { rotulo: 'Rascunhos', valor: orcamentos.filter((item) => item.estado === 'rascunho').length, filtro: 'rascunho' },
+              { rotulo: 'Em validação', valor: orcamentos.filter((item) => item.estado === 'em_validacao').length, filtro: 'em_validacao' },
+              { rotulo: 'Aguardando Cliente', valor: orcamentos.filter((item) => item.estado === 'publicada').length, filtro: 'publicada' },
+              { rotulo: 'Aceitas', valor: orcamentos.filter((item) => item.estado === 'aceita').length, filtro: 'aceita' },
+            ].map((indicador) => (
+              <button key={indicador.rotulo} type="button" onClick={() => { setFiltroEstado(indicador.filtro); window.requestAnimationFrame(() => document.getElementById('lista-orcamentos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>
+                <small>{indicador.rotulo}</small><strong>{indicador.valor}</strong><span>Ver registros</span>
+              </button>
+            ))}
+          </section>
           {podeCriarRascunhoOrcamento(perfil) && (
             <button className="alternador-formulario-orcamento" type="button" onClick={() => setFormularioAberto((aberto) => !aberto)} aria-expanded={formularioAberto}>
               <span>
@@ -605,8 +633,17 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                     <input id="prazo-pagamento-orcamento" required type="number" inputMode="numeric" min="1" max="365" value={prazoPagamentoDias} onChange={(evento) => setPrazoPagamentoDias(evento.target.value)} />
                     {!versaoEmEdicao && (
                       <>
-                        <label htmlFor="entrega-estimada-orcamento">Data estimada de entrega</label>
-                        <input id="entrega-estimada-orcamento" required type="date" min={new Date().toISOString().slice(0, 10)} value={entregaEstimada} onChange={(evento) => setEntregaEstimada(evento.target.value)} />
+                        <label className="campo-data-orcamento" htmlFor="entrega-estimada-orcamento" onClick={() => {
+                          try {
+                            campoEntregaRef.current?.showPicker?.();
+                          } catch {
+                            campoEntregaRef.current?.focus();
+                          }
+                        }}>
+                          <span>Data estimada de entrega</span>
+                          <input ref={campoEntregaRef} id="entrega-estimada-orcamento" required type="date" min={new Date().toISOString().slice(0, 10)} value={entregaEstimada} onChange={(evento) => setEntregaEstimada(evento.target.value)} />
+                          <small>Clique em qualquer ponto deste campo para abrir o calendário.</small>
+                        </label>
                       </>
                     )}
                     <label htmlFor="servico-orcamento">Serviço</label>
@@ -633,7 +670,10 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                         <input
                           id="quantidade-orcamento"
                           required
+                          type="number"
                           inputMode="decimal"
+                          min="0.01"
+                          step="0.01"
                           value={quantidade}
                           onChange={(evento) => {
                             setQuantidade(evento.target.value);
@@ -643,7 +683,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                       </label>
                       <label htmlFor="horas-orcamento">
                         Horas estimadas
-                        <input id="horas-orcamento" required inputMode="decimal" value={horas} onChange={(evento) => setHoras(evento.target.value)} />
+                        <input id="horas-orcamento" required type="number" inputMode="decimal" min="0" step="0.25" value={horas} onChange={(evento) => setHoras(evento.target.value)} />
                       </label>
                     </div>
                     <label htmlFor="equipamento-orcamento">Equipamento</label>
@@ -682,7 +722,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                                 </option>
                               ))}
                             </select>
-                            <input required inputMode="decimal" aria-label={`Horas do equipamento adicional ${indice + 1}`} value={uso.horas} onChange={(evento) => setEquipamentosAdicionais((atuais) => atuais.map((item, posicao) => (posicao === indice ? { ...item, horas: evento.target.value } : item)))} />
+                            <input required type="number" inputMode="decimal" min="0" step="0.25" aria-label={`Horas do equipamento adicional ${indice + 1}`} value={uso.horas} onChange={(evento) => setEquipamentosAdicionais((atuais) => atuais.map((item, posicao) => (posicao === indice ? { ...item, horas: evento.target.value } : item)))} />
                             <button type="button" aria-label={`Remover equipamento adicional ${indice + 1}`} onClick={() => setEquipamentosAdicionais((atuais) => atuais.filter((_, posicao) => posicao !== indice))}>
                               <Trash2 size={16} />
                             </button>
@@ -730,20 +770,15 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                       <div className="linha-campos-orcamento">
                         <label htmlFor="extras-orcamento">
                           Custos extras (BRL)
-                          <input id="extras-orcamento" required inputMode="decimal" value={custosExtras} onChange={(evento) => setCustosExtras(evento.target.value)} />
+                          <input id="extras-orcamento" required type="number" inputMode="decimal" min="0" step="0.01" value={custosExtras} onChange={(evento) => setCustosExtras(evento.target.value)} />
                         </label>
                         <label htmlFor="lucro-orcamento">
                           Lucro (%)
-                          <input id="lucro-orcamento" required inputMode="decimal" value={percentualLucro} onChange={(evento) => setPercentualLucro(evento.target.value)} />
+                          <input id="lucro-orcamento" required type="number" inputMode="decimal" min="-99.99" step="0.01" value={percentualLucro} onChange={(evento) => setPercentualLucro(evento.target.value)} />
                         </label>
                       </div>
                     )}
                     <small>Use somente dados fictícios. A emissão exige PDF imutável e é exclusiva do Administrador. O Nectar permanece fora do escopo.</small>
-                    {mensagem && (
-                      <p className="mensagem-formulario-custo" role="status">
-                        {mensagem}
-                      </p>
-                    )}
                     {versaoEmEdicao && (
                       <button
                         className="acao-orcamento"
@@ -804,7 +839,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
             </div>
           )}
 
-          <section className="bloco tabela-orcamentos-persistentes">
+          <section className="bloco tabela-orcamentos-persistentes" id="lista-orcamentos">
             <header>
               <div>
                 <h2>Pré-propostas salvas</h2>

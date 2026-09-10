@@ -441,6 +441,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   return (
     <main className="portal-cliente" data-hidratado={hidratado ? 'sim' : 'nao'}>
       <NotificacaoFlutuante mensagem={aviso} tipo="sucesso" aoFechar={() => setAviso('')} />
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <header className="topo-cliente">
         <a href="/" aria-label="Voltar ao site">
           <MarcaOficial />
@@ -565,11 +566,6 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
           />
         )}
 
-        {erro && (
-          <div className="aviso-cliente erro" role="alert">
-            {erro}
-          </div>
-        )}
         {carregando && (
           <div className="aviso-cliente" role="status">
             <RefreshCw size={18} /> Carregando acompanhamento…

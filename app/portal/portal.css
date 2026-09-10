@@ -297,6 +297,19 @@
 .cards-kpi-interativos > button:focus-visible { outline:3px solid rgba(8,117,183,.28); outline-offset:2px; }
 .cards-kpi-interativos > button small,.cards-kpi-interativos > button strong,.cards-kpi-interativos > button p { display:block; }
 .cards-kpi-interativos .seta-kpi { position:absolute; right:15px; top:15px; color:#4e8198; }
+.cards-kpi-interativos { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+.cards-operacionais { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; margin:14px 0; }
+.cards-operacionais button { min-height:104px; display:grid; align-content:center; gap:6px; padding:16px 18px; color:#17445a; background:white; border:1px solid #b9d3df; border-left:4px solid #1188b8; text-align:left; cursor:pointer; transition:.18s ease; }
+.cards-operacionais button:hover { border-color:#58a9c7; box-shadow:0 8px 22px rgba(5,53,76,.1); transform:translateY(-1px); }
+.cards-operacionais button small { color:#587686; font-size:11px; font-weight:750; }.cards-operacionais button strong { font-size:26px; }.cards-operacionais button span { color:#0874a8; font-size:10px; font-weight:800; }
+.campo-data-orcamento { display:grid!important; gap:7px; padding:12px; color:#365f73; background:#f5fafc; border:1px solid #b9d4df; cursor:pointer; }
+.campo-data-orcamento input { margin:0!important; cursor:pointer; }.campo-data-orcamento small { color:#64808d; font-size:10px; }
+.guia-conhecimento { margin-bottom:14px; }.guia-conhecimento > ol { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0; padding:18px 20px; list-style:none; }.guia-conhecimento li { display:grid; gap:7px; padding:14px; background:#f2f8fa; border-left:3px solid #1685b2; }.guia-conhecimento li span { color:#527181; line-height:1.55; }.guia-conhecimento > p { margin:0; padding:0 20px 20px; color:#345d70; line-height:1.6; }
+.status-conteudo-publico { margin-bottom:14px; }.status-conteudo-publico > div { display:grid; gap:8px; padding:18px 20px; color:#416678; line-height:1.6; }.status-conteudo-publico p { margin:0; }.tabela-licoes button:disabled { opacity:.58; cursor:not-allowed; }
+.botao-link-acesso { width:100%; justify-content:center; border:0; background:transparent; cursor:pointer; }
+.conteudo-interno,.painel { min-width:0; background:#f3f7f9; }.painel-orcamentos-persistentes { width:100%; overflow-x:hidden; }.painel-orcamentos-persistentes .tabela-wrap { width:100%; background:white; }
+@media (max-width:980px) { .cards-operacionais { grid-template-columns:repeat(2,minmax(0,1fr)); }.guia-conhecimento > ol { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:650px) { .cards-operacionais,.guia-conhecimento > ol { grid-template-columns:1fr; } }
 .campo-fechamento span small { color:#758b95; font-weight:600; }
 .marcadores-fechamento { display:flex; flex-wrap:wrap; gap:16px; padding:4px 0; }
 .marcadores-fechamento label { display:flex; align-items:center; gap:7px; color:#355d70; font-size:9px; font-weight:750; }

@@ -8,6 +8,7 @@ import type { PerfilInterno } from '../lib/contratos';
 import { rotuloNecessidadeCliente } from '../lib/solicitacao';
 import { apresentarEstadoSolicitacao, podeConsultarSolicitacoes, podeCriarPrePropostaDaSolicitacao, type SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 function formatarDataHora(valor: string): string {
   return new Intl.DateTimeFormat('pt-BR', {
@@ -20,6 +21,7 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoParaPreProposta[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+  const [mensagem, setMensagem] = useState('');
   const [vinculando, setVinculando] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
   const [filtroAcesso, setFiltroAcesso] = useState('todos');
@@ -65,11 +67,15 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
   async function vincularAoCliente(solicitacao: SolicitacaoParaPreProposta) {
     setVinculando(solicitacao.id);
     setErro('');
+    setMensagem('');
     const { error } = await cliente.rpc('vincular_solicitacao_publica_cliente_existente', {
       solicitacao_publica: solicitacao.id,
     });
     if (error) setErro(error.message || 'Não foi possível vincular a solicitação ao Cliente existente.');
-    else await carregar();
+    else {
+      setMensagem('Solicitação vinculada à área do Cliente.');
+      await carregar();
+    }
     setVinculando(null);
   }
 
@@ -89,6 +95,8 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
 
   return (
     <div className="painel painel-solicitacoes-persistentes">
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
+      <NotificacaoFlutuante mensagem={mensagem} tipo="sucesso" aoFechar={() => setMensagem('')} />
       <section className="cabecalho-custos">
         <div>
           <span>
@@ -102,15 +110,6 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
         </button>
       </section>
 
-      {erro && (
-        <section className="aviso-custos erro" role="alert">
-          <ShieldCheck size={20} />
-          <div>
-            <strong>Falha na consulta</strong>
-            <p>{erro}</p>
-          </div>
-        </section>
-      )}
       {carregando && (
         <section className="aviso-custos" role="status">
           <RefreshCw size={20} />
@@ -122,7 +121,20 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
       )}
 
       {!carregando && !erro && (
-        <section className="bloco tabela-solicitacoes-persistentes">
+        <>
+        <section className="cards-operacionais" aria-label="Resumo e filtros das solicitações">
+          {[
+            { rotulo: 'Aguardando ativação', valor: solicitacoes.filter((item) => item.estado === 'recebida').length, tipo: 'acesso', filtro: 'recebida' },
+            { rotulo: 'Portal ativado', valor: solicitacoes.filter((item) => item.estado === 'ativada').length, tipo: 'acesso', filtro: 'ativada' },
+            { rotulo: 'Sem pré-proposta', valor: solicitacoes.filter((item) => !item.tem_pre_proposta).length, tipo: 'atendimento', filtro: 'sem_proposta' },
+            { rotulo: 'Revisão solicitada', valor: solicitacoes.filter((item) => item.estado_pre_proposta === 'recusada').length, tipo: 'atendimento', filtro: 'recusada' },
+          ].map((indicador) => (
+            <button key={indicador.rotulo} type="button" onClick={() => { if (indicador.tipo === 'acesso') { setFiltroAcesso(indicador.filtro); setFiltroAtendimento('todos'); } else { setFiltroAtendimento(indicador.filtro); setFiltroAcesso('todos'); } window.requestAnimationFrame(() => document.getElementById('fila-solicitacoes')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>
+              <small>{indicador.rotulo}</small><strong>{indicador.valor}</strong><span>Ver solicitações</span>
+            </button>
+          ))}
+        </section>
+        <section className="bloco tabela-solicitacoes-persistentes" id="fila-solicitacoes">
           <header>
             <div>
               <h2>Fila de atendimento</h2>
@@ -252,6 +264,7 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
             </div>
           )}
         </section>
+        </>
       )}
     </div>
   );

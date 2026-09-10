@@ -6,6 +6,7 @@ import { cnpjValido, formatarCnpj, necessidadeInicial, necessidadesCliente, praz
 import { obterClienteSupabase } from '../lib/supabase/cliente';
 import { MATERIAIS_PECA, normalizarTelefoneDigitado, telefoneValido, valorPadronizado } from '../lib/campos-padronizados';
 import { campoEstaInvalido, mensagemCampoInvalido } from './validacao-global';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'application/octet-stream'];
 
@@ -130,6 +131,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
 
   return (
     <form className="formulario-solicitacao" data-hidratado={hidratado ? 'sim' : 'nao'} noValidate onSubmit={enviar}>
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <div className="aviso-demo">
         <ShieldCheck size={18} />
         <span>
@@ -255,11 +257,6 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           <span>Na homologação, os arquivos permanecem no dispositivo até o acesso autenticado.</span>
           <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(evento) => selecionar(evento.target.files)} />
         </label>
-        {erro && (
-          <p className="erro-form" role="alert">
-            {erro}
-          </p>
-        )}
         <ul className="lista-arquivos">
           {arquivos.map((arquivo, indice) => (
             <li key={`${arquivo.name}-${arquivo.size}`}>

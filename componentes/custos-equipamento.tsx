@@ -7,6 +7,7 @@ import type { PerfilInterno } from '../lib/contratos';
 import { correspondeBusca } from '../lib/busca-e-filtros';
 import { dataPosterior, normalizarCustoHora, ORIGEM_CUSTOS_HOMOLOGACAO, podeConsultarCustos, podeVersionarCustos } from '../lib/custos-equipamento';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 type Equipamento = {
   id: string;
@@ -136,12 +137,13 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
   }
 
   return <div className="painel painel-custos">
+    <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
+    <NotificacaoFlutuante mensagem={mensagem} tipo="sucesso" aoFechar={() => setMensagem('')} />
     <section className="cabecalho-custos">
       <div><span><CircleDollarSign size={17} /> Origem: demonstração</span><h2>Custos-hora vigentes</h2><p>Valores sintéticos persistidos no Supabase de homologação e protegidos por perfil.</p></div>
       <button type="button" onClick={() => void carregar()} disabled={carregando}><RefreshCw size={16} /> Atualizar</button>
     </section>
 
-    {erro && <section className="aviso-custos erro" role="alert"><ShieldCheck size={20} /><div><strong>Falha na consulta</strong><p>{erro}</p></div></section>}
     {carregando && <section className="aviso-custos" role="status"><RefreshCw size={20} /><div><strong>Carregando custos</strong><p>Consultando somente registros demonstrativos autorizados.</p></div></section>}
 
     {!carregando && !erro && <div className={`grade-custos ${podeVersionarCustos(perfil) ? '' : 'somente-leitura'}`}>
@@ -164,13 +166,12 @@ export function CustosEquipamento({ cliente, perfil }: { cliente: SupabaseClient
           <select id="equipamento-custo" required value={equipamentoId} onChange={(evento) => setEquipamentoId(evento.target.value)}>{equipamentosAtivos.map((equipamento) => <option key={equipamento.id} value={equipamento.id}>{equipamento.nome}</option>)}</select>
           {custoSelecionado && <p className="custo-atual">Atual: <strong>{formatarCusto(custoSelecionado.custo_hora)}</strong> desde {formatarData(custoSelecionado.vigente_desde)}</p>}
           <label htmlFor="novo-custo">Novo custo-hora (BRL)</label>
-          <input id="novo-custo" required inputMode="decimal" placeholder="0,00" value={novoCusto} onChange={(evento) => setNovoCusto(evento.target.value)} />
+          <input id="novo-custo" required type="number" inputMode="decimal" min="0.01" step="0.01" placeholder="0,00" value={novoCusto} onChange={(evento) => setNovoCusto(evento.target.value)} />
           <label htmlFor="vigencia-custo">Início da nova vigência</label>
           <input id="vigencia-custo" type="date" required min={vigenciaMinima} value={vigenciaEfetiva} onChange={(evento) => setVigencia(evento.target.value)} />
           <label htmlFor="referencia-custo">Referência da atualização demonstrativa</label>
           <textarea id="referencia-custo" required maxLength={240} rows={3} placeholder="Ex.: ajuste de homologação aprovado" value={referencia} onChange={(evento) => setReferencia(evento.target.value)} />
           <small>Não informe valores reais, caminhos restritos ou dados pessoais neste ambiente.</small>
-          {mensagem && <p className="mensagem-formulario-custo" role="status">{mensagem}</p>}
           <button className="botao-interno" type="submit" disabled={salvando || equipamentosAtivos.length === 0}><Save size={16} />{salvando ? 'Salvando…' : 'Criar nova vigência'}</button>
         </form>
       </aside> : <aside className="aviso-custos leitura"><ShieldCheck size={20} /><div><strong>Consulta em modo somente leitura</strong><p>O perfil Validador pode visualizar os custos vigentes. Somente o Administrador pode criar uma nova vigência.</p></div></aside>}

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { caminhoAnexoSolicitacao, tipoMimeArmazenado, validarAnexosSolicitacao, type AnexoSolicitacaoCliente } from '../lib/anexos-solicitacao';
 import { necessidadesCliente, prazosPagamento } from '../lib/solicitacao';
 import { MATERIAIS_PECA, normalizarTelefoneDigitado, telefoneValido, valorPadronizado } from '../lib/campos-padronizados';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 export type DadosNovaSolicitacaoCliente = {
   telefone: string;
@@ -208,6 +209,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
         if (evento.target === evento.currentTarget && !resultadoPendente) aoFechar();
       }}
     >
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <section className="nova-solicitacao-cliente" role="dialog" aria-modal="true" aria-labelledby="titulo-nova-solicitacao">
         <header>
           <div>
@@ -344,11 +346,6 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
               )}
             </div>
           </div>
-          {erro && (
-            <p className="erro-nova-solicitacao" role="alert">
-              {erro}
-            </p>
-          )}
           <footer>
             <button type="button" onClick={() => void cancelar()}>
               {resultadoPendente ? 'Concluir sem os arquivos restantes' : 'Cancelar'}

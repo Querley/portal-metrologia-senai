@@ -4,10 +4,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Activity, BookOpenCheck, BriefcaseBusiness, ChevronRight, FileCheck2, Gauge, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 type SolicitacaoResumo = { id: string; codigo: number; empresa: string; necessidade: string; estado: string; criado_em: string; tem_pre_proposta: boolean; estado_pre_proposta: string | null };
 type OrcamentoResumo = { estado: string };
-type ExecucaoResumo = { estado: string };
+type ExecucaoResumo = { estado: string; fechamento_estado?: string | null };
 type IndicadorResumo = { licao_estado: string | null; esforco_assertivo: boolean | null };
 
 type Destino = { secao: string; filtro?: string };
@@ -48,11 +49,11 @@ export function VisaoGeralPersistente({ cliente, perfil, aoNavegar }: { cliente:
   const dados = useMemo(() => {
     const abertas = solicitacoes.filter((item) => item.estado !== 'descartada' && !['aceita', 'recusada'].includes(item.estado_pre_proposta ?? '')).length;
     const semProposta = solicitacoes.filter((item) => item.estado === 'ativada' && !item.tem_pre_proposta).length;
-    const emExecucao = execucoes.filter((item) => item.estado === 'em_execucao').length;
+    const emExecucao = execucoes.filter((item) => item.estado === 'em_execucao' && item.fechamento_estado !== 'aprovado').length;
     const aguardando = orcamentos.filter((item) => item.estado === 'em_validacao').length;
     const licoesPendentes = indicadores.filter((item) => item.licao_estado === 'em_validacao').length;
     const formalizadas = indicadores.filter((item) => item.licao_estado === 'formalizada').length;
-    const concluidas = execucoes.filter((item) => item.estado === 'concluido').length;
+    const concluidas = execucoes.filter((item) => item.estado === 'concluido' || item.fechamento_estado === 'aprovado').length;
     const comparaveis = indicadores.filter((item) => item.esforco_assertivo !== null);
     const assertivas = comparaveis.filter((item) => item.esforco_assertivo).length;
     const assertividade = comparaveis.length ? Math.round((assertivas / comparaveis.length) * 100) : 0;
@@ -66,13 +67,14 @@ export function VisaoGeralPersistente({ cliente, perfil, aoNavegar }: { cliente:
     { rotulo: 'Em execução', valor: dados.emExecucao, detalhe: 'trabalhos em andamento', icone: Activity, cor: 'ciano', destino: { secao: 'servicos', filtro: 'em_execucao' } },
     { rotulo: 'Propostas aguardando', valor: dados.aguardando, detalhe: 'aguardando validação', icone: FileCheck2, cor: 'amarelo', destino: { secao: 'orcamentos', filtro: 'em_validacao' } },
     { rotulo: 'Assertividade', valor: `${dados.assertividade}%`, detalhe: `${dados.comparaveis} execuções comparadas`, icone: Gauge, cor: 'verde', destino: { secao: 'conhecimento', filtro: 'assertivo' } },
+    { rotulo: 'Serviços finalizados', valor: dados.concluidas, detalhe: 'fechamentos aprovados', icone: BookOpenCheck, cor: 'verde', destino: { secao: 'servicos', filtro: 'concluido' } },
   ];
 
   if (carregando) return <div className="painel"><section className="bloco estado-vazio-execucao"><RefreshCw className="girando" /><h3>Atualizando a Visão Geral</h3><p>Calculando os indicadores com os registros autorizados do sistema.</p></section></div>;
 
   return (
     <div className="painel" data-perfil={perfil}>
-      {erro && <section className="aviso-custos erro" role="alert"><RefreshCw /><div><strong>Indicadores indisponíveis</strong><p>{erro}</p></div><button type="button" onClick={() => void carregar()}>Tentar novamente</button></section>}
+      <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <section className="cards-kpi cards-kpi-interativos" aria-label="Indicadores principais">
         {cards.map(({ rotulo, valor, detalhe, icone: Icone, cor, destino }) => (
           <button type="button" key={rotulo} onClick={() => aoNavegar(destino)} aria-label={`${rotulo}: ${valor}. Abrir detalhes`}>
