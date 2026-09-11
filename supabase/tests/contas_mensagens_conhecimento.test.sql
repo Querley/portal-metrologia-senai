@@ -23,9 +23,17 @@ insert into storage.objects(bucket_id,name,metadata) values('mensagens','demonst
 set local role authenticated;
 select set_config('request.jwt.claim.sub','c1000000-0000-0000-0000-000000000001',true);
 select lives_ok($$select alterar_perfil_interno_demonstrativo('c1000000-0000-0000-0000-000000000002','validador')$$,'Administrador altera perfil sem consultar colunas inexistentes');
+reset role;
 select is((select perfil_interno::text from perfis where usuario_id='c1000000-0000-0000-0000-000000000002'),'validador','Nova funcao foi persistida');
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','c1000000-0000-0000-0000-000000000001',true);
 select lives_ok($$select atualizar_email_proprio_demonstrativo('novo.admin@empresa.com.br')$$,'E-mail valido fora de example.test e aceito');
+reset role;
 select is((select email from auth.users where id='c1000000-0000-0000-0000-000000000001'),'novo.admin@empresa.com.br','E-mail de acesso foi atualizado');
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','c1000000-0000-0000-0000-000000000001',true);
 select ok(jsonb_typeof(listar_painel_administrativo_demonstrativo()->'clientes')='array','Painel administrativo retorna clientes');
 select ok(jsonb_typeof(listar_inteligencia_operacional_demonstrativa()->'materiais')='array','Conhecimento retorna materiais consolidados');
 select ok(pode_ler_anexo_mensagem('demonstracao/c5000000-0000-0000-0000-000000000001/c6000000-0000-0000-0000-000000000001-desenho.pdf'),'Administrador pode ler anexo da conversa');
