@@ -1,6 +1,7 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 function rotuloDoCampo(campo: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): string {
   const rotulo = campo.labels?.[0]?.textContent?.replace(/\s+/g, ' ').trim();
@@ -26,14 +27,21 @@ export function campoEstaInvalido(campo: HTMLInputElement | HTMLTextAreaElement 
 }
 
 export function ValidacaoGlobal({ children }: { children: ReactNode }) {
+  const [mensagem, setMensagem] = useState('');
   return (
     <div
       className="validacao-global"
       onInvalidCapture={(evento) => {
         const campo = evento.target;
         if (campo instanceof HTMLInputElement || campo instanceof HTMLTextAreaElement || campo instanceof HTMLSelectElement) {
+          evento.preventDefault();
           campo.setCustomValidity('');
-          if (!campo.validity.valid) campo.setCustomValidity(mensagemCampoInvalido(campo));
+          if (!campo.validity.valid) {
+            const explicacao = mensagemCampoInvalido(campo);
+            campo.setCustomValidity(explicacao);
+            setMensagem(explicacao);
+            campo.focus();
+          }
         }
       }}
       onInputCapture={(evento) => {
@@ -41,6 +49,7 @@ export function ValidacaoGlobal({ children }: { children: ReactNode }) {
         if (campo instanceof HTMLInputElement || campo instanceof HTMLTextAreaElement || campo instanceof HTMLSelectElement) campo.setCustomValidity('');
       }}
     >
+      <NotificacaoFlutuante mensagem={mensagem} tipo="erro" aoFechar={() => setMensagem('')} />
       {children}
     </div>
   );

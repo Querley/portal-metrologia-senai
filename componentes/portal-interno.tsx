@@ -1,8 +1,8 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ArrowLeft, KeyRound, LockKeyhole, Mail, Save, ShieldCheck } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Activity, ArrowLeft, Ban, CheckCircle2, KeyRound, LockKeyhole, Mail, Save, Search, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
 import type { ContextoCliente } from '../lib/portal-cliente';
 import { obterClienteSupabase } from '../lib/supabase/cliente';
@@ -19,6 +19,10 @@ type Perfil = {
 };
 
 type Estado = 'carregando' | 'sem_configuracao' | 'anonimo' | 'sem_perfil' | 'autenticado_interno' | 'autenticado_cliente' | 'erro';
+
+type FuncionarioAdministrativo = { usuario_id: string; nome: string; email: string; perfil: PerfilInterno; atribuidos: number; concluidos: number; em_execucao: number; retrabalhos: number };
+type ContatoAdministrativo = { usuario_id: string; nome: string; email: string; cargo: string };
+type ClienteAdministrativo = { empresa_id: string; empresa: string; bloqueada: boolean; bloqueio_motivo: string | null; contatos: ContatoAdministrativo[]; solicitacoes: number; concluidos: number; ticket_medio: number | null };
 
 const rotulosPerfil: Record<PerfilInterno, string> = {
   consulta: 'Consulta',
@@ -229,12 +233,6 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, recuperandoSenha,
           <>
             <h1>Integração de homologação pendente</h1>
             <p>O acesso permanece fechado até a URL e a chave pública do Supabase de homologação serem configuradas.</p>
-            <a className="link-acesso" href="/portal/cliente-demonstracao">
-              Ver demonstração da área do cliente
-            </a>
-            <a className="link-acesso" href="/portal/demonstracao">
-              Abrir demonstração interna
-            </a>
           </>
         )}
         {estado === 'sem_perfil' && (
@@ -307,12 +305,6 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, recuperandoSenha,
             <a className="link-acesso" href="/solicitar">
               Fazer solicitação sem login
             </a>
-            <a className="link-acesso" href="/portal/cliente-demonstracao">
-              Ver demonstração da área do cliente
-            </a>
-            <a className="link-acesso" href="/portal/demonstracao">
-              Abrir demonstração interna
-            </a>
           </>
         )}
       </section>
@@ -328,11 +320,33 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
   const [salvando, setSalvando] = useState(false);
   const [usuarios, setUsuarios] = useState<Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>>([]);
   const [alterandoUsuario, setAlterandoUsuario] = useState('');
+  const [funcionarios, setFuncionarios] = useState<FuncionarioAdministrativo[]>([]);
+  const [clientes, setClientes] = useState<ClienteAdministrativo[]>([]);
+  const [buscaCliente, setBuscaCliente] = useState('');
+  const [convite, setConvite] = useState({ nome: '', email: '', tipo: 'cliente', empresa: '', cargo: '' });
+  const [convidando, setConvidando] = useState(false);
+  const [bloqueando, setBloqueando] = useState('');
+
+  const carregarAdministracao = useCallback(async () => {
+    if (perfil.perfil_interno !== 'administrador') return;
+    const [respostaUsuarios, respostaPainel] = await Promise.all([
+      cliente.rpc('listar_usuarios_internos_demonstrativos'),
+      cliente.rpc('listar_painel_administrativo_demonstrativo'),
+    ]);
+    if (!respostaUsuarios.error) setUsuarios((respostaUsuarios.data ?? []) as Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>);
+    if (!respostaPainel.error && respostaPainel.data && typeof respostaPainel.data === 'object') {
+      const painel = respostaPainel.data as { funcionarios?: FuncionarioAdministrativo[]; clientes?: ClienteAdministrativo[] };
+      setFuncionarios(painel.funcionarios ?? []);
+      setClientes(painel.clientes ?? []);
+    }
+  }, [cliente, perfil.perfil_interno]);
 
   useEffect(() => {
     void cliente.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ''));
-    if (perfil.perfil_interno === 'administrador') void cliente.rpc('listar_usuarios_internos_demonstrativos').then(({ data }) => setUsuarios((data ?? []) as Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>));
-  }, [cliente, perfil.perfil_interno]);
+    queueMicrotask(() => void carregarAdministracao());
+  }, [carregarAdministracao, cliente]);
+
+  const clientesVisiveis = useMemo(() => clientes.filter((item) => `${item.empresa} ${item.contatos.map((contato) => `${contato.nome} ${contato.email}`).join(' ')}`.toLowerCase().includes(buscaCliente.trim().toLowerCase())), [buscaCliente, clientes]);
 
   async function alterarFuncao(usuarioId: string, novaFuncao: PerfilInterno) {
     setAlterandoUsuario(usuarioId);
@@ -359,9 +373,9 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
       return;
     }
     const emailNormalizado = email.trim().toLowerCase();
-    if (!emailNormalizado.endsWith('.test')) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailNormalizado)) {
       setTipoMensagem('erro');
-      setMensagem('Na homologação, use somente um e-mail sintético terminado em .test.');
+      setMensagem('Informe um endereço de e-mail válido.');
       return;
     }
     setSalvando(true);
@@ -391,10 +405,49 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
     setSalvando(false);
   }
 
+  async function convidarUsuario(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    setConvidando(true);
+    setMensagem('');
+    const { data, error } = await cliente.functions.invoke('gerenciar-usuarios', { body: convite });
+    if (error || data?.erro) {
+      setTipoMensagem('erro');
+      setMensagem(data?.erro || 'Não foi possível enviar o convite.');
+    } else {
+      setTipoMensagem('sucesso');
+      setMensagem(data?.mensagem || 'Convite enviado por e-mail.');
+      setConvite({ nome: '', email: '', tipo: 'cliente', empresa: '', cargo: '' });
+      await carregarAdministracao();
+    }
+    setConvidando(false);
+  }
+
+  async function alterarBloqueio(item: ClienteAdministrativo) {
+    const motivo = item.bloqueada ? null : window.prompt('Informe o motivo do bloqueio (5 a 500 caracteres):');
+    if (!item.bloqueada && (!motivo || motivo.trim().length < 5)) return;
+    setBloqueando(item.empresa_id);
+    const { error } = await cliente.rpc('alterar_bloqueio_empresa_demonstrativa', { empresa: item.empresa_id, bloquear: !item.bloqueada, motivo });
+    if (error) { setTipoMensagem('erro'); setMensagem(error.message || 'Não foi possível alterar o bloqueio.'); }
+    else { setTipoMensagem('sucesso'); setMensagem(item.bloqueada ? 'Acesso da empresa desbloqueado.' : 'Acesso da empresa bloqueado e auditado.'); await carregarAdministracao(); }
+    setBloqueando('');
+  }
+
+  async function editarContato(contato: ContatoAdministrativo) {
+    const nomeAtualizado = window.prompt('Nome do contato:', contato.nome)?.trim();
+    if (!nomeAtualizado) return;
+    const emailAtualizado = window.prompt('E-mail de acesso:', contato.email)?.trim().toLowerCase();
+    if (!emailAtualizado) return;
+    const cargoAtualizado = window.prompt('Cargo ou função:', contato.cargo)?.trim();
+    if (!cargoAtualizado) return;
+    const { data, error } = await cliente.functions.invoke('gerenciar-usuarios', { body: { acao: 'atualizar', usuario_id: contato.usuario_id, nome: nomeAtualizado, email: emailAtualizado, cargo: cargoAtualizado } });
+    if (error || data?.erro) { setTipoMensagem('erro'); setMensagem(data?.erro || 'Não foi possível atualizar o contato.'); }
+    else { setTipoMensagem('sucesso'); setMensagem(data?.mensagem || 'Contato atualizado.'); await carregarAdministracao(); }
+  }
+
   return (
     <main className="acesso-interno">
       <NotificacaoFlutuante mensagem={mensagem} tipo={tipoMensagem} aoFechar={() => setMensagem('')} />
-      <section className="cartao-acesso">
+      <section className={`cartao-acesso ${perfil.perfil_interno === 'administrador' ? 'cartao-administracao' : ''}`}>
         <button className="voltar-acesso" type="button" onClick={aoVoltar}>
           <ArrowLeft size={16} /> Voltar ao portal
         </button>
@@ -418,7 +471,7 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
           </button>
         </form>
         {perfil.perfil_interno === 'administrador' && (
-          <section className="gestao-usuarios-internos">
+          <section className="gestao-usuarios-internos area-administrativa">
             <h2>Funções da equipe</h2>
             <p>Altere a função de usuários internos existentes. Sua própria função fica protegida contra alteração acidental.</p>
             {usuarios.map((usuario) => (
@@ -436,6 +489,25 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
                 </select>
               </label>
             ))}
+            <section className="painel-convite-usuario">
+              <header><UserPlus size={20} /><div><h2>Cadastrar novo usuário</h2><p>O sistema envia um convite seguro; a pessoa define a própria senha.</p></div></header>
+              <form onSubmit={convidarUsuario}>
+                <label>Nome<input required minLength={2} maxLength={120} value={convite.nome} onChange={(e) => setConvite((atual) => ({ ...atual, nome: e.target.value }))} /></label>
+                <label>E-mail<input required type="email" value={convite.email} onChange={(e) => setConvite((atual) => ({ ...atual, email: e.target.value }))} /></label>
+                <label>Tipo<select value={convite.tipo} onChange={(e) => setConvite((atual) => ({ ...atual, tipo: e.target.value }))}><option value="cliente">Cliente</option><option value="tecnico">Técnico</option><option value="validador">Validador</option><option value="administrador">Administrador</option></select></label>
+                {convite.tipo === 'cliente' && <><label>Empresa<input required minLength={2} maxLength={180} value={convite.empresa} onChange={(e) => setConvite((atual) => ({ ...atual, empresa: e.target.value }))} /></label><label>Cargo/função<input required minLength={2} maxLength={120} value={convite.cargo} onChange={(e) => setConvite((atual) => ({ ...atual, cargo: e.target.value }))} /></label></>}
+                <button className="botao-acesso" type="submit" disabled={convidando}><UserPlus size={16} />{convidando ? 'Enviando…' : 'Enviar convite'}</button>
+              </form>
+            </section>
+            <section className="metricas-equipe-admin">
+              <header><Activity size={20} /><div><h2>Performance da equipe</h2><p>Indicadores operacionais; valores comerciais não são expostos ao Técnico.</p></div></header>
+              <div>{funcionarios.map((item) => <article key={item.usuario_id}><strong>{item.nome}</strong><small>{rotulosPerfil[item.perfil]}</small><dl><div><dt>Atribuídos</dt><dd>{item.atribuidos}</dd></div><div><dt>Em execução</dt><dd>{item.em_execucao}</dd></div><div><dt>Concluídos</dt><dd>{item.concluidos}</dd></div><div><dt>Retrabalhos</dt><dd>{item.retrabalhos}</dd></div></dl></article>)}</div>
+            </section>
+            <section className="clientes-admin">
+              <header><Users size={20} /><div><h2>Clientes cadastrados</h2><p>Pesquise empresas e contatos, acompanhe relacionamento e administre o acesso.</p></div></header>
+              <label className="busca-clientes-admin"><Search size={16} /><input type="search" value={buscaCliente} onChange={(e) => setBuscaCliente(e.target.value)} placeholder="Pesquisar empresa, contato ou e-mail" /></label>
+              <div>{clientesVisiveis.map((item) => <article key={item.empresa_id}><header><div><strong>{item.empresa}</strong><small>{item.contatos.map((contato) => `${contato.nome} · ${contato.email}`).join(' | ') || 'Sem contato ativo'}</small></div><span className={`estado ${item.bloqueada ? 'estado-rejeitada' : 'estado-formalizada'}`}>{item.bloqueada ? 'Bloqueada' : 'Ativa'}</span></header><dl><div><dt>Solicitações</dt><dd>{item.solicitacoes}</dd></div><div><dt>Concluídos</dt><dd>{item.concluidos}</dd></div><div><dt>Ticket médio</dt><dd>{item.ticket_medio == null ? '—' : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.ticket_medio)}</dd></div></dl>{item.bloqueio_motivo && <p>Motivo: {item.bloqueio_motivo}</p>}<div className="acoes-cliente-admin">{item.contatos.map((contato) => <button type="button" key={contato.usuario_id} onClick={() => void editarContato(contato)}>Editar {contato.nome}</button>)}<button type="button" disabled={bloqueando === item.empresa_id} onClick={() => void alterarBloqueio(item)}>{item.bloqueada ? <CheckCircle2 size={15} /> : <Ban size={15} />}{item.bloqueada ? 'Desbloquear acesso' : 'Bloquear acesso'}</button></div></article>)}</div>
+            </section>
           </section>
         )}
       </section>

@@ -6,6 +6,7 @@ export type MensagemInterna = {
   criada_em: string;
   autor_nome: string;
   autor_tipo: 'cliente' | 'equipe';
+  anexos?: import('./anexos-mensagem').AnexoMensagem[];
 };
 
 export type ConversaInterna = {
@@ -17,6 +18,7 @@ export type ConversaInterna = {
   necessidade: string;
   criada_em: string;
   mensagens: MensagemInterna[];
+  nao_lidas?: number;
 };
 
 export function podeAcessarConversas(perfil: PerfilInterno): boolean {

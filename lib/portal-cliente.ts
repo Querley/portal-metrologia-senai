@@ -48,6 +48,7 @@ export type MensagemCliente = {
   autor_proprio: boolean;
   conteudo: string;
   criada_em: string;
+  anexos?: import('./anexos-mensagem').AnexoMensagem[];
 };
 
 export function tituloServicoCliente(slug: string): string {

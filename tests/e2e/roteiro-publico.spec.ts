@@ -66,8 +66,8 @@ test('serviço oficial abre uma solicitação já classificada', async ({ page }
   await expect(page.getByLabel('Qual resultado você espera?')).toBeVisible();
 });
 
-test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }) => {
-  await page.goto('/portal/demonstracao');
+test('painel interno calcula orçamento no cenário isolado de E2E', async ({ page }) => {
+  await page.goto('/portal/validacao-e2e');
   await expect(page.locator('.aplicacao')).toHaveAttribute('data-hidratado', 'sim');
   await expect(page.getByText('AMBIENTE DE HOMOLOGAÇÃO')).toBeVisible();
   await page.getByRole('button', { name: 'Orçamentos' }).click({ force: (page.viewportSize()?.width ?? 1000) < 650 });
@@ -80,12 +80,11 @@ test('painel mantém origem demonstrativa e calcula orçamento', async ({ page }
   await expect(page.getByText(/não altero o cálculo/i)).toBeVisible();
 });
 
-test('área interna oferece autenticação e alternativa de demonstração', async ({ page }) => {
+test('área interna oferece autenticação e recuperação sem atalhos antigos', async ({ page }) => {
   await page.goto('/portal');
   await expect(page.getByText('Acesso protegido')).toBeVisible();
   await expect(page.getByRole('heading', { name: /Entrar no Portal de Metrologia|Integração de homologação pendente/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Abrir demonstração interna' })).toHaveAttribute('href', '/portal/demonstracao');
-  await expect(page.getByRole('link', { name: 'Ver demonstração da área do cliente' })).toHaveAttribute('href', '/portal/cliente-demonstracao');
+  await expect(page.getByRole('link', { name: /demonstração/i })).toHaveCount(0);
   await page.getByRole('button', { name: 'Esqueci minha senha' }).click();
   await expect(page.getByRole('heading', { name: 'Recuperar senha' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Enviar link seguro' })).toBeVisible();
@@ -94,7 +93,7 @@ test('área interna oferece autenticação e alternativa de demonstração', asy
 });
 
 test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page }) => {
-  await page.goto('/portal/cliente-demonstracao');
+  await page.goto('/portal/validacao-e2e?area=cliente');
   await expect(page.locator('.portal-cliente')).toHaveAttribute('data-hidratado', 'sim');
   const avisoPrivacidade = page.getByRole('dialog', { name: 'Antes de acessar sua área' });
   await avisoPrivacidade.getByRole('button', { name: 'Continuar' }).click();
@@ -141,7 +140,7 @@ test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page
 
 test('área interna mantém navegação, perfil e saída em larguras intermediárias e mobile', async ({ page }) => {
   await page.setViewportSize({ width: 820, height: 860 });
-  await page.goto('/portal/demonstracao');
+  await page.goto('/portal/validacao-e2e');
   await expect(page.locator('.acoes-conta-responsivas').getByRole('button', { name: 'Meu perfil' })).toBeVisible();
   await expect(page.locator('.acoes-conta-responsivas').getByRole('button', { name: 'Sair' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Solicitações' })).toBeVisible();
@@ -153,4 +152,21 @@ test('área interna mantém navegação, perfil e saída em larguras intermediá
   await expect(page.locator('.acoes-conta-responsivas').getByRole('button', { name: 'Sair' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Módulos internos' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test('orçamentos preservam cards e tabela em escalas intermediárias', async ({ page }) => {
+  for (const largura of [1366, 1100, 820, 640]) {
+    await page.setViewportSize({ width: largura, height: 850 });
+    await page.goto('/portal/validacao-e2e?area=orcamentos');
+    const aceitas = page.getByRole('button', { name: /Aceitas/ });
+    await expect(aceitas).toBeVisible();
+    const caixa = await aceitas.boundingBox();
+    expect(caixa?.x ?? -1).toBeGreaterThanOrEqual(0);
+    expect((caixa?.x ?? 0) + (caixa?.width ?? 0)).toBeLessThanOrEqual(largura + 1);
+    const tabela = page.locator('.painel-orcamentos-persistentes .tabela-wrap');
+    await expect(tabela).toBeVisible();
+    await tabela.evaluate((elemento) => { elemento.scrollLeft = elemento.scrollWidth; });
+    await expect(tabela.locator('th').last()).toBeAttached();
+    await expect(page.locator('.painel-orcamentos-persistentes')).toHaveCSS('background-color', 'rgb(243, 247, 249)');
+  }
 });

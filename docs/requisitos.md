@@ -14,7 +14,7 @@
    - O Técnico registra e envia o fechamento; Validador ou Administrador aprova ou devolve com justificativa.
    - Somente Administrador atribui ou reatribui o Técnico responsável; o Técnico acessa apenas execuções atribuídas, enquanto Validador e Administrador supervisionam todas as execuções demonstrativas.
 9. Recomendar por mesmo serviço, similaridade controlada e faixas de confiança; com ao menos cinco casos elegíveis, persistir e exigir justificativa fora de Q1–Q3 antes da validação.
-10. Trocar mensagens humanas persistentes em tempo real, sem anexos, presença ou recibo de leitura.
+10. Trocar mensagens humanas persistentes em tempo real, com até cinco anexos privados de 10 MB por mensagem e contador de não lidas por conversa; presença em tempo real permanece fora do MVP.
 11. Separar visual e logicamente dados reais e demonstrativos; permitir reset apenas ao Administrador.
 12. Permitir que Validador e Administrador consultem custos-hora e que somente Administrador versione esses valores, sempre na origem ativa e sem exclusão de histórico.
 13. Aplicar hierarquia cumulativa aos perfis internos: Validador faz tudo que Técnico faz; Administrador faz tudo que Validador faz. Técnico, Validador e Administrador criam, corrigem e enviam os próprios orçamentos; somente Validador e Administrador os aprovam, devolvem ou rejeitam, sempre com justificativa nas decisões negativas; somente Administrador publica uma versão aprovada com PDF imutável.

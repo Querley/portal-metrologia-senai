@@ -13,6 +13,8 @@ import { ContatoEmail } from './contato-email';
 import { MarcaOficial } from './marca-oficial';
 import { NovaSolicitacaoCliente, type DadosNovaSolicitacaoCliente } from './nova-solicitacao-cliente';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
+import { caminhoAnexoMensagem, validarAnexosMensagem, type AnexoMensagem } from '../lib/anexos-mensagem';
+import { tipoMimeArmazenado } from '../lib/anexos-solicitacao';
 
 type Propriedades = {
   cliente?: SupabaseClient;
@@ -64,6 +66,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [criandoSolicitacao, setCriandoSolicitacao] = useState(false);
   const [anexosPorSolicitacao, setAnexosPorSolicitacao] = useState<Record<string, AnexoSolicitacaoCliente[]>>({});
   const [baixandoAnexoId, setBaixandoAnexoId] = useState('');
+  const [arquivosMensagem, setArquivosMensagem] = useState<File[]>([]);
+  const [naoLidas, setNaoLidas] = useState<Record<string, number>>({});
   const hidratado = useSyncExternalStore(
     () => () => undefined,
     () => true,
@@ -87,10 +91,18 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const carregarMensagens = useCallback(
     async (solicitacaoId: string) => {
       if (!cliente || demonstracao || !solicitacaoId) return;
-      const { data, error } = await cliente.rpc('listar_mensagens_cliente', {
-        solicitacao: solicitacaoId,
-      });
-      if (!error) setMensagens((data ?? []) as MensagemCliente[]);
+      const [mensagensResposta, anexosResposta, leiturasResposta] = await Promise.all([
+        cliente.rpc('listar_mensagens_cliente', { solicitacao: solicitacaoId }),
+        cliente.rpc('listar_anexos_mensagens_demonstrativas', { solicitacao: solicitacaoId }),
+        cliente.rpc('resumo_mensagens_nao_lidas_demonstrativas'),
+      ]);
+      if (!mensagensResposta.error && !anexosResposta.error) {
+        const anexos = (anexosResposta.data ?? []) as AnexoMensagem[];
+        setMensagens(((mensagensResposta.data ?? []) as MensagemCliente[]).map((mensagem) => ({ ...mensagem, anexos: anexos.filter((anexo) => anexo.mensagem_id === mensagem.id) })));
+      }
+      if (!leiturasResposta.error) setNaoLidas(Object.fromEntries(((leiturasResposta.data ?? []) as Array<{ solicitacao_id: string; nao_lidas: number }>).map((item) => [item.solicitacao_id, Number(item.nao_lidas)])));
+      await cliente.rpc('marcar_conversa_lida_demonstrativa', { solicitacao: solicitacaoId });
+      setNaoLidas((atuais) => ({ ...atuais, [solicitacaoId]: 0 }));
     },
     [cliente, demonstracao],
   );
@@ -170,8 +182,9 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       total: solicitacoes.length,
       emExecucao: solicitacoes.filter((item) => item.execucao_estado === 'em_execucao').length,
       aguardandoCliente: solicitacoes.filter((item) => item.proposta_estado === 'publicada').length,
+      mensagens: Object.values(naoLidas).reduce((total, quantidade) => total + quantidade, 0),
     }),
-    [solicitacoes],
+    [naoLidas, solicitacoes],
   );
 
   function abrirTrabalhosComFiltro(filtro: string) {
@@ -250,14 +263,23 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     const conteudo = mensagemNova.trim();
     if (!conteudo || !selecionada) return;
     if (cliente && !demonstracao) {
-      const { error } = await cliente.rpc('enviar_mensagem_cliente', {
+      const { data: mensagemId, error } = await cliente.rpc('enviar_mensagem_cliente', {
         solicitacao: selecionada.id,
         conteudo,
       });
-      if (error) {
+      if (error || !mensagemId) {
         setErro('Não foi possível enviar a mensagem.');
         return;
       }
+      for (const arquivo of arquivosMensagem) {
+        const caminho = caminhoAnexoMensagem(String(mensagemId), arquivo);
+        const tipo = tipoMimeArmazenado(arquivo) ?? 'application/octet-stream';
+        const envio = await cliente.storage.from('mensagens').upload(caminho, arquivo, { contentType: tipo, upsert: false });
+        if (envio.error) { setErro(`A mensagem foi enviada, mas ${arquivo.name} não pôde ser anexado.`); break; }
+        const registro = await cliente.rpc('registrar_anexo_mensagem_demonstrativa', { mensagem: mensagemId, caminho, nome_original: arquivo.name, tipo_mime: tipo, tamanho_bytes: arquivo.size });
+        if (registro.error) { setErro(`A mensagem foi enviada, mas ${arquivo.name} não pôde ser registrado.`); break; }
+      }
+      setArquivosMensagem([]);
       await carregarMensagens(selecionada.id);
     } else {
       setMensagens((atuais) => [
@@ -273,6 +295,29 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setMensagemNova('');
   }
 
+  function selecionarArquivosMensagem(lista: FileList | null) {
+    const arquivos = [...arquivosMensagem, ...Array.from(lista ?? [])];
+    const falha = validarAnexosMensagem(arquivos);
+    if (falha) setErro(falha);
+    else { setErro(''); setArquivosMensagem(arquivos); }
+  }
+
+  async function baixarAnexoMensagem(anexo: AnexoMensagem) {
+    if (!cliente || demonstracao) { setAviso('Use a área autenticada para baixar anexos de mensagens.'); return; }
+    setBaixandoAnexoId(anexo.id);
+    const { data, error } = await cliente.storage.from('mensagens').download(anexo.caminho_storage);
+    if (error || !data) setErro('Não foi possível baixar o anexo protegido.');
+    else {
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = anexo.nome_original;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+    setBaixandoAnexoId('');
+  }
+
   async function salvarPerfil(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const nome = nomeEmEdicao.trim();
@@ -282,8 +327,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       setErro('Informe um nome entre 2 e 120 caracteres.');
       return;
     }
-    if (!email.endsWith('.test')) {
-      setErro('Na homologação, use somente um e-mail sintético terminado em .test.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      setErro('Informe um endereço de e-mail válido.');
       return;
     }
     if (cargo.length < 2 || cargo.length > 120) {
@@ -538,6 +583,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
               <strong>{indicadores.aguardandoCliente}</strong>
             </span>
           </button>
+          <button type="button" onClick={() => document.getElementById('mensagens-trabalho-cliente')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+            <MessageSquareText size={21} />
+            <span><small>Mensagens não lidas</small><strong>{indicadores.mensagens}</strong></span>
+          </button>
         </section>
 
         <div id="trabalhos-cliente" />
@@ -772,7 +821,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   </ol>
                 )}
               </section>
-              <section className="mensagens-cliente">
+              <section className="mensagens-cliente" id="mensagens-trabalho-cliente">
                 <div className="titulo-bloco-cliente">
                   <div>
                     <h3>
@@ -785,6 +834,11 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   {mensagens.map((mensagem) => (
                     <p key={mensagem.id} className={mensagem.autor_proprio ? 'propria' : ''}>
                       {mensagem.conteudo}
+                      {mensagem.anexos?.map((anexo) => (
+                        <button type="button" className="anexo-mensagem" key={anexo.id} onClick={() => void baixarAnexoMensagem(anexo)} disabled={baixandoAnexoId === anexo.id}>
+                          <FileText size={14} /> {anexo.nome_original} <Download size={13} />
+                        </button>
+                      ))}
                       <small>{dataCurta(mensagem.criada_em)}</small>
                     </p>
                   ))}
@@ -794,10 +848,12 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                     Nova mensagem
                   </label>
                   <input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para a equipe" />
+                  <label className="anexar-mensagem"><Paperclip size={16} /><span>Anexar</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(evento) => selecionarArquivosMensagem(evento.target.files)} /></label>
                   <button type="submit">
                     <Send size={16} /> Enviar
                   </button>
                 </form>
+                {arquivosMensagem.length > 0 && <div className="arquivos-mensagem-selecionados">{arquivosMensagem.map((arquivo, indice) => <span key={`${arquivo.name}-${indice}`}>{arquivo.name}<button type="button" aria-label={`Remover ${arquivo.name}`} onClick={() => setArquivosMensagem((atuais) => atuais.filter((_, posicao) => posicao !== indice))}><X size={12} /></button></span>)}</div>}
               </section>
             </section>
           </div>

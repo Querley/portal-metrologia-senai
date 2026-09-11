@@ -62,10 +62,6 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
       .trim()
       .toLowerCase();
     const telefone = String(formulario.get('telefone') ?? '').trim();
-    if (!email.endsWith('.test')) {
-      setErro('Nesta homologação, use somente um e-mail sintético terminado em .test. Não informe dados reais.');
-      return;
-    }
     if (telefone && !telefoneValido(telefone)) {
       setErro('Informe um telefone válido, usando somente números, espaços, parênteses, hífen e + no início.');
       return;
@@ -117,14 +113,11 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
         <CheckCircle2 size={42} />
         <h1>Solicitação salva na homologação</h1>
         <p>
-          Protocolo <strong>DEM-SOL-{String(confirmacao.codigo).padStart(4, '0')}</strong>, vinculado ao e-mail sintético <strong>{emailEnviado}</strong>.
+          Protocolo <strong>DEM-SOL-{String(confirmacao.codigo).padStart(4, '0')}</strong>, vinculado ao e-mail <strong>{emailEnviado}</strong>.
         </p>
         <p>Use o acesso abaixo com o mesmo e-mail. Se o Cliente já estiver cadastrado, este novo trabalho será acrescentado à empresa existente; caso seja o primeiro, a área protegida será ativada. Os arquivos selecionados permaneceram neste dispositivo e poderão ser enviados na etapa autenticada.</p>
         <a className="botao" href={`/portal?ativar=${encodeURIComponent(confirmacao.token_ativacao)}`}>
           Vincular ao acompanhamento do Cliente <span>→</span>
-        </a>
-        <a className="link-confirmacao" href="/portal/cliente-demonstracao">
-          Ver a demonstração antes de ativar
         </a>
       </section>
     );
@@ -135,7 +128,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
       <div className="aviso-demo">
         <ShieldCheck size={18} />
         <span>
-          <strong>Homologação persistente.</strong> Use somente dados fictícios, inclusive e-mail terminado em <code>.test</code>. A origem demonstrativa é gravada e nunca se mistura à produção.
+          <strong>Homologação persistente.</strong> Você pode usar uma caixa de e-mail válida para receber acesso e recuperar a senha. Não inclua informações industriais confidenciais; os registros continuam isolados na origem de homologação.
         </span>
       </div>
       <label className="campo-armadilha" aria-hidden="true">
@@ -150,8 +143,8 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
             <input required name="nome" autoComplete="name" minLength={2} maxLength={120} />
           </label>
           <label>
-            E-mail sintético para o acesso Cliente
-            <input required name="email" type="email" autoComplete="email" maxLength={254} pattern="[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.test" title="Na homologação, informe um e-mail válido terminado em .test." placeholder="cliente.hml@example.test" />
+            E-mail para o acesso Cliente
+            <input required name="email" type="email" autoComplete="email" maxLength={254} placeholder="nome@empresa.com.br" />
           </label>
           <label>
             Nome da empresa

@@ -9,6 +9,8 @@ import { rotuloNecessidadeCliente } from '../lib/solicitacao';
 import { apresentarEstadoSolicitacao, podeConsultarSolicitacoes, podeCriarPrePropostaDaSolicitacao, type SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistentes';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
+import { AnexosSolicitacaoInternos } from './anexos-solicitacao-internos';
+import { tituloDescritivoTrabalho } from '../lib/titulos-trabalho';
 
 function formatarDataHora(valor: string): string {
   return new Intl.DateTimeFormat('pt-BR', {
@@ -225,7 +227,7 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
                           {solicitacao.nome} · {solicitacao.email}
                         </small>
                       </td>
-                      <td>{rotuloNecessidadeCliente(solicitacao.necessidade)}</td>
+                      <td><strong>{tituloDescritivoTrabalho({ quantidade: solicitacao.quantidade, descricao: solicitacao.descricao, servico: rotuloNecessidadeCliente(solicitacao.necessidade), empresa: solicitacao.empresa })}</strong></td>
                       <td>{formatarDataHora(solicitacao.criado_em)}</td>
                       <td>
                         <span className={`estado ${estado.classe}`}>{estado.rotulo}</span>
@@ -233,9 +235,9 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
                       </td>
                       <td>
                         {podeCriar ? (
-                          <button className="acao-orcamento" type="button" onClick={() => aoCriarPreProposta(solicitacao)}>
+                          <><button className="acao-orcamento" type="button" onClick={() => aoCriarPreProposta(solicitacao)}>
                             <FileText size={14} /> Criar pré-proposta
-                          </button>
+                          </button>{solicitacao.solicitacao_id && <AnexosSolicitacaoInternos compacto cliente={cliente} solicitacaoId={solicitacao.solicitacao_id} />}</>
                         ) : solicitacao.tem_pre_proposta ? (
                           <>
                             <span className="estado estado-orçada">Pré-proposta criada</span>
@@ -250,6 +252,7 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
                         ) : (
                           <small>Aguardando a primeira ativação pelo Cliente.</small>
                         )}
+                        {solicitacao.solicitacao_id && !podeCriar && <AnexosSolicitacaoInternos compacto cliente={cliente} solicitacaoId={solicitacao.solicitacao_id} />}
                       </td>
                     </tr>
                   );

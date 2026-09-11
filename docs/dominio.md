@@ -33,6 +33,7 @@ A aprovação não emite a pré-proposta. Somente Administrador promove `aprovad
 - Uma empresa pode possuir várias solicitações e execuções simultâneas. O vínculo representa a relação do usuário com a empresa, não um trabalho selecionado.
 - O Cliente autenticado pode criar outro trabalho diretamente na área protegida e alternar o acompanhamento entre todos os trabalhos da empresa.
 - Cada solicitação pode receber até cinco anexos privados no cadastro autenticado: PDF e imagens de até 10 MB por arquivo, ou CAD de até 50 MB. Metadados, bytes e autorização permanecem vinculados ao trabalho selecionado.
+- Cada mensagem pode receber até cinco anexos privados de até 10 MB. A leitura segue a autorização da conversa, e o último horário de leitura é registrado por usuário e solicitação.
 - Uma solicitação pública recorrente com o mesmo e-mail reutiliza a empresa demonstrativa ativa. O CNPJ informado na triagem é preservado para auditoria, mas não troca nem duplica o vínculo empresarial sem decisão administrativa explícita.
 - O acompanhamento exige usuário autenticado e vínculo empresarial previamente aprovado.
 - Cliente externo nunca vê rascunhos internos, custos ou margens; vê somente pré-proposta emitida, etapas marcadas como visíveis e mensagens da própria empresa.
@@ -71,3 +72,5 @@ A solicitação é a raiz obrigatória da pré-proposta. A recusa preserva vers�
 ## Complemento do domínio — 8 de setembro de 2026
 
 Cargo empresarial descreve a função profissional do contato e não altera seu papel externo nem concede capacidades internas. Usuário com vínculo empresarial ativo não pode receber perfil interno. Uma execução ainda não finalizada pode retornar justificadamente a uma etapa anterior: a etapa escolhida volta a `em_andamento`, as posteriores voltam a `a_fazer` e o histórico da decisão fica na auditoria. Execução concluída, cancelada ou com fechamento em validação não pode usar esse retorno.
+
+O Administrador pode convidar contas, editar nome/e-mail/cargo de contatos, alterar papéis internos entre Técnico, Validador e Administrador e bloquear uma empresa com motivo. Essas ações são auditadas; bloqueio empresarial não transforma Cliente em perfil interno.

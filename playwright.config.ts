@@ -15,6 +15,7 @@ export default defineConfig({
       // Nenhum serviço Supabase é iniciado ou acessado pelo roteiro público.
       NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'chave-publica-e2e-sem-backend',
+      NEXT_PUBLIC_E2E_SCENARIO: 'enabled',
     },
   },
   projects: [

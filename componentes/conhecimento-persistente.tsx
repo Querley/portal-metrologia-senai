@@ -15,6 +15,12 @@ function tituloServico(slug: string): string {
   return servicosOficiais.find((servico) => servico.slug === slug)?.titulo ?? slug;
 }
 
+type InteligenciaOperacional = {
+  servicos: Array<{ slug: string; quantidade: number; horas_medias: number | null; retrabalhos: number }>;
+  materiais: Array<{ material: string; quantidade: number }>;
+  assuntos: Array<{ assunto: string; quantidade: number }>;
+};
+
 function Metrica({ titulo, estimado, realizado, desvio, assertivo, moeda = false }: { titulo: string; estimado: number | string | null; realizado: number | string | null; desvio: number | string | null; assertivo: boolean | null; moeda?: boolean }) {
   const formatar = (valor: number | string | null) => (valor === null ? '—' : moeda ? formatarDinheiro(valor) : formatarHoras(valor));
   return (
@@ -46,16 +52,21 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
   const [busca, setBusca] = useState('');
   const [filtroLicao, setFiltroLicao] = useState(filtroInicial === 'em_validacao' ? 'em_validacao' : 'todos');
   const [filtroAssertividade, setFiltroAssertividade] = useState(filtroInicial === 'assertivo' ? 'assertivo' : 'todos');
+  const [inteligencia, setInteligencia] = useState<InteligenciaOperacional>({ servicos: [], materiais: [], assuntos: [] });
 
   const carregar = useCallback(async () => {
     setCarregando(true);
     setErro('');
-    const resposta = await cliente.rpc('listar_indicadores_execucoes_demonstrativas');
-    if (resposta.error) setErro('Não foi possível carregar indicadores e lições persistentes.');
+    const [resposta, respostaInteligencia] = await Promise.all([
+      cliente.rpc('listar_indicadores_execucoes_demonstrativas'),
+      cliente.rpc('listar_inteligencia_operacional_demonstrativa'),
+    ]);
+    if (resposta.error || respostaInteligencia.error) setErro('Não foi possível carregar indicadores e conhecimento operacional.');
     else {
       const dados = (resposta.data ?? []) as IndicadorExecucaoPersistente[];
       setIndicadores(dados);
       setServicoId((atual) => atual || dados[0]?.servico_id || '');
+      if (respostaInteligencia.data && typeof respostaInteligencia.data === 'object') setInteligencia(respostaInteligencia.data as InteligenciaOperacional);
     }
     setCarregando(false);
   }, [cliente]);
@@ -259,6 +270,15 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
           </li>
         </ol>
         <p>A lição formalizada torna o caso elegível e preserva o contexto para análise. Hoje o cálculo sugere horas; duração e custo já são comparados, mas ainda não geram recomendação automática.</p>
+      </section>
+      <section className="bloco inteligencia-operacional">
+        <header><div><h2>Inteligência operacional</h2><p>Padrões consolidados dos trabalhos registrados; nenhum dado é inventado.</p></div><Activity /></header>
+        <div className="grade-inteligencia-operacional">
+          <article><h3>Serviços e produtos mais usados</h3>{inteligencia.servicos.length === 0 ? <p>Os padrões surgirão após as primeiras execuções.</p> : <ol>{inteligencia.servicos.slice(0, 8).map((item) => <li key={item.slug}><span><strong>{tituloServico(item.slug)}</strong><small>{item.quantidade} trabalho(s) · {item.retrabalhos} retrabalho(s)</small></span><b>{item.horas_medias == null ? '—' : `${item.horas_medias} h médias`}</b></li>)}</ol>}</article>
+          <article><h3>Materiais recorrentes</h3>{inteligencia.materiais.length === 0 ? <p>Sem materiais suficientes para análise.</p> : <ol>{inteligencia.materiais.slice(0, 8).map((item) => <li key={item.material}><span><strong>{item.material}</strong><small>Vocabulário padronizado das solicitações</small></span><b>{item.quantidade}</b></li>)}</ol>}</article>
+          <article><h3>Técnicas e estratégias aprendidas</h3>{inteligencia.assuntos.length === 0 ? <p>Formalize lições e seus assuntos para gerar dicas pesquisáveis.</p> : <ol>{inteligencia.assuntos.slice(0, 8).map((item) => <li key={item.assunto}><span><strong>{item.assunto}</strong><small>Presente em lições formalizadas</small></span><b>{item.quantidade}</b></li>)}</ol>}</article>
+        </div>
+        <p className="nota-inteligencia">Análises comerciais identificáveis por cliente ficam restritas ao Administrador, na área administrativa; Técnicos e Validadores recebem aqui somente padrões operacionais necessários ao trabalho.</p>
       </section>
       <section className="bloco lista-indicadores" id="indicadores-conhecimento">
         <header>

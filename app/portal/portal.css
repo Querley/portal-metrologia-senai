@@ -284,7 +284,7 @@
 .campo-fechamento { display:grid; gap:6px; color:#355d70; font-size:9px; font-weight:800; }
 .campo-fechamento textarea, .decisao-fechamento textarea { min-height:78px; padding:9px; resize:vertical; line-height:1.45; }
 .campo-fechamento select { min-height:40px; padding:0 9px; }
-.barra-progresso-editavel { display:block; width:100%; padding:0; border:0; cursor:crosshair; text-align:left; }
+.barra-progresso-editavel { display:block; width:100%; padding:0; border:0; cursor:pointer; text-align:left; }
 .barra-progresso-editavel:focus-visible { outline:3px solid rgba(8,117,183,.28); outline-offset:3px; }
 .barra-progresso-editavel:disabled { cursor:not-allowed; opacity:.72; }
 .confirmar-retorno-etapa { display:grid; gap:7px; margin:10px 0; padding:12px; background:#fff8e4; border:1px solid #dfc77e; }
@@ -298,7 +298,7 @@
 .cards-kpi-interativos > button small,.cards-kpi-interativos > button strong,.cards-kpi-interativos > button p { display:block; }
 .cards-kpi-interativos .seta-kpi { position:absolute; right:15px; top:15px; color:#4e8198; }
 .cards-kpi-interativos { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
-.cards-operacionais { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; margin:14px 0; }
+.cards-operacionais { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:12px; margin:14px 0; }
 .cards-operacionais button { min-height:104px; display:grid; align-content:center; gap:6px; padding:16px 18px; color:#17445a; background:white; border:1px solid #b9d3df; border-left:4px solid #1188b8; text-align:left; cursor:pointer; transition:.18s ease; }
 .cards-operacionais button:hover { border-color:#58a9c7; box-shadow:0 8px 22px rgba(5,53,76,.1); transform:translateY(-1px); }
 .cards-operacionais button small { color:#587686; font-size:11px; font-weight:750; }.cards-operacionais button strong { font-size:26px; }.cards-operacionais button span { color:#0874a8; font-size:10px; font-weight:800; }
@@ -307,10 +307,65 @@
 .guia-conhecimento { margin-bottom:14px; }.guia-conhecimento > ol { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0; padding:18px 20px; list-style:none; }.guia-conhecimento li { display:grid; gap:7px; padding:14px; background:#f2f8fa; border-left:3px solid #1685b2; }.guia-conhecimento li span { color:#527181; line-height:1.55; }.guia-conhecimento > p { margin:0; padding:0 20px 20px; color:#345d70; line-height:1.6; }
 .status-conteudo-publico { margin-bottom:14px; }.status-conteudo-publico > div { display:grid; gap:8px; padding:18px 20px; color:#416678; line-height:1.6; }.status-conteudo-publico p { margin:0; }.tabela-licoes button:disabled { opacity:.58; cursor:not-allowed; }
 .botao-link-acesso { width:100%; justify-content:center; border:0; background:transparent; cursor:pointer; }
-.conteudo-interno,.painel { min-width:0; background:#f3f7f9; }.painel-orcamentos-persistentes { width:100%; overflow-x:hidden; }.painel-orcamentos-persistentes .tabela-wrap { width:100%; background:white; }
-@media (max-width:980px) { .cards-operacionais { grid-template-columns:repeat(2,minmax(0,1fr)); }.guia-conhecimento > ol { grid-template-columns:repeat(2,1fr); } }
-@media (max-width:650px) { .cards-operacionais,.guia-conhecimento > ol { grid-template-columns:1fr; } }
+.aplicacao { width:100%; min-width:0; background:#f3f7f9; }
+.conteudo-interno { width:calc(100% - 286px); min-width:0; background:#f3f7f9; }
+.conteudo-interno > main,.painel,.painel > * { min-width:0; }
+.painel { width:100%; max-width:100%; background:#f3f7f9; }
+.painel-orcamentos-persistentes { width:100%; max-width:100%; overflow:visible; }
+.painel-orcamentos-persistentes .cards-operacionais { width:100%; }
+.painel-orcamentos-persistentes .tabela-orcamentos-persistentes { width:100%; max-width:100%; overflow:hidden; background:#f3f7f9; }
+.painel-orcamentos-persistentes .tabela-wrap { display:block; width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; background:#f3f7f9; scrollbar-gutter:stable; }
+.painel-orcamentos-persistentes .tabela-wrap table { min-width:940px; background:white; }
+@media (max-width:980px) { .conteudo-interno { width:calc(100% - 72px); }.cards-operacionais { grid-template-columns:repeat(2,minmax(0,1fr)); }.guia-conhecimento > ol { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:650px) { .conteudo-interno { width:100%; }.cards-operacionais,.guia-conhecimento > ol { grid-template-columns:1fr; } }
 .campo-fechamento span small { color:#758b95; font-weight:600; }
+.anexos-internos { display:grid; gap:8px; min-width:0; }
+.acao-anexos-internos { min-height:38px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:7px 11px; color:#075c86; background:white; border:1px solid #8fc2d6; font:inherit; font-size:10px; font-weight:800; cursor:pointer; }
+.anexos-internos.compacto { margin-top:7px; }
+.anexos-internos.compacto .acao-anexos-internos { width:100%; }
+.lista-anexos-internos { display:grid; gap:6px; min-width:230px; padding:9px; background:#f4fafc; border:1px solid #c8dce5; }
+.lista-anexos-internos > span { display:flex; align-items:center; gap:6px; color:#587481; font-size:10px; }
+.lista-anexos-internos > button { min-width:0; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; padding:8px; color:#17465c; background:white; border:1px solid #d3e2e8; text-align:left; cursor:pointer; }
+.lista-anexos-internos > button span,.lista-anexos-internos > button strong,.lista-anexos-internos > button small { min-width:0; display:block; overflow:hidden; text-overflow:ellipsis; }
+.lista-anexos-internos > button strong { white-space:nowrap; }
+.cartao-acesso.cartao-administracao { width:min(1180px,calc(100% - 32px)); max-width:none; margin-block:28px; }
+.area-administrativa { display:grid; gap:18px; margin-top:24px; }
+.painel-convite-usuario,.metricas-equipe-admin,.clientes-admin { display:grid; gap:13px; padding:18px; background:#f5fafc; border:1px solid #cbdde5; }
+.painel-convite-usuario > header,.metricas-equipe-admin > header,.clientes-admin > header { display:flex; align-items:flex-start; gap:10px; }
+.painel-convite-usuario h2,.metricas-equipe-admin h2,.clientes-admin h2 { margin:0; color:#123f55; font-size:16px; }
+.painel-convite-usuario p,.metricas-equipe-admin p,.clientes-admin p { margin:4px 0 0; color:#5a7582; }
+.painel-convite-usuario form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+.painel-convite-usuario label { display:grid; gap:6px; color:#365e71; font-weight:800; }
+.painel-convite-usuario input,.painel-convite-usuario select,.busca-clientes-admin input { width:100%; min-height:42px; padding:0 11px; color:#173e52; background:white; border:1px solid #b8ced8; font:inherit; }
+.painel-convite-usuario .botao-acesso { align-self:end; margin:0; }
+.metricas-equipe-admin > div,.clientes-admin > div { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:10px; }
+.metricas-equipe-admin article,.clientes-admin article { min-width:0; padding:14px; background:white; border:1px solid #d4e2e8; }
+.metricas-equipe-admin article > small,.clientes-admin article small { display:block; margin-top:4px; color:#6b818b; overflow-wrap:anywhere; }
+.metricas-equipe-admin dl,.clientes-admin dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:12px 0 0; }
+.metricas-equipe-admin dl div,.clientes-admin dl div { padding:8px; background:#f3f8fa; }
+.metricas-equipe-admin dt,.clientes-admin dt { color:#69818d; font-size:9px; }.metricas-equipe-admin dd,.clientes-admin dd { margin:3px 0 0; color:#12455c; font-size:16px; font-weight:850; }
+.clientes-admin article > header { display:flex; justify-content:space-between; gap:10px; }
+.clientes-admin article > button { min-height:38px; display:flex; align-items:center; justify-content:center; gap:7px; margin-top:11px; padding:0 11px; color:#7a361f; background:#fff7f3; border:1px solid #d9a18d; font-weight:800; cursor:pointer; }
+.acoes-cliente-admin { display:flex; flex-wrap:wrap; gap:7px; margin-top:11px; }.acoes-cliente-admin button { min-height:38px; display:flex; align-items:center; justify-content:center; gap:7px; padding:0 11px; color:#155d7d; background:#f1f9fc; border:1px solid #9ac9da; font-weight:800; cursor:pointer; }.acoes-cliente-admin button:last-child { color:#7a361f; background:#fff7f3; border-color:#d9a18d; }
+.busca-clientes-admin { display:flex; align-items:center; gap:8px; padding-left:11px; color:#527687; background:white; border:1px solid #b8ced8; }.busca-clientes-admin input { border:0; outline:0; }
+@media (max-width:720px) { .painel-convite-usuario form { grid-template-columns:1fr; }.cartao-acesso.cartao-administracao { width:calc(100% - 20px); padding-inline:16px; } }
+.grade-inteligencia-operacional { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:18px 20px; }
+.grade-inteligencia-operacional article { min-width:0; padding:14px; background:#f4f9fb; border:1px solid #d3e2e8; }
+.grade-inteligencia-operacional h3 { margin:0 0 10px; color:#17465c; font-size:12px; }
+.grade-inteligencia-operacional ol { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
+.grade-inteligencia-operacional li { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; background:white; border-left:3px solid #178ab5; }
+.grade-inteligencia-operacional li span,.grade-inteligencia-operacional li strong,.grade-inteligencia-operacional li small { min-width:0; display:block; }
+.grade-inteligencia-operacional li small { margin-top:3px; color:#70858e; }.grade-inteligencia-operacional li b { flex:none; color:#126388; font-size:10px; }
+.nota-inteligencia { margin:0; padding:0 20px 18px; color:#496c7b; line-height:1.6; }
+@media (max-width:980px) { .grade-inteligencia-operacional { grid-template-columns:1fr; } }
+.anexar-mensagem { min-height:40px; display:flex!important; align-items:center; justify-content:center; gap:6px; padding:0 12px; color:#075f89!important; background:#eef8fb; border:1px solid #8fc5d8; font-weight:800!important; cursor:pointer; }
+.anexar-mensagem input { position:absolute; width:1px!important; height:1px!important; opacity:0; pointer-events:none; }
+.arquivos-mensagem-selecionados { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.arquivos-mensagem-selecionados > span { display:flex; align-items:center; gap:5px; max-width:260px; padding:6px 8px; color:#28566a; background:#edf7fa; border:1px solid #bddbe5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.arquivos-mensagem-selecionados button { width:22px!important; min-width:22px!important; height:22px!important; display:grid!important; place-items:center; padding:0!important; color:#80402d!important; background:white!important; border:1px solid #d8b2a6!important; }
+.anexo-mensagem { width:100%; min-height:34px; display:flex; align-items:center; justify-content:space-between; gap:7px; margin-top:7px; padding:6px 8px; color:#075f89; background:white; border:1px solid #9dcddd; font:inherit; font-size:10px; font-weight:750; cursor:pointer; }
+.baloes .anexo-mensagem { color:#075f89; }
+.indicadores-cliente { grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); }
 .marcadores-fechamento { display:flex; flex-wrap:wrap; gap:16px; padding:4px 0; }
 .marcadores-fechamento label { display:flex; align-items:center; gap:7px; color:#355d70; font-size:9px; font-weight:750; }
 .marcadores-fechamento input { width:16px; height:16px; accent-color:#087db5; }

@@ -10,6 +10,7 @@ import { calcularProgressoExecucao, etapasConcluidas, etapaPodeAvancar, normaliz
 import { tituloServicoCliente } from '../lib/portal-cliente';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
+import { tituloDescritivoTrabalho } from '../lib/titulos-trabalho';
 
 const apresentacaoEtapa = {
   a_fazer: { rotulo: 'A fazer', Icone: Circle },
@@ -364,7 +365,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
             {execucoesVisiveis.map((execucao) => (
               <button key={execucao.execucao_id} type="button" className={execucao.execucao_id === selecionada.execucao_id ? 'ativo' : ''} onClick={() => selecionarExecucao(execucao)}>
                 <span>DEM-SOL-{String(execucao.solicitacao_codigo).padStart(4, '0')}</span>
-                <strong>{tituloServicoCliente(execucao.servico_slug)}</strong>
+                <strong>{tituloDescritivoTrabalho({ descricao: execucao.descricao, servico: tituloServicoCliente(execucao.servico_slug), empresa: execucao.empresa_nome })}</strong>
                 <small>{execucao.empresa_nome}</small>
                 <em>{calcularProgressoExecucao(execucao.etapas)}% concluído</em>
               </button>

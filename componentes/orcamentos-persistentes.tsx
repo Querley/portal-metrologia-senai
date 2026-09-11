@@ -15,6 +15,8 @@ import type { SolicitacaoParaPreProposta } from '../lib/solicitacoes-persistente
 import { MarcaOficial } from './marca-oficial';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
+import { AnexosSolicitacaoInternos } from './anexos-solicitacao-internos';
+import { tituloDescritivoTrabalho } from '../lib/titulos-trabalho';
 
 type Servico = { id: string; slug: string; ativo: boolean };
 type Equipamento = { id: string; codigo: string; nome: string; ativo: boolean };
@@ -625,6 +627,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                             {solicitacaoVinculada.nome} · {solicitacaoVinculada.email}
                           </span>
                         </div>
+                        {solicitacaoVinculada.solicitacao_id && <AnexosSolicitacaoInternos cliente={cliente} solicitacaoId={solicitacaoVinculada.solicitacao_id} />}
                       </div>
                     )}
                     <label htmlFor="destinatario-orcamento">Destinatário da pré-proposta</label>
@@ -898,7 +901,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                       <tr key={orcamento.versao_id}>
                         <td>{formatarDataHora(orcamento.criada_em)}</td>
                         <td>
-                          <strong>{orcamento.descricao}</strong>
+                          <strong>{tituloDescritivoTrabalho({ descricao: orcamento.descricao, servico: tituloServico(orcamento.servico_slug), empresa: orcamento.empresa_nome })}</strong>
                           <small>{tituloServico(orcamento.servico_slug)}</small>
                           <small>{orcamento.cliente_vinculado ? `DEM-SOL-${String(orcamento.solicitacao_codigo).padStart(4, '0')} · ${orcamento.empresa_nome}` : 'Rascunho interno sem solicitação Cliente'}</small>
                           <small>
@@ -923,6 +926,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                         </td>
                         <td>
                           <div className="acoes-orcamento">
+                            {orcamento.cliente_vinculado && orcamento.solicitacao_id && <AnexosSolicitacaoInternos compacto cliente={cliente} solicitacaoId={orcamento.solicitacao_id} />}
                             {podeConsultarCustos(perfil) && (
                               <button className="acao-orcamento" type="button" onClick={() => setPrevisualizando(orcamento)}>
                                 <FileText size={14} /> Prévia PDF

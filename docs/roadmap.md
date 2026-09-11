@@ -13,7 +13,7 @@
 ## Estado em 1º de setembro de 2026
 
 - [x] projeto Supabase de homologação conectado ao site publicado;
-- [x] login por e-mail sem autocadastro, com Administrador, Validador e Técnico sintéticos confirmados;
+- [x] login por e-mail sem autocadastro público, recuperação de senha e convite administrativo de Cliente, Técnico, Validador ou Administrador;
 - [x] perfis internos, RLS, segregação por origem e massa demonstrativa persistida;
 - [x] consulta de custos para Validador/Administrador e versionamento auditado somente por Administrador;
 - [x] login ponta a ponta validado pelo mantenedor com Administrador e Validador;
@@ -86,7 +86,7 @@ Mudança funcional inclui estados de erro e vazio, validação, autorização, t
 ## Replanejamento de usuários e acesso — 2 de setembro
 
 - [x] **2–4 set** — concluir recusa/revisão, contato por e-mail e busca/filtros transversais, incluindo a migration `202609020033`.
-- [ ] **5–7 set** — implementar em homologação o convite administrativo de Clientes, contatos adicionais e gestão de membros internos (convite, função, desativação e auditoria). Membros do laboratório não terão autocadastro público.
+- [~] **5–11 set** — convite administrativo de Clientes e membros internos, função, edição de contatos, bloqueio de empresa e auditoria implementados; contatos adicionais na mesma empresa e desativação individual ainda serão refinados. Membros do laboratório não têm autocadastro público.
 - [~] **8–10 set** — gestão de contas iniciada com recuperação de senha e papéis operacionais coerentes; preparar CMS e idiomas e, depois, integrações de IA sanitizadas.
 - [ ] **11–12 set** — MFA, acessibilidade, observabilidade, backup/restauração e ensaio final. A ativação de contas reais em produção depende do projeto de produção, domínio/remetente oficial e textos jurídicos aprovados.
 
@@ -102,7 +102,7 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] separar cargo empresarial editável de permissões e restaurar automaticamente contas Cliente contaminadas por papel interno;
 - [x] permitir retorno justificado e auditado a etapa anterior e atualização direta pela barra de progresso;
 - [x] padronizar mensagens de validação dos campos e destacar o resultado da edição do perfil;
-- [ ] concluir gestão administrativa de convites, contatos adicionais e desativação de usuários;
+- [~] concluir gestão administrativa de contatos adicionais e desativação individual; convites, edição, função e bloqueio empresarial já estão implementados;
 - [ ] avançar CMS e idiomas, depois importação sanitizada de históricos e integrações de IA.
 - [x] iniciar a etapa de gestão de contas com recuperação segura de senha e restrição temporária aos papéis Técnico, Validador e Administrador;
 - [ ] configurar e testar o remetente de homologação para entrega real dos links de recuperação;
