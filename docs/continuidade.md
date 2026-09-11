@@ -6,7 +6,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Último estado confirmado
 
-- `main`, `origin/main` e a fonte publicada no Sites apontam para `285ebdccf3d0998d5688d5704662788cbb873f5d`.
+- o último commit de aplicação publicado no Sites é `285ebdccf3d0998d5688d5704662788cbb873f5d`; commits posteriores podem alterar somente este registro documental;
 - versão pública: 38;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
 - migration mais recente: `202609090036_consistencia_conclusao_e_funcoes.sql`, aplicada e reconciliada na homologação;
@@ -59,4 +59,3 @@ O texto anexado nesta conversa deve ser tratado como o próximo lote de requisit
 4. executar lint, testes unitários, build, E2E desktop/mobile e banco/RLS;
 5. atualizar este registro após cada entrega, indicando commit, migration, testes e pendências;
 6. somente então enviar e publicar a revisão aprovada.
-
