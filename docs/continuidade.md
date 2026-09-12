@@ -6,12 +6,12 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Último estado confirmado
 
-- o commit de aplicação pronto para publicação é `3f889e8`; a publicação desta revisão deve ser confirmada após o GitHub Actions;
-- versão pública anterior: 38;
+- fonte publicada: `e91b86a6f9033774169f2621cc7f797afc0164f2` (funcionalidades em `3f889e8` e ajuste exclusivo do teste pgTAP em `e91b86a`);
+- versão pública atual: 39, publicação concluída com sucesso;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
 - migration mais recente: `202609110040_bloqueio_cliente_efetivo.sql`, aplicada e reconciliada na homologação; lint remoto sem erros;
-- GitHub Actions `34491028792`: verificação, E2E e banco/RLS concluídos com sucesso;
-- último resultado local: lint aprovado, 98 testes unitários aprovados, build aprovado e 20 testes E2E aprovados em desktop e Pixel 7; a prova pgTAP nova está versionada e aguarda o executor Docker do GitHub Actions;
+- GitHub Actions `34659736654`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
+- último resultado local: lint aprovado, 98 testes unitários aprovados, build aprovado e 20 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `040` e aprovou todas as provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
 
 ## Implementado e publicado no último lote
@@ -50,8 +50,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Ordem de retomada recomendada
 
-1. confirmar GitHub Actions verde e publicar o commit `3f889e8` no Sites;
-2. homologar pela interface o convite em uma caixa real, a criação de senha e a recuperação de senha; isso depende da entrega SMTP externa;
-3. testar envio/download de anexos em mensagens e bloqueio/desbloqueio de uma empresa;
-4. desenvolver em seguida o CMS persistente e a internacionalização PT-BR/inglês/alemão das áreas pública e Cliente;
-5. depois importar históricos sanitizados e ampliar as integrações de IA sem cliente, preço, margem, anexos ou identificadores.
+1. homologar pela interface o convite em uma caixa real, a criação de senha e a recuperação de senha; isso depende da entrega SMTP externa;
+2. testar envio/download de anexos em mensagens e bloqueio/desbloqueio de uma empresa;
+3. desenvolver em seguida o CMS persistente e a internacionalização PT-BR/inglês/alemão das áreas pública e Cliente;
+4. depois importar históricos sanitizados e ampliar as integrações de IA sem cliente, preço, margem, anexos ou identificadores.
