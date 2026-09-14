@@ -33,6 +33,10 @@ export type SolicitacaoCliente = {
   estado: string;
   criada_em: string;
   servico: string;
+  descricao?: string;
+  material?: string;
+  quantidade?: string;
+  prazo_servico?: string;
   proposta_estado: string | null;
   valor_pre_proposta: number | null;
   prazo_pagamento_dias: number | null;
@@ -190,6 +194,10 @@ export const solicitacoesClienteDemonstracao: SolicitacaoCliente[] = [
     estado: 'em_execucao',
     criada_em: '2026-08-20T12:42:00.000Z',
     servico: 'Digitalização e engenharia reversa',
+    descricao: 'Digitalizar componente mecânico e entregar modelo tridimensional editável.',
+    material: 'Aço',
+    quantidade: '2',
+    prazo_servico: 'Até 15 dias',
     proposta_estado: 'publicada',
     valor_pre_proposta: 12840,
     prazo_pagamento_dias: 45,

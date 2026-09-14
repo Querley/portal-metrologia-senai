@@ -107,3 +107,15 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] iniciar a etapa de gestão de contas com recuperação segura de senha e restrição temporária aos papéis Técnico, Validador e Administrador;
 - [ ] configurar e testar o remetente de homologação para entrega real dos links de recuperação;
 - [ ] conectar o CMS persistente e localizar somente as áreas pública e do Cliente em PT-BR, inglês e alemão;
+
+### Revisão de 14 de setembro de 2026
+
+- [x] corrigir o estado transitório de recuperação e convite para impedir o redirecionamento antes da criação da senha;
+- [x] isolar a sessão por aba do navegador para homologação simultânea de Administrador e Cliente;
+- [x] exigir empresa, CNPJ válido e cargo sugerido ou personalizado no convite administrativo;
+- [x] ampliar o painel do Administrador com busca, filtros, ordenação, paginação da equipe, indicadores e análise da carteira;
+- [x] acrescentar ordenação por data, empresa, progresso, desvio e valor somente onde o perfil já pode consultar esse dado;
+- [x] tornar a necessidade legível em múltiplas linhas nas áreas interna e do Cliente;
+- [x] acrescentar gráficos de barras aos padrões de serviços, materiais e assuntos da área Conhecimento;
+- [x] fechar com `Esc` as janelas que já permitem fechamento por `X` ou clique externo;
+- [~] migration `202609140041` e Edge Function homologadas; falta repetir o fluxo real de convite/recuperação com uma caixa autorizada após a publicação do front-end;

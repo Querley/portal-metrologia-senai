@@ -78,6 +78,8 @@ test('painel interno calcula orçamento no cenário isolado de E2E', async ({ pa
   await page.getByRole('button', { name: /Assistente interno/i }).click();
   await expect(page.getByText('PRÉVIA SANITIZADA')).toBeVisible();
   await expect(page.getByText(/não altero o cálculo/i)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('PRÉVIA SANITIZADA')).toBeHidden();
 });
 
 test('área interna oferece autenticação e recuperação sem atalhos antigos', async ({ page }) => {
@@ -90,6 +92,14 @@ test('área interna oferece autenticação e recuperação sem atalhos antigos',
   await expect(page.getByRole('button', { name: 'Enviar link seguro' })).toBeVisible();
   await page.getByRole('button', { name: 'Voltar ao login' }).click();
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
+});
+
+test('link de convite permanece na definição de senha enquanto valida a sessão', async ({ page }) => {
+  await page.goto('/portal?definir=senha');
+  await expect(page.getByRole('heading', { name: 'Ative sua conta' })).toBeVisible();
+  await page.waitForTimeout(2200);
+  await expect(page).toHaveURL(/\/portal\?definir=senha/);
+  await expect(page.getByRole('button', { name: 'Salvar nova senha' })).toBeDisabled();
 });
 
 test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page }) => {
@@ -136,6 +146,21 @@ test('cliente registra outro trabalho e alterna o acompanhamento', async ({ page
   await expect(page.locator('.aceite-pre-proposta-cliente.recusada').getByText('Revisão solicitada', { exact: true })).toBeVisible();
   await page.getByLabel('Situação').selectOption('recusados');
   await expect(page.getByText('1 resultado', { exact: true })).toBeVisible();
+  await page.getByLabel('Ordenar').selectOption('antigas');
+  await expect(page.getByRole('button', { name: /DEM-SOL-0284/i })).toBeVisible();
+});
+
+test('nova solicitação do cliente fecha com Escape sem perder o portal', async ({ page }) => {
+  await page.goto('/portal/validacao-e2e?area=cliente');
+  await expect(page.locator('.portal-cliente')).toHaveAttribute('data-hidratado', 'sim');
+  const avisoPrivacidade = page.getByRole('dialog', { name: 'Antes de acessar sua área' });
+  await avisoPrivacidade.getByRole('button', { name: 'Continuar' }).click();
+  await expect(avisoPrivacidade).toBeHidden();
+  await page.getByRole('button', { name: 'Registrar novo trabalho' }).first().click();
+  await expect(page.getByRole('dialog', { name: 'Registrar outra solicitação' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Registrar outra solicitação' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Todos os trabalhos da sua empresa em um só lugar.' })).toBeVisible();
 });
 
 test('área interna mantém navegação, perfil e saída em larguras intermediárias e mobile', async ({ page }) => {

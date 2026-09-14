@@ -48,6 +48,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
   const [responsavelSelecionado, setResponsavelSelecionado] = useState('');
   const [busca, setBusca] = useState('');
   const [filtroEstado, setFiltroEstado] = useState(filtroEstadoInicial || 'todos');
+  const [ordenacao, setOrdenacao] = useState('recentes');
   const [filtroFechamento, setFiltroFechamento] = useState('todos');
   const [retornoAberto, setRetornoAberto] = useState('');
   const [motivoRetorno, setMotivoRetorno] = useState('');
@@ -104,7 +105,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
     };
   }, [carregar, cliente, perfil]);
 
-  const execucoesVisiveis = useMemo(() => execucoes.filter((execucao) => correspondeBusca(busca, execucao.solicitacao_codigo, execucao.empresa_nome, execucao.servico_slug, execucao.descricao, execucao.responsavel_nome, execucao.estado, execucao.fechamento_estado, formatosDataParaBusca(execucao.criada_em)) && (filtroEstado === 'todos' || execucao.estado === filtroEstado) && (filtroFechamento === 'todos' || execucao.fechamento_estado === filtroFechamento)), [busca, execucoes, filtroEstado, filtroFechamento]);
+  const execucoesVisiveis = useMemo(() => execucoes.filter((execucao) => correspondeBusca(busca, execucao.solicitacao_codigo, execucao.empresa_nome, execucao.servico_slug, execucao.descricao, execucao.responsavel_nome, execucao.estado, execucao.fechamento_estado, formatosDataParaBusca(execucao.criada_em)) && (filtroEstado === 'todos' || execucao.estado === filtroEstado) && (filtroFechamento === 'todos' || execucao.fechamento_estado === filtroFechamento)).sort((a,b) => ordenacao === 'antigas' ? +new Date(a.criada_em) - +new Date(b.criada_em) : ordenacao === 'empresa' ? a.empresa_nome.localeCompare(b.empresa_nome, 'pt-BR') : ordenacao === 'progresso' ? calcularProgressoExecucao(b.etapas) - calcularProgressoExecucao(a.etapas) : +new Date(b.criada_em) - +new Date(a.criada_em)), [busca, execucoes, filtroEstado, filtroFechamento, ordenacao]);
   const selecionada = useMemo(() => execucoesVisiveis.find((item) => item.execucao_id === selecionadaId) ?? execucoesVisiveis[0], [execucoesVisiveis, selecionadaId]);
   const progressoGeral = selecionada ? calcularProgressoExecucao(selecionada.etapas) : 0;
   const podeFechar = selecionada ? etapasConcluidas(selecionada.etapas) : false;
@@ -320,6 +321,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
           aoMudarBusca={setBusca}
           placeholder="Pesquisar protocolo, empresa, serviço, responsável ou data"
           total={execucoesVisiveis.length}
+          ordenacao={{ valor: ordenacao, aoMudar: setOrdenacao, opcoes: [{ valor: 'recentes', rotulo: 'Mais recentes' }, { valor: 'antigas', rotulo: 'Mais antigas' }, { valor: 'progresso', rotulo: 'Maior progresso' }, { valor: 'empresa', rotulo: 'Empresa (A–Z)' }] }}
           filtros={[
             {
               id: 'estado-execucao',

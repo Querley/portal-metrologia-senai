@@ -63,6 +63,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [recusaAberta, setRecusaAberta] = useState(false);
   const [buscaTrabalho, setBuscaTrabalho] = useState('');
   const [filtroTrabalho, setFiltroTrabalho] = useState('todos');
+  const [ordenacaoTrabalho, setOrdenacaoTrabalho] = useState('recentes');
   const [criandoSolicitacao, setCriandoSolicitacao] = useState(false);
   const [anexosPorSolicitacao, setAnexosPorSolicitacao] = useState<Record<string, AnexoSolicitacaoCliente[]>>({});
   const [baixandoAnexoId, setBaixandoAnexoId] = useState('');
@@ -138,7 +139,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const solicitacoesVisiveis = useMemo(
     () =>
       solicitacoes.filter((item) => {
-        const corresponde = correspondeBusca(buscaTrabalho, protocoloSolicitacaoCliente(item), tituloServicoCliente(item.servico), item.estado, item.proposta_estado, item.execucao_estado, formatosDataParaBusca(item.criada_em));
+        const corresponde = correspondeBusca(buscaTrabalho, protocoloSolicitacaoCliente(item), tituloServicoCliente(item.servico), item.descricao, item.material, item.quantidade, item.estado, item.proposta_estado, item.execucao_estado, formatosDataParaBusca(item.criada_em));
         if (!corresponde || filtroTrabalho === 'todos') return corresponde;
         if (filtroTrabalho === 'aguardando') return item.proposta_estado === 'publicada';
         if (filtroTrabalho === 'ativos') return item.execucao_estado === 'planejado' || item.execucao_estado === 'em_execucao';
@@ -146,8 +147,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         if (filtroTrabalho === 'recusados') return item.proposta_estado === 'recusada';
         if (filtroTrabalho === 'sem_proposta') return !item.proposta_estado;
         return true;
-      }),
-    [buscaTrabalho, filtroTrabalho, solicitacoes],
+      }).sort((a, b) => ordenacaoTrabalho === 'antigas' ? +new Date(a.criada_em) - +new Date(b.criada_em) : ordenacaoTrabalho === 'maior_valor' ? Number(b.valor_pre_proposta || 0) - Number(a.valor_pre_proposta || 0) : ordenacaoTrabalho === 'servico' ? tituloServicoCliente(a.servico).localeCompare(tituloServicoCliente(b.servico), 'pt-BR') : +new Date(b.criada_em) - +new Date(a.criada_em)),
+    [buscaTrabalho, filtroTrabalho, ordenacaoTrabalho, solicitacoes],
   );
   const selecionada = useMemo(() => solicitacoesVisiveis.find((item) => item.id === selecionadaId) ?? solicitacoesVisiveis[0], [selecionadaId, solicitacoesVisiveis]);
   const selecionadaIdEfetiva = selecionada?.id ?? '';
@@ -206,6 +207,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
           proposta_estado: null,
           valor_pre_proposta: null,
           prazo_pagamento_dias: dados.prazo_pagamento_dias,
+          descricao: dados.descricao,
+          material: dados.material,
+          quantidade: String(dados.quantidade),
+          prazo_servico: dados.prazo_servico,
           aceita_em: null,
           execucao_estado: null,
           etapas: [],
@@ -596,6 +601,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
             aoMudarBusca={setBuscaTrabalho}
             placeholder="Pesquisar por protocolo, serviço, estado ou data"
             total={solicitacoesVisiveis.length}
+            ordenacao={{ valor: ordenacaoTrabalho, aoMudar: setOrdenacaoTrabalho, opcoes: [{ valor: 'recentes', rotulo: 'Mais novos primeiro' }, { valor: 'antigas', rotulo: 'Mais antigos primeiro' }, { valor: 'maior_valor', rotulo: 'Maior valor' }, { valor: 'servico', rotulo: 'Tipo de serviço' }] }}
             filtros={[
               {
                 id: 'estado-trabalho',
@@ -657,6 +663,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 >
                   <span>{protocoloSolicitacaoCliente(item)}</span>
                   <strong>{tituloServicoCliente(item.servico)}</strong>
+                  <small className="detalhes-necessidade-cliente">{item.quantidade ? `${item.quantidade} peça(s)` : 'Quantidade não informada'}{item.material ? ` · ${item.material}` : ''}</small>
+                  {item.descricao && <small className="descricao-necessidade-cliente" title={item.descricao}>{item.descricao}</small>}
                   <small>Recebida em {dataCurta(item.criada_em)}</small>
                 </button>
               ))}

@@ -12,6 +12,9 @@ export function obterClienteSupabase(): SupabaseClient | null {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Cada aba mantém sua própria identidade. Assim, o laboratório pode validar
+      // o portal do Cliente em outra aba sem derrubar ou substituir sua sessão.
+      storage: typeof window === 'undefined' ? undefined : window.sessionStorage,
     },
   });
   return instancia;

@@ -52,6 +52,7 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
   const [busca, setBusca] = useState('');
   const [filtroLicao, setFiltroLicao] = useState(filtroInicial === 'em_validacao' ? 'em_validacao' : 'todos');
   const [filtroAssertividade, setFiltroAssertividade] = useState(filtroInicial === 'assertivo' ? 'assertivo' : 'todos');
+  const [ordenacao, setOrdenacao] = useState('recentes');
   const [inteligencia, setInteligencia] = useState<InteligenciaOperacional>({ servicos: [], materiais: [], assuntos: [] });
 
   const carregar = useCallback(async () => {
@@ -79,7 +80,7 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
   const assertivas = indicadores.filter((item) => item.esforco_assertivo === true).length;
   const percentualAssertivo = indicadores.length ? Math.round((assertivas / indicadores.length) * 100) : 0;
   const servicos = useMemo(() => [...new Map(indicadores.map((item) => [item.servico_id, item.servico_slug])).entries()], [indicadores]);
-  const indicadoresVisiveis = useMemo(() => indicadores.filter((item) => correspondeBusca(busca, item.solicitacao_codigo, item.empresa_nome, item.servico_slug, item.licao_resumo, item.licao_assuntos, formatosDataParaBusca(item.concluida_em)) && (filtroLicao === 'todos' || (filtroLicao === 'sem_licao' ? !item.licao_estado : item.licao_estado === filtroLicao)) && (filtroAssertividade === 'todos' || (filtroAssertividade === 'assertivo' ? item.esforco_assertivo === true : item.esforco_assertivo === false))), [busca, filtroAssertividade, filtroLicao, indicadores]);
+  const indicadoresVisiveis = useMemo(() => indicadores.filter((item) => correspondeBusca(busca, item.solicitacao_codigo, item.empresa_nome, item.servico_slug, item.licao_resumo, item.licao_assuntos, formatosDataParaBusca(item.concluida_em)) && (filtroLicao === 'todos' || (filtroLicao === 'sem_licao' ? !item.licao_estado : item.licao_estado === filtroLicao)) && (filtroAssertividade === 'todos' || (filtroAssertividade === 'assertivo' ? item.esforco_assertivo === true : item.esforco_assertivo === false))).sort((a,b) => ordenacao === 'antigas' ? +new Date(a.concluida_em) - +new Date(b.concluida_em) : ordenacao === 'desvio' ? Math.abs(Number(b.desvio_esforco || 0)) - Math.abs(Number(a.desvio_esforco || 0)) : ordenacao === 'empresa' ? a.empresa_nome.localeCompare(b.empresa_nome, 'pt-BR') : +new Date(b.concluida_em) - +new Date(a.concluida_em)), [busca, filtroAssertividade, filtroLicao, indicadores, ordenacao]);
 
   function abrirIndicadores(filtro: 'formalizada' | 'em_validacao' | 'assertivo' | 'todos') {
     if (filtro === 'assertivo') {
@@ -274,9 +275,9 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
       <section className="bloco inteligencia-operacional">
         <header><div><h2>Inteligência operacional</h2><p>Padrões consolidados dos trabalhos registrados; nenhum dado é inventado.</p></div><Activity /></header>
         <div className="grade-inteligencia-operacional">
-          <article><h3>Serviços e produtos mais usados</h3>{inteligencia.servicos.length === 0 ? <p>Os padrões surgirão após as primeiras execuções.</p> : <ol>{inteligencia.servicos.slice(0, 8).map((item) => <li key={item.slug}><span><strong>{tituloServico(item.slug)}</strong><small>{item.quantidade} trabalho(s) · {item.retrabalhos} retrabalho(s)</small></span><b>{item.horas_medias == null ? '—' : `${item.horas_medias} h médias`}</b></li>)}</ol>}</article>
-          <article><h3>Materiais recorrentes</h3>{inteligencia.materiais.length === 0 ? <p>Sem materiais suficientes para análise.</p> : <ol>{inteligencia.materiais.slice(0, 8).map((item) => <li key={item.material}><span><strong>{item.material}</strong><small>Vocabulário padronizado das solicitações</small></span><b>{item.quantidade}</b></li>)}</ol>}</article>
-          <article><h3>Técnicas e estratégias aprendidas</h3>{inteligencia.assuntos.length === 0 ? <p>Formalize lições e seus assuntos para gerar dicas pesquisáveis.</p> : <ol>{inteligencia.assuntos.slice(0, 8).map((item) => <li key={item.assunto}><span><strong>{item.assunto}</strong><small>Presente em lições formalizadas</small></span><b>{item.quantidade}</b></li>)}</ol>}</article>
+          <article><h3>Serviços e produtos mais usados</h3>{inteligencia.servicos.length === 0 ? <p>Os padrões surgirão após as primeiras execuções.</p> : <ol>{inteligencia.servicos.slice(0, 8).map((item) => <li key={item.slug}><span><strong>{tituloServico(item.slug)}</strong><small>{item.quantidade} trabalho(s) · {item.retrabalhos} retrabalho(s)</small><i className="barra-conhecimento"><em style={{ width: `${item.quantidade / Math.max(inteligencia.servicos[0]?.quantidade || 1, 1) * 100}%` }} /></i></span><b>{item.horas_medias == null ? '—' : `${item.horas_medias} h médias`}</b></li>)}</ol>}</article>
+          <article><h3>Materiais recorrentes</h3>{inteligencia.materiais.length === 0 ? <p>Sem materiais suficientes para análise.</p> : <ol>{inteligencia.materiais.slice(0, 8).map((item) => <li key={item.material}><span><strong>{item.material}</strong><small>Vocabulário padronizado das solicitações</small><i className="barra-conhecimento"><em style={{ width: `${item.quantidade / Math.max(inteligencia.materiais[0]?.quantidade || 1, 1) * 100}%` }} /></i></span><b>{item.quantidade}</b></li>)}</ol>}</article>
+          <article><h3>Técnicas e estratégias aprendidas</h3>{inteligencia.assuntos.length === 0 ? <p>Formalize lições e seus assuntos para gerar dicas pesquisáveis.</p> : <ol>{inteligencia.assuntos.slice(0, 8).map((item) => <li key={item.assunto}><span><strong>{item.assunto}</strong><small>Presente em lições formalizadas</small><i className="barra-conhecimento"><em style={{ width: `${item.quantidade / Math.max(inteligencia.assuntos[0]?.quantidade || 1, 1) * 100}%` }} /></i></span><b>{item.quantidade}</b></li>)}</ol>}</article>
         </div>
         <p className="nota-inteligencia">Análises comerciais identificáveis por cliente ficam restritas ao Administrador, na área administrativa; Técnicos e Validadores recebem aqui somente padrões operacionais necessários ao trabalho.</p>
       </section>
@@ -295,6 +296,7 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
           aoMudarBusca={setBusca}
           placeholder="Pesquisar protocolo, empresa, serviço, assunto ou data"
           total={indicadoresVisiveis.length}
+          ordenacao={{ valor: ordenacao, aoMudar: setOrdenacao, opcoes: [{ valor: 'recentes', rotulo: 'Mais recentes' }, { valor: 'antigas', rotulo: 'Mais antigas' }, { valor: 'desvio', rotulo: 'Maior desvio' }, { valor: 'empresa', rotulo: 'Empresa (A–Z)' }] }}
           filtros={[
             {
               id: 'estado-licao',

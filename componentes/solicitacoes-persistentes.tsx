@@ -10,7 +10,6 @@ import { apresentarEstadoSolicitacao, podeConsultarSolicitacoes, podeCriarPrePro
 import { BarraBuscaFiltros } from './barra-busca-filtros';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { AnexosSolicitacaoInternos } from './anexos-solicitacao-internos';
-import { tituloDescritivoTrabalho } from '../lib/titulos-trabalho';
 
 function formatarDataHora(valor: string): string {
   return new Intl.DateTimeFormat('pt-BR', {
@@ -29,6 +28,7 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
   const [filtroAcesso, setFiltroAcesso] = useState('todos');
   const [filtroAtendimento, setFiltroAtendimento] = useState(filtroInicial === 'sem_proposta' ? 'sem_proposta' : 'todos');
   const [filtroNecessidade, setFiltroNecessidade] = useState('todos');
+  const [ordenacao, setOrdenacao] = useState('recentes');
 
   const carregar = useCallback(async () => {
     if (!podeConsultarSolicitacoes(perfil)) {
@@ -62,8 +62,8 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
         if (filtroAtendimento === 'com_proposta' && !solicitacao.tem_pre_proposta) return false;
         if (!['todos', 'sem_proposta', 'com_proposta'].includes(filtroAtendimento) && solicitacao.estado_pre_proposta !== filtroAtendimento) return false;
         return true;
-      }),
-    [busca, filtroAcesso, filtroAtendimento, filtroInicial, filtroNecessidade, solicitacoes],
+      }).sort((a, b) => ordenacao === 'antigas' ? +new Date(a.criado_em) - +new Date(b.criado_em) : ordenacao === 'empresa' ? a.empresa.localeCompare(b.empresa, 'pt-BR') : ordenacao === 'quantidade' ? Number(b.quantidade || 0) - Number(a.quantidade || 0) : +new Date(b.criado_em) - +new Date(a.criado_em)),
+    [busca, filtroAcesso, filtroAtendimento, filtroInicial, filtroNecessidade, ordenacao, solicitacoes],
   );
 
   async function vincularAoCliente(solicitacao: SolicitacaoParaPreProposta) {
@@ -151,6 +151,7 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
             aoMudarBusca={setBusca}
             placeholder="Pesquisar protocolo, empresa, contato, necessidade ou data"
             total={solicitacoesVisiveis.length}
+            ordenacao={{ valor: ordenacao, aoMudar: setOrdenacao, opcoes: [{ valor: 'recentes', rotulo: 'Mais novas primeiro' }, { valor: 'antigas', rotulo: 'Mais antigas primeiro' }, { valor: 'empresa', rotulo: 'Empresa (A–Z)' }, { valor: 'quantidade', rotulo: 'Maior quantidade' }] }}
             filtros={[
               {
                 id: 'acesso-cliente',
@@ -227,7 +228,7 @@ export function SolicitacoesPersistentes({ cliente, perfil, aoCriarPreProposta, 
                           {solicitacao.nome} · {solicitacao.email}
                         </small>
                       </td>
-                      <td><strong>{tituloDescritivoTrabalho({ quantidade: solicitacao.quantidade, descricao: solicitacao.descricao, servico: rotuloNecessidadeCliente(solicitacao.necessidade), empresa: solicitacao.empresa })}</strong></td>
+                      <td className="necessidade-solicitacao"><strong>{rotuloNecessidadeCliente(solicitacao.necessidade)}</strong><span>{solicitacao.quantidade || 'Quantidade não informada'} peça(s)</span><small title={solicitacao.descricao}>{solicitacao.descricao}</small></td>
                       <td>{formatarDataHora(solicitacao.criado_em)}</td>
                       <td>
                         <span className={`estado ${estado.classe}`}>{estado.rotulo}</span>

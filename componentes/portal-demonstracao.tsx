@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Activity, BookOpenCheck, Bot, BriefcaseBusiness, Calculator, ChevronRight, CircleDollarSign, FileCheck2, Gauge, LayoutDashboard, LogOut, MessageSquareText, Plus, Settings, ShieldCheck, Sparkles } from 'lucide-react';
 import { calcularProposta, formatarDinheiro } from '../lib/calculos';
 import type { PerfilInterno } from '../lib/contratos';
@@ -82,6 +82,14 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
   const solicitacoesPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
   const mensagensPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
   const menu = useMemo(() => (custosDisponiveis ? [...menuBase, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }] : menuBase), [custosDisponiveis]);
+
+  useEffect(() => {
+    function fecharComEscape(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') setAssistenteAberto(false);
+    }
+    window.addEventListener('keydown', fecharComEscape);
+    return () => window.removeEventListener('keydown', fecharComEscape);
+  }, []);
 
   const item = useMemo(
     () =>

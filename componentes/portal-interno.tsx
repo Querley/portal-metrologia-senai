@@ -1,15 +1,18 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Activity, ArrowLeft, Ban, CheckCircle2, KeyRound, LockKeyhole, Mail, Save, Search, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { Activity, ArrowLeft, Ban, Building2, CheckCircle2, KeyRound, LockKeyhole, Mail, Save, ShieldCheck, TrendingUp, UserPlus, Users, WalletCards } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
 import type { ContextoCliente } from '../lib/portal-cliente';
+import { limparModoDefinicaoSenha, modoDefinicaoSenha, type ModoDefinicaoSenha } from '../lib/sessao-portal';
 import { obterClienteSupabase } from '../lib/supabase/cliente';
 import { MarcaOficial } from './marca-oficial';
 import { PortalCliente } from './portal-cliente';
 import { PortalDemonstracao } from './portal-demonstracao';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
+import { BarraBuscaFiltros } from './barra-busca-filtros';
+import { cnpjValido, formatarCnpj } from '../lib/solicitacao';
 
 type Perfil = {
   usuario_id: string;
@@ -20,9 +23,19 @@ type Perfil = {
 
 type Estado = 'carregando' | 'sem_configuracao' | 'anonimo' | 'sem_perfil' | 'autenticado_interno' | 'autenticado_cliente' | 'erro';
 
-type FuncionarioAdministrativo = { usuario_id: string; nome: string; email: string; perfil: PerfilInterno; atribuidos: number; concluidos: number; em_execucao: number; retrabalhos: number };
+type FuncionarioAdministrativo = { usuario_id: string; nome: string; email: string; perfil: PerfilInterno; cargo?: string | null; cnpj?: string | null; atribuidos: number; concluidos: number; em_execucao: number; retrabalhos: number };
 type ContatoAdministrativo = { usuario_id: string; nome: string; email: string; cargo: string };
-type ClienteAdministrativo = { empresa_id: string; empresa: string; bloqueada: boolean; bloqueio_motivo: string | null; contatos: ContatoAdministrativo[]; solicitacoes: number; concluidos: number; ticket_medio: number | null };
+type ClienteAdministrativo = { empresa_id: string; empresa: string; cnpj?: string; bloqueada: boolean; bloqueio_motivo: string | null; contatos: ContatoAdministrativo[]; solicitacoes: number; concluidos: number; em_execucao?: number; propostas_aceitas?: number; propostas_recusadas?: number; ticket_medio: number | null; valor_total?: number; ultima_solicitacao?: string | null; servicos?: Array<{ slug: string; quantidade: number }> };
+
+type UsuarioAdministrativo = Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'> & { email?: string; cargo_profissional?: string | null; cnpj_empregador_sintetico?: string | null };
+const cargosPredefinidos = ['Analista', 'Coordenador(a)', 'Engenheiro(a)', 'Gestor(a)', 'Metrologista', 'Técnico(a)', 'Outro'];
+const ITENS_POR_PAGINA_ADMIN = 8;
+
+function PaginacaoAdmin({ pagina, total, aoMudar }: { pagina: number; total: number; aoMudar: (pagina: number) => void }) {
+  const paginas = Math.max(1, Math.ceil(total / ITENS_POR_PAGINA_ADMIN));
+  if (paginas <= 1) return null;
+  return <nav className="paginacao-admin" aria-label="Paginação"><button type="button" disabled={pagina <= 1} onClick={() => aoMudar(pagina - 1)}>Anterior</button><span>Página {pagina} de {paginas}</span><button type="button" disabled={pagina >= paginas} onClick={() => aoMudar(pagina + 1)}>Próxima</button></nav>;
+}
 
 const rotulosPerfil: Record<PerfilInterno, string> = {
   consulta: 'Consulta',
@@ -51,7 +64,8 @@ export function PortalInterno() {
   const [contextoCliente, setContextoCliente] = useState<ContextoCliente | null>(null);
   const [mensagem, setMensagem] = useState('');
   const [editandoPerfil, setEditandoPerfil] = useState(false);
-  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
+  const [modoSenha, setModoSenha] = useState<ModoDefinicaoSenha>(() => typeof window === 'undefined' ? null : modoDefinicaoSenha(window.location.href));
+  const [linkSenhaPronto, setLinkSenhaPronto] = useState(false);
 
   const carregarPerfil = useCallback(
     async (usuarioId: string) => {
@@ -91,18 +105,24 @@ export function PortalInterno() {
     if (!cliente) return;
 
     let ativo = true;
+    const modoInicial = modoDefinicaoSenha(window.location.href);
     cliente.auth
       .getSession()
       .then(({ data }) => {
         if (!ativo) return;
-        if (!data.session?.user) setEstado('anonimo');
+        if (modoInicial) {
+          setModoSenha(modoInicial);
+          setLinkSenhaPronto(Boolean(data.session?.user));
+          setEstado('anonimo');
+        }
+        else if (!data.session?.user) setEstado('anonimo');
         else void carregarPerfil(data.session.user.id);
       })
       .catch(() => {
         if (ativo) setEstado('erro');
       });
 
-    const { data: autenticacao } = cliente.auth.onAuthStateChange((evento) => {
+    const { data: autenticacao } = cliente.auth.onAuthStateChange((evento, sessao) => {
       if (evento === 'SIGNED_OUT') {
         setPerfil(null);
         setContextoCliente(null);
@@ -110,7 +130,13 @@ export function PortalInterno() {
         setEstado('anonimo');
       }
       if (evento === 'PASSWORD_RECOVERY') {
-        setRecuperandoSenha(true);
+        setModoSenha('recuperacao');
+        setLinkSenhaPronto(Boolean(sessao?.user));
+        setEstado('anonimo');
+      }
+      if (evento === 'SIGNED_IN' && modoDefinicaoSenha(window.location.href)) {
+        setModoSenha(modoDefinicaoSenha(window.location.href));
+        setLinkSenhaPronto(Boolean(sessao?.user));
         setEstado('anonimo');
       }
     });
@@ -123,6 +149,11 @@ export function PortalInterno() {
 
   async function sair() {
     if (!cliente) return;
+    if (typeof window !== 'undefined' && modoDefinicaoSenha(window.location.href)) {
+      window.history.replaceState({}, '', limparModoDefinicaoSenha(window.location.href));
+      setModoSenha(null);
+      setLinkSenhaPronto(false);
+    }
     await cliente.auth.signOut();
   }
 
@@ -138,10 +169,10 @@ export function PortalInterno() {
     return <PortalCliente cliente={cliente!} contexto={contextoCliente} aoSair={sair} mensagemInicial={mensagem} />;
   }
 
-  return <TelaAcesso estado={estado} cliente={cliente} mensagem={mensagem} aoAutenticar={carregarPerfil} recuperandoSenha={recuperandoSenha} aoConcluirRecuperacao={() => setRecuperandoSenha(false)} />;
+  return <TelaAcesso estado={estado} cliente={cliente} mensagem={mensagem} aoAutenticar={carregarPerfil} modoSenha={modoSenha} linkSenhaPronto={linkSenhaPronto} aoConcluirRecuperacao={() => { setModoSenha(null); setLinkSenhaPronto(false); }} />;
 }
 
-function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, recuperandoSenha, aoConcluirRecuperacao }: { estado: Estado; cliente: SupabaseClient | null; mensagem: string; aoAutenticar: (usuarioId: string) => Promise<void>; recuperandoSenha: boolean; aoConcluirRecuperacao: () => void }) {
+function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, modoSenha, linkSenhaPronto, aoConcluirRecuperacao }: { estado: Estado; cliente: SupabaseClient | null; mensagem: string; aoAutenticar: (usuarioId: string) => Promise<void>; modoSenha: ModoDefinicaoSenha; linkSenhaPronto: boolean; aoConcluirRecuperacao: () => void }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
@@ -199,12 +230,19 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, recuperandoSenha,
     }
     setEnviando(true);
     setErro('');
+    const { data: sessaoAtual } = await cliente.auth.getSession();
+    if (!sessaoAtual.session?.user) {
+      setErro('O link ainda não foi validado ou já expirou. Abra novamente o link mais recente recebido por e-mail.');
+      setEnviando(false);
+      return;
+    }
     const { error } = await cliente.auth.updateUser({ password: novaSenha });
     if (error) setErro('O link expirou ou a senha não pôde ser alterada. Solicite uma nova recuperação.');
     else {
       setAviso('Senha alterada. Você já pode continuar com a sessão protegida.');
       setNovaSenha('');
       setConfirmacaoSenha('');
+      window.history.replaceState({}, '', limparModoDefinicaoSenha(window.location.href));
       aoConcluirRecuperacao();
       const { data } = await cliente.auth.getUser();
       if (data.user) await aoAutenticar(data.user.id);
@@ -258,22 +296,22 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, recuperandoSenha,
             </button>
           </>
         )}
-        {estado === 'anonimo' && recuperandoSenha && (
+        {estado === 'anonimo' && modoSenha && (
           <>
-            <h1>Crie uma nova senha</h1>
-            <p>Use uma senha exclusiva com pelo menos 10 caracteres.</p>
+            <h1>{modoSenha === 'convite' ? 'Ative sua conta' : 'Crie uma nova senha'}</h1>
+            <p>{linkSenhaPronto ? 'Use uma senha exclusiva com pelo menos 10 caracteres.' : 'Validando o link seguro recebido por e-mail…'}</p>
             <form onSubmit={redefinirSenha}>
               <label htmlFor="nova-senha">Nova senha</label>
               <input id="nova-senha" type="password" autoComplete="new-password" required minLength={10} value={novaSenha} onChange={(evento) => setNovaSenha(evento.target.value)} />
               <label htmlFor="confirmar-nova-senha">Confirmar nova senha</label>
               <input id="confirmar-nova-senha" type="password" autoComplete="new-password" required minLength={10} value={confirmacaoSenha} onChange={(evento) => setConfirmacaoSenha(evento.target.value)} />
-              <button className="botao-acesso" type="submit" disabled={enviando}>
+              <button className="botao-acesso" type="submit" disabled={enviando || !linkSenhaPronto}>
                 <KeyRound size={16} /> {enviando ? 'Alterando…' : 'Salvar nova senha'}
               </button>
             </form>
           </>
         )}
-        {estado === 'anonimo' && !recuperandoSenha && solicitandoRecuperacao && (
+        {estado === 'anonimo' && !modoSenha && solicitandoRecuperacao && (
           <>
             <h1>Recuperar senha</h1>
             <p>Informe o e-mail usado no portal. Por segurança, a confirmação não revela se o endereço está cadastrado.</p>
@@ -287,7 +325,7 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, recuperandoSenha,
             </form>
           </>
         )}
-        {estado === 'anonimo' && !recuperandoSenha && !solicitandoRecuperacao && (
+        {estado === 'anonimo' && !modoSenha && !solicitandoRecuperacao && (
           <>
             <h1>Entrar no Portal de Metrologia</h1>
             <p>Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.</p>
@@ -318,12 +356,18 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
   const [mensagem, setMensagem] = useState('');
   const [tipoMensagem, setTipoMensagem] = useState<'sucesso' | 'erro'>('sucesso');
   const [salvando, setSalvando] = useState(false);
-  const [usuarios, setUsuarios] = useState<Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioAdministrativo[]>([]);
   const [alterandoUsuario, setAlterandoUsuario] = useState('');
   const [funcionarios, setFuncionarios] = useState<FuncionarioAdministrativo[]>([]);
   const [clientes, setClientes] = useState<ClienteAdministrativo[]>([]);
   const [buscaCliente, setBuscaCliente] = useState('');
-  const [convite, setConvite] = useState({ nome: '', email: '', tipo: 'cliente', empresa: '', cargo: '' });
+  const [buscaEquipe, setBuscaEquipe] = useState('');
+  const [filtroEquipe, setFiltroEquipe] = useState('todos');
+  const [ordenacaoEquipe, setOrdenacaoEquipe] = useState('nome');
+  const [filtroCliente, setFiltroCliente] = useState('todos');
+  const [ordenacaoCliente, setOrdenacaoCliente] = useState('recentes');
+  const [paginaEquipe, setPaginaEquipe] = useState(1);
+  const [convite, setConvite] = useState({ nome: '', email: '', tipo: 'cliente', empresa: '', cnpj: '', cargoOpcao: 'Gestor(a)', cargoOutro: '' });
   const [convidando, setConvidando] = useState(false);
   const [bloqueando, setBloqueando] = useState('');
 
@@ -333,7 +377,7 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
       cliente.rpc('listar_usuarios_internos_demonstrativos'),
       cliente.rpc('listar_painel_administrativo_demonstrativo'),
     ]);
-    if (!respostaUsuarios.error) setUsuarios((respostaUsuarios.data ?? []) as Array<Pick<Perfil, 'usuario_id' | 'nome' | 'perfil_interno'>>);
+    if (!respostaUsuarios.error) setUsuarios((respostaUsuarios.data ?? []) as UsuarioAdministrativo[]);
     if (!respostaPainel.error && respostaPainel.data && typeof respostaPainel.data === 'object') {
       const painel = respostaPainel.data as { funcionarios?: FuncionarioAdministrativo[]; clientes?: ClienteAdministrativo[] };
       setFuncionarios(painel.funcionarios ?? []);
@@ -346,7 +390,12 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
     queueMicrotask(() => void carregarAdministracao());
   }, [carregarAdministracao, cliente]);
 
-  const clientesVisiveis = useMemo(() => clientes.filter((item) => `${item.empresa} ${item.contatos.map((contato) => `${contato.nome} ${contato.email}`).join(' ')}`.toLowerCase().includes(buscaCliente.trim().toLowerCase())), [buscaCliente, clientes]);
+  const funcionariosVisiveis = useMemo(() => funcionarios.filter((item) => `${item.nome} ${item.email} ${item.cargo ?? ''} ${rotulosPerfil[item.perfil]}`.toLowerCase().includes(buscaEquipe.trim().toLowerCase()) && (filtroEquipe === 'todos' || item.perfil === filtroEquipe)).sort((a, b) => ordenacaoEquipe === 'concluidos' ? b.concluidos - a.concluidos : ordenacaoEquipe === 'retrabalhos' ? b.retrabalhos - a.retrabalhos : ordenacaoEquipe === 'execucao' ? b.em_execucao - a.em_execucao : a.nome.localeCompare(b.nome, 'pt-BR')), [buscaEquipe, filtroEquipe, funcionarios, ordenacaoEquipe]);
+  const usuariosVisiveis = useMemo(() => usuarios.filter((item) => `${item.nome} ${item.email ?? ''} ${item.cargo_profissional ?? ''}`.toLowerCase().includes(buscaEquipe.trim().toLowerCase()) && (filtroEquipe === 'todos' || item.perfil_interno === filtroEquipe)), [buscaEquipe, filtroEquipe, usuarios]);
+  const clientesVisiveis = useMemo(() => clientes.filter((item) => `${item.empresa} ${item.cnpj ?? ''} ${item.contatos.map((contato) => `${contato.nome} ${contato.email} ${contato.cargo}`).join(' ')}`.toLowerCase().includes(buscaCliente.trim().toLowerCase()) && (filtroCliente === 'todos' || (filtroCliente === 'ativas' ? !item.bloqueada : filtroCliente === 'bloqueadas' ? item.bloqueada : filtroCliente === 'com_execucao' ? Boolean(item.em_execucao) : true))).sort((a, b) => ordenacaoCliente === 'ticket' ? Number(b.ticket_medio || 0) - Number(a.ticket_medio || 0) : ordenacaoCliente === 'valor' ? Number(b.valor_total || 0) - Number(a.valor_total || 0) : ordenacaoCliente === 'nome' ? a.empresa.localeCompare(b.empresa, 'pt-BR') : +new Date(b.ultima_solicitacao || 0) - +new Date(a.ultima_solicitacao || 0)), [buscaCliente, clientes, filtroCliente, ordenacaoCliente]);
+  const paginaEquipeValida = Math.min(paginaEquipe, Math.max(1, Math.ceil(usuariosVisiveis.length / ITENS_POR_PAGINA_ADMIN)));
+  const usuariosPaginados = usuariosVisiveis.slice((paginaEquipeValida - 1) * ITENS_POR_PAGINA_ADMIN, paginaEquipeValida * ITENS_POR_PAGINA_ADMIN);
+  const funcionariosPaginados = funcionariosVisiveis.slice((paginaEquipeValida - 1) * ITENS_POR_PAGINA_ADMIN, paginaEquipeValida * ITENS_POR_PAGINA_ADMIN);
 
   async function alterarFuncao(usuarioId: string, novaFuncao: PerfilInterno) {
     setAlterandoUsuario(usuarioId);
@@ -409,14 +458,17 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
     evento.preventDefault();
     setConvidando(true);
     setMensagem('');
-    const { data, error } = await cliente.functions.invoke('gerenciar-usuarios', { body: convite });
+    const cargo = convite.cargoOpcao === 'Outro' ? convite.cargoOutro.trim() : convite.cargoOpcao;
+    if (!cnpjValido(convite.cnpj)) { setTipoMensagem('erro'); setMensagem('Informe um CNPJ válido para a empresa.'); setConvidando(false); return; }
+    if (cargo.length < 2) { setTipoMensagem('erro'); setMensagem('Selecione ou informe um cargo válido.'); setConvidando(false); return; }
+    const { data, error } = await cliente.functions.invoke('gerenciar-usuarios', { body: { ...convite, cargo } });
     if (error || data?.erro) {
       setTipoMensagem('erro');
       setMensagem(data?.erro || 'Não foi possível enviar o convite.');
     } else {
       setTipoMensagem('sucesso');
       setMensagem(data?.mensagem || 'Convite enviado por e-mail.');
-      setConvite({ nome: '', email: '', tipo: 'cliente', empresa: '', cargo: '' });
+      setConvite({ nome: '', email: '', tipo: 'cliente', empresa: '', cnpj: '', cargoOpcao: 'Gestor(a)', cargoOutro: '' });
       await carregarAdministracao();
     }
     setConvidando(false);
@@ -432,14 +484,18 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
     setBloqueando('');
   }
 
-  async function editarContato(contato: ContatoAdministrativo) {
+  async function editarContato(item: ClienteAdministrativo, contato: ContatoAdministrativo) {
+    const empresaAtualizada = window.prompt('Razão social:', item.empresa)?.trim();
+    if (!empresaAtualizada) return;
+    const cnpjAtualizado = window.prompt('CNPJ da empresa:', formatarCnpj(item.cnpj ?? ''))?.trim();
+    if (!cnpjAtualizado || !cnpjValido(cnpjAtualizado)) { setTipoMensagem('erro'); setMensagem('Informe um CNPJ válido.'); return; }
     const nomeAtualizado = window.prompt('Nome do contato:', contato.nome)?.trim();
     if (!nomeAtualizado) return;
     const emailAtualizado = window.prompt('E-mail de acesso:', contato.email)?.trim().toLowerCase();
     if (!emailAtualizado) return;
     const cargoAtualizado = window.prompt('Cargo ou função:', contato.cargo)?.trim();
     if (!cargoAtualizado) return;
-    const { data, error } = await cliente.functions.invoke('gerenciar-usuarios', { body: { acao: 'atualizar', usuario_id: contato.usuario_id, nome: nomeAtualizado, email: emailAtualizado, cargo: cargoAtualizado } });
+    const { data, error } = await cliente.functions.invoke('gerenciar-usuarios', { body: { acao: 'atualizar_cliente', empresa_id: item.empresa_id, empresa: empresaAtualizada, cnpj: cnpjAtualizado, usuario_id: contato.usuario_id, nome: nomeAtualizado, email: emailAtualizado, cargo: cargoAtualizado } });
     if (error || data?.erro) { setTipoMensagem('erro'); setMensagem(data?.erro || 'Não foi possível atualizar o contato.'); }
     else { setTipoMensagem('sucesso'); setMensagem(data?.mensagem || 'Contato atualizado.'); await carregarAdministracao(); }
   }
@@ -472,13 +528,20 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
         </form>
         {perfil.perfil_interno === 'administrador' && (
           <section className="gestao-usuarios-internos area-administrativa">
+            <section className="resumo-administracao" aria-label="Resumo administrativo">
+              <article><Users /><span><small>Equipe interna</small><strong>{funcionarios.length}</strong></span></article>
+              <article><Building2 /><span><small>Empresas clientes</small><strong>{clientes.length}</strong></span></article>
+              <article><TrendingUp /><span><small>Serviços concluídos</small><strong>{clientes.reduce((total, item) => total + item.concluidos, 0)}</strong></span></article>
+              <article><WalletCards /><span><small>Volume aceito</small><strong>{new Intl.NumberFormat('pt-BR', { notation: 'compact', style: 'currency', currency: 'BRL' }).format(clientes.reduce((total, item) => total + Number(item.valor_total || 0), 0))}</strong></span></article>
+            </section>
             <h2>Funções da equipe</h2>
-            <p>Altere a função de usuários internos existentes. Sua própria função fica protegida contra alteração acidental.</p>
-            {usuarios.map((usuario) => (
+            <p>Localize profissionais por nome, e-mail, cargo ou perfil. Sua própria função fica protegida contra alteração acidental.</p>
+            <BarraBuscaFiltros busca={buscaEquipe} aoMudarBusca={(valor) => { setBuscaEquipe(valor); setPaginaEquipe(1); }} placeholder="Pesquisar profissional, e-mail ou cargo" total={usuariosVisiveis.length} filtros={[{ id: 'perfil-equipe', rotulo: 'Perfil', valor: filtroEquipe, aoMudar: (valor) => { setFiltroEquipe(valor); setPaginaEquipe(1); }, opcoes: [{ valor: 'todos', rotulo: 'Todos os perfis' }, { valor: 'tecnico', rotulo: 'Técnicos' }, { valor: 'validador', rotulo: 'Validadores' }, { valor: 'administrador', rotulo: 'Administradores' }] }]} ordenacao={{ valor: ordenacaoEquipe, aoMudar: (valor) => { setOrdenacaoEquipe(valor); setPaginaEquipe(1); }, opcoes: [{ valor: 'nome', rotulo: 'Nome (A–Z)' }, { valor: 'concluidos', rotulo: 'Mais conclusões' }, { valor: 'execucao', rotulo: 'Mais trabalhos ativos' }, { valor: 'retrabalhos', rotulo: 'Mais retrabalhos' }] }} />
+            <div className="grade-funcoes-equipe">{usuariosPaginados.map((usuario) => (
               <label key={usuario.usuario_id}>
                 <span>
                   <strong>{usuario.nome}</strong>
-                  <small>{usuario.usuario_id === perfil.usuario_id ? 'Você' : 'Usuário interno'}</small>
+                  <small>{usuario.usuario_id === perfil.usuario_id ? 'Você' : usuario.cargo_profissional || usuario.email || 'Usuário interno'}</small>
                 </span>
                 <select value={usuario.perfil_interno} disabled={usuario.usuario_id === perfil.usuario_id || alterandoUsuario === usuario.usuario_id} onChange={(evento) => void alterarFuncao(usuario.usuario_id, evento.target.value as PerfilInterno)}>
                   {(['tecnico', 'validador', 'administrador'] as PerfilInterno[]).map((valor) => (
@@ -488,25 +551,29 @@ function EditarPerfil({ perfil, cliente, aoAtualizar, aoVoltar }: { perfil: Perf
                   ))}
                 </select>
               </label>
-            ))}
+            ))}</div><PaginacaoAdmin pagina={paginaEquipeValida} total={usuariosVisiveis.length} aoMudar={setPaginaEquipe} />
             <section className="painel-convite-usuario">
               <header><UserPlus size={20} /><div><h2>Cadastrar novo usuário</h2><p>O sistema envia um convite seguro; a pessoa define a própria senha.</p></div></header>
               <form onSubmit={convidarUsuario}>
                 <label>Nome<input required minLength={2} maxLength={120} value={convite.nome} onChange={(e) => setConvite((atual) => ({ ...atual, nome: e.target.value }))} /></label>
                 <label>E-mail<input required type="email" value={convite.email} onChange={(e) => setConvite((atual) => ({ ...atual, email: e.target.value }))} /></label>
                 <label>Tipo<select value={convite.tipo} onChange={(e) => setConvite((atual) => ({ ...atual, tipo: e.target.value }))}><option value="cliente">Cliente</option><option value="tecnico">Técnico</option><option value="validador">Validador</option><option value="administrador">Administrador</option></select></label>
-                {convite.tipo === 'cliente' && <><label>Empresa<input required minLength={2} maxLength={180} value={convite.empresa} onChange={(e) => setConvite((atual) => ({ ...atual, empresa: e.target.value }))} /></label><label>Cargo/função<input required minLength={2} maxLength={120} value={convite.cargo} onChange={(e) => setConvite((atual) => ({ ...atual, cargo: e.target.value }))} /></label></>}
+                <label>Empresa do usuário<input required minLength={2} maxLength={180} value={convite.empresa} onChange={(e) => setConvite((atual) => ({ ...atual, empresa: e.target.value }))} /></label>
+                <label>CNPJ da empresa<input required inputMode="numeric" minLength={18} maxLength={18} value={convite.cnpj} onChange={(e) => setConvite((atual) => ({ ...atual, cnpj: formatarCnpj(e.target.value) }))} placeholder="00.000.000/0000-00" /></label>
+                <label>Cargo/função<select value={convite.cargoOpcao} onChange={(e) => setConvite((atual) => ({ ...atual, cargoOpcao: e.target.value }))}>{cargosPredefinidos.map((cargo) => <option key={cargo}>{cargo}</option>)}</select></label>
+                {convite.cargoOpcao === 'Outro' && <label>Outro cargo<input required minLength={2} maxLength={120} value={convite.cargoOutro} onChange={(e) => setConvite((atual) => ({ ...atual, cargoOutro: e.target.value }))} /></label>}
                 <button className="botao-acesso" type="submit" disabled={convidando}><UserPlus size={16} />{convidando ? 'Enviando…' : 'Enviar convite'}</button>
               </form>
             </section>
             <section className="metricas-equipe-admin">
               <header><Activity size={20} /><div><h2>Performance da equipe</h2><p>Indicadores operacionais; valores comerciais não são expostos ao Técnico.</p></div></header>
-              <div>{funcionarios.map((item) => <article key={item.usuario_id}><strong>{item.nome}</strong><small>{rotulosPerfil[item.perfil]}</small><dl><div><dt>Atribuídos</dt><dd>{item.atribuidos}</dd></div><div><dt>Em execução</dt><dd>{item.em_execucao}</dd></div><div><dt>Concluídos</dt><dd>{item.concluidos}</dd></div><div><dt>Retrabalhos</dt><dd>{item.retrabalhos}</dd></div></dl></article>)}</div>
+              <div>{funcionariosPaginados.map((item) => <article key={item.usuario_id}><strong>{item.nome}</strong><small>{item.cargo || rotulosPerfil[item.perfil]} · {rotulosPerfil[item.perfil]}</small><dl><div><dt>Atribuídos</dt><dd>{item.atribuidos}</dd></div><div><dt>Em execução</dt><dd>{item.em_execucao}</dd></div><div><dt>Concluídos</dt><dd>{item.concluidos}</dd></div><div><dt>Retrabalhos</dt><dd>{item.retrabalhos}</dd></div></dl><div className="barra-performance" title={`${item.concluidos} de ${Math.max(item.atribuidos, 1)} concluídos`}><span style={{ width: `${Math.min(100, item.atribuidos ? item.concluidos / item.atribuidos * 100 : 0)}%` }} /></div></article>)}</div>
             </section>
             <section className="clientes-admin">
               <header><Users size={20} /><div><h2>Clientes cadastrados</h2><p>Pesquise empresas e contatos, acompanhe relacionamento e administre o acesso.</p></div></header>
-              <label className="busca-clientes-admin"><Search size={16} /><input type="search" value={buscaCliente} onChange={(e) => setBuscaCliente(e.target.value)} placeholder="Pesquisar empresa, contato ou e-mail" /></label>
-              <div>{clientesVisiveis.map((item) => <article key={item.empresa_id}><header><div><strong>{item.empresa}</strong><small>{item.contatos.map((contato) => `${contato.nome} · ${contato.email}`).join(' | ') || 'Sem contato ativo'}</small></div><span className={`estado ${item.bloqueada ? 'estado-rejeitada' : 'estado-formalizada'}`}>{item.bloqueada ? 'Bloqueada' : 'Ativa'}</span></header><dl><div><dt>Solicitações</dt><dd>{item.solicitacoes}</dd></div><div><dt>Concluídos</dt><dd>{item.concluidos}</dd></div><div><dt>Ticket médio</dt><dd>{item.ticket_medio == null ? '—' : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.ticket_medio)}</dd></div></dl>{item.bloqueio_motivo && <p>Motivo: {item.bloqueio_motivo}</p>}<div className="acoes-cliente-admin">{item.contatos.map((contato) => <button type="button" key={contato.usuario_id} onClick={() => void editarContato(contato)}>Editar {contato.nome}</button>)}<button type="button" disabled={bloqueando === item.empresa_id} onClick={() => void alterarBloqueio(item)}>{item.bloqueada ? <CheckCircle2 size={15} /> : <Ban size={15} />}{item.bloqueada ? 'Desbloquear acesso' : 'Bloquear acesso'}</button></div></article>)}</div>
+              <BarraBuscaFiltros busca={buscaCliente} aoMudarBusca={setBuscaCliente} placeholder="Pesquisar empresa, CNPJ, contato, cargo ou e-mail" total={clientesVisiveis.length} filtros={[{ id: 'situacao-clientes', rotulo: 'Situação', valor: filtroCliente, aoMudar: setFiltroCliente, opcoes: [{ valor: 'todos', rotulo: 'Todos os clientes' }, { valor: 'ativas', rotulo: 'Contas ativas' }, { valor: 'bloqueadas', rotulo: 'Contas bloqueadas' }, { valor: 'com_execucao', rotulo: 'Com serviços ativos' }] }]} ordenacao={{ valor: ordenacaoCliente, aoMudar: setOrdenacaoCliente, opcoes: [{ valor: 'recentes', rotulo: 'Atividade mais recente' }, { valor: 'ticket', rotulo: 'Maior ticket médio' }, { valor: 'valor', rotulo: 'Maior volume aceito' }, { valor: 'nome', rotulo: 'Empresa (A–Z)' }] }} />
+              <section className="analise-clientes-admin"><article><h3>Maiores relacionamentos</h3>{[...clientes].sort((a,b) => Number(b.valor_total || 0) - Number(a.valor_total || 0)).slice(0,5).map((item) => <div className="linha-grafico-admin" key={item.empresa_id}><span>{item.empresa}</span><div><i style={{ width: `${Math.max(4, Number(item.valor_total || 0) / Math.max(...clientes.map((clienteItem) => Number(clienteItem.valor_total || 0)), 1) * 100)}%` }} /></div><b>{new Intl.NumberFormat('pt-BR', { notation: 'compact', style: 'currency', currency: 'BRL' }).format(Number(item.valor_total || 0))}</b></div>)}</article><article><h3>Carteira e decisões</h3><dl><div><dt>Contas ativas</dt><dd>{clientes.filter((item) => !item.bloqueada).length}</dd></div><div><dt>Em execução</dt><dd>{clientes.reduce((total,item) => total + Number(item.em_execucao || 0), 0)}</dd></div><div><dt>Propostas aceitas</dt><dd>{clientes.reduce((total,item) => total + Number(item.propostas_aceitas || 0), 0)}</dd></div><div><dt>Revisões solicitadas</dt><dd>{clientes.reduce((total,item) => total + Number(item.propostas_recusadas || 0), 0)}</dd></div></dl></article></section>
+              <div>{clientesVisiveis.map((item) => <article key={item.empresa_id}><header><div><strong>{item.empresa}</strong><small>{item.cnpj ? `CNPJ ${formatarCnpj(item.cnpj)} · ` : ''}{item.contatos.map((contato) => `${contato.nome} · ${contato.email}`).join(' | ') || 'Sem contato ativo'}</small></div><span className={`estado ${item.bloqueada ? 'estado-rejeitada' : 'estado-formalizada'}`}>{item.bloqueada ? 'Bloqueada' : 'Ativa'}</span></header><dl><div><dt>Solicitações</dt><dd>{item.solicitacoes}</dd></div><div><dt>Ativos</dt><dd>{item.em_execucao || 0}</dd></div><div><dt>Concluídos</dt><dd>{item.concluidos}</dd></div><div><dt>Ticket médio</dt><dd>{item.ticket_medio == null ? '—' : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.ticket_medio)}</dd></div><div><dt>Volume aceito</dt><dd>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(item.valor_total || 0))}</dd></div><div><dt>Serviço principal</dt><dd>{item.servicos?.[0]?.slug?.replaceAll('-', ' ') || '—'}</dd></div></dl>{item.bloqueio_motivo && <p>Motivo: {item.bloqueio_motivo}</p>}<div className="acoes-cliente-admin">{item.contatos.map((contato) => <button type="button" key={contato.usuario_id} onClick={() => void editarContato(item, contato)}>Editar cadastro de {contato.nome}</button>)}<button type="button" disabled={bloqueando === item.empresa_id} onClick={() => void alterarBloqueio(item)}>{item.bloqueada ? <CheckCircle2 size={15} /> : <Ban size={15} />}{item.bloqueada ? 'Desbloquear acesso' : 'Bloquear acesso'}</button></div></article>)}</div>
             </section>
           </section>
         )}

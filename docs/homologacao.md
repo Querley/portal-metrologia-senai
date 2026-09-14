@@ -120,3 +120,18 @@ A migration `202609020033` foi aplicada e registrada em 2 de setembro. Ela regis
 A migration `202609080035` foi aplicada e registrada em 8 de setembro. Ela adiciona cargo profissional ao vínculo empresarial, troca auditada de e-mail próprio, reparo de perfis externos que receberam papel interno e retorno justificado de execução para etapa anterior. A conferência remota encontrou zero Clientes com perfil interno, zero vínculos sem cargo e confirmou as novas funções. A interface autenticada passa a calcular a Visão Geral com dados persistidos e oferece navegação filtrada, barra de progresso clicável e mensagens globais de validação. A conta `cliente.hml@example.test` deve permanecer na área Cliente mesmo após tentativas administrativas de atribuição de papel interno.
 
 A migration `202609090036` foi aplicada e registrada na homologação em 9 de setembro. Ela reconciliou fechamentos aprovados com o estado concluído e restringiu mudanças administrativas futuras aos papéis Técnico, Validador e Administrador. As migrations `202609110037` a `202609110040` foram aplicadas em 11 de setembro: corrigiram a referência às colunas inexistentes da função de papéis, aceitaram e-mail válido de caixa real mantendo `origem=demonstracao`, adicionaram painel administrativo, bloqueio efetivo, anexos internos, inteligência operacional, anexos em mensagens e leituras. O lint remoto terminou sem erros. A Edge Function `gerenciar-usuarios` foi publicada para convites e edição administrativa; a entrega de e-mail continua dependendo do remetente SMTP e das URLs autorizadas no Supabase Auth.
+
+## Lote de contas e análise — 14 de setembro de 2026
+
+A migration `202609140041_contas_analiticas_e_detalhes_portal.sql` acrescenta cargo e CNPJ do empregador ao perfil demonstrativo, amplia as leituras administrativas e entrega descrição, material, quantidade e prazo ao portal do Cliente. O CNPJ integral permanece restrito ao Administrador e à função de provisionamento; auditoria registra apenas os quatro dígitos finais. Antes de considerar este lote homologado, confirmar:
+
+1. convite para Cliente e funcionário com empresa, CNPJ e cargo `Outro`;
+2. permanência em `/portal?definir=senha` até a senha ser salva;
+3. recuperação por `/portal?recuperar=senha`, sem redirecionamento ou retorno após logout;
+4. duas abas independentes, uma como Administrador e outra como Cliente;
+5. edição de razão social, CNPJ, nome, e-mail e cargo do contato, com auditoria;
+6. busca, filtros, ordenação e paginação da equipe; análise e ordenação da carteira;
+7. necessidade multilinha, ordenações operacionais e gráficos de Conhecimento;
+8. fechamento de janelas com `Esc`.
+
+Aplicação confirmada no SQL Editor em 14 de setembro: o histórico remoto avançou de `202609110040` para `202609140041`, e a consulta pós-aplicação confirmou `cargo_profissional` e `listar_portal_cliente`. A função `gerenciar-usuarios` foi republicada no mesmo projeto. A prova completa de recriação do banco e pgTAP permanece no GitHub Actions.

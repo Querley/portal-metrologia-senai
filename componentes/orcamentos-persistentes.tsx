@@ -153,8 +153,17 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
   const [busca, setBusca] = useState('');
   const [filtroEstado, setFiltroEstado] = useState(filtroEstadoInicial || 'todos');
   const [filtroTipo, setFiltroTipo] = useState('todos');
+  const [ordenacao, setOrdenacao] = useState('recentes');
   const [formularioAberto, setFormularioAberto] = useState(Boolean(solicitacaoInicial));
   const campoEntregaRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function fecharPreviaComEscape(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') setPrevisualizando(null);
+    }
+    window.addEventListener('keydown', fecharPreviaComEscape);
+    return () => window.removeEventListener('keydown', fecharPreviaComEscape);
+  }, []);
 
   const carregar = useCallback(async () => {
     if (!podeConsultarOrcamentos(perfil)) return;
@@ -212,8 +221,8 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
         if (filtroTipo === 'vinculados' && !orcamento.cliente_vinculado) return false;
         if (filtroTipo === 'internos' && orcamento.cliente_vinculado) return false;
         return true;
-      }),
-    [busca, filtroEstado, filtroTipo, orcamentos],
+      }).sort((a, b) => ordenacao === 'antigas' ? +new Date(a.criada_em) - +new Date(b.criada_em) : ordenacao === 'maior_preco' ? Number(b.preco_final || 0) - Number(a.preco_final || 0) : ordenacao === 'menor_preco' ? Number(a.preco_final || 0) - Number(b.preco_final || 0) : ordenacao === 'empresa' ? String(a.empresa_nome || '').localeCompare(String(b.empresa_nome || ''), 'pt-BR') : +new Date(b.criada_em) - +new Date(a.criada_em)),
+    [busca, filtroEstado, filtroTipo, orcamentos, ordenacao],
   );
   const custoSelecionado = custosPorEquipamento.get(equipamentoId);
   const entrada = {
@@ -857,6 +866,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
               aoMudarBusca={setBusca}
               placeholder="Pesquisar protocolo, empresa, serviço, equipamento ou data"
               total={orcamentosVisiveis.length}
+              ordenacao={{ valor: ordenacao, aoMudar: setOrdenacao, opcoes: [{ valor: 'recentes', rotulo: 'Mais recentes' }, { valor: 'antigas', rotulo: 'Mais antigas' }, ...(podeConsultarCustos(perfil) ? [{ valor: 'maior_preco', rotulo: 'Maior preço' }, { valor: 'menor_preco', rotulo: 'Menor preço' }] : []), { valor: 'empresa', rotulo: 'Empresa (A–Z)' }] }}
               filtros={[
                 {
                   id: 'estado-orcamento',

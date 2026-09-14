@@ -26,6 +26,10 @@
 18. Oferecer contato por `mailto:` e cópia do endereço, VLibras na versão em português, copyright, tipografia móvel legível e vídeos sem corte de conteúdo.
 19. Oferecer pesquisa textual e filtros de estado/contexto nas listas operacionais do laboratório e nos trabalhos do Cliente, sem ampliar o conjunto autorizado pela RLS.
 20. Ao recusar uma pré-proposta emitida, o Cliente informa o ajuste necessário; a decisão é auditada e libera a equipe para criar e emitir outra pré-proposta sem apagar o histórico.
+21. Convites administrativos exigem empresa, CNPJ validado e cargo profissional; o cargo usa vocabulário sugerido com alternativa `Outro`, sem conceder permissões automaticamente.
+22. O convite e a recuperação mantêm o usuário na definição da senha até a conclusão. Sessões do navegador são isoladas por aba para permitir homologação simultânea como funcionário e Cliente.
+23. Listas operacionais e administrativas oferecem busca, filtros e ordenação coerentes com o dado autorizado; ordenação comercial não pode revelar preço ao Técnico.
+24. O Administrador consulta desempenho da equipe, situação da carteira, ticket médio, volume aceito, decisões e serviços recorrentes, sempre restritos à origem ativa.
 
 ## IA
 

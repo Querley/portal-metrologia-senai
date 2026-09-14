@@ -2,7 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { BriefcaseBusiness, FileUp, Paperclip, Send, ShieldCheck, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { caminhoAnexoSolicitacao, tipoMimeArmazenado, validarAnexosSolicitacao, type AnexoSolicitacaoCliente } from '../lib/anexos-solicitacao';
 import { necessidadesCliente, prazosPagamento } from '../lib/solicitacao';
 import { MATERIAIS_PECA, normalizarTelefoneDigitado, telefoneValido, valorPadronizado } from '../lib/campos-padronizados';
@@ -43,6 +43,14 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
   const [dadosPendentes, setDadosPendentes] = useState<DadosNovaSolicitacaoCliente | null>(null);
   const [anexosEnviados, setAnexosEnviados] = useState<AnexoSolicitacaoCliente[]>([]);
   const [material, setMaterial] = useState('');
+
+  useEffect(() => {
+    function fecharComEscape(evento: KeyboardEvent) {
+      if (evento.key === 'Escape' && !resultadoPendente) aoFechar();
+    }
+    window.addEventListener('keydown', fecharComEscape);
+    return () => window.removeEventListener('keydown', fecharComEscape);
+  }, [aoFechar, resultadoPendente]);
 
   function selecionarArquivos(lista: FileList | null) {
     const proximos = [...arquivos, ...Array.from(lista ?? [])];

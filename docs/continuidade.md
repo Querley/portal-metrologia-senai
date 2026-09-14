@@ -1,6 +1,6 @@
 # Registro de continuidade
 
-Atualizado em 11 de setembro de 2026.
+Atualizado em 14 de setembro de 2026.
 
 Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for interrompida por limite de uso, contexto, energia ou outro motivo. Antes de continuar um lote, conferir este registro, `docs/roadmap.md`, `docs/homologacao.md`, o estado da `main` e a execução mais recente do GitHub Actions.
 
@@ -13,6 +13,14 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 - GitHub Actions `34659736654`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
 - último resultado local: lint aprovado, 98 testes unitários aprovados, build aprovado e 20 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `040` e aprovou todas as provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
+
+## Lote em andamento em 14 de setembro
+
+- implementado localmente: correção de recuperação/convite, sessão isolada por aba, convite com empresa/CNPJ/cargo, edição ampliada de Clientes, painel administrativo analítico, busca/filtros/ordenação, paginação da equipe, necessidade multilinha, gráficos de Conhecimento e fechamento de janelas com `Esc`;
+- banco homologado: o SQL Editor confirmou a origem remota em `040`, aplicou `202609140041_contas_analiticas_e_detalhes_portal.sql` em transação e confirmou versão `202609140041`, coluna de cargo e função do portal; a Edge Function `gerenciar-usuarios` também foi republicada;
+- testes aprovados neste ponto: lint, 100 testes unitários, build e 24 cenários E2E em desktop e Pixel 7, incluindo convite, ordenação e `Esc`;
+- observação operacional: o pooler remoto encerrou ou expirou oito tentativas; por isso foi usado o SQL Editor autenticado, conforme alternativa já documentada, com registro explícito em `supabase_migrations.schema_migrations`;
+- não versionar nem alterar `docs/atividade-aula-07.md`.
 
 ## Implementado e publicado no último lote
 
