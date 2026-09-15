@@ -19,8 +19,8 @@ insert into perfis(usuario_id,nome,perfil_interno,origem_ativa) values
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','d1000000-0000-0000-0000-000000000001',true);
-select lives_ok($$select salvar_versao_conteudo_demonstrativo('inicio.teste','secao','pt-BR','Conteúdo de teste','Texto público sintético criado para validar o CMS.')$$,'Administrador salva nova versão');
-select lives_ok($$select publicar_versao_conteudo_demonstrativo((select id from versoes_conteudo v join conteudos c on c.id=v.conteudo_id where c.chave='inicio.teste' order by v.criada_em desc limit 1))$$,'Administrador publica nova versão');
+select lives_ok($$select salvar_versao_conteudo_demonstrativo('inicio.teste','secao','pt-BR','Conteúdo de teste','{"texto":"Texto público sintético criado para validar o CMS."}'::jsonb)$$,'Administrador salva nova versão');
+select lives_ok($$select publicar_versao_conteudo_demonstrativo((select v.id from versoes_conteudo v join conteudos c on c.id=v.conteudo_id where c.chave='inicio.teste' order by v.criada_em desc limit 1))$$,'Administrador publica nova versão');
 select ok(jsonb_array_length(listar_cms_demonstrativo()) >= 4,'Administrador recebe inventário e histórico do CMS');
 reset role;
 
@@ -29,7 +29,7 @@ select ok(exists(select 1 from auditoria where entidade='conteudo' and acao='pub
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','d1000000-0000-0000-0000-000000000002',true);
-select throws_ok($$select salvar_versao_conteudo_demonstrativo('inicio.negado','secao','pt-BR','Conteúdo negado','Texto que não deve ser gravado pelo perfil técnico.')$$,'Somente Administrador pode editar o Conteúdo Público.','Técnico não edita o CMS');
+select throws_ok($$select salvar_versao_conteudo_demonstrativo('inicio.negado','secao','pt-BR','Conteúdo negado','{"texto":"Texto que não deve ser gravado pelo perfil técnico."}'::jsonb)$$,'Somente Administrador pode editar o Conteúdo Público.','Técnico não edita o CMS');
 
 select * from finish();
 rollback;
