@@ -6,20 +6,21 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Último estado confirmado
 
-- fonte publicada: `e91b86a6f9033774169f2621cc7f797afc0164f2` (funcionalidades em `3f889e8` e ajuste exclusivo do teste pgTAP em `e91b86a`);
-- versão pública atual: 39, publicação concluída com sucesso;
+- fonte publicada: `6ca31085a4bec7ada2944d733bc1f00a6cdb418c`;
+- versão pública atual: 40, publicação concluída com sucesso;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
-- migration mais recente: `202609110040_bloqueio_cliente_efetivo.sql`, aplicada e reconciliada na homologação; lint remoto sem erros;
-- GitHub Actions `34659736654`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
-- último resultado local: lint aprovado, 98 testes unitários aprovados, build aprovado e 20 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `040` e aprovou todas as provas pgTAP;
+- migration mais recente: `202609140041_contas_analiticas_e_detalhes_portal.sql`, aplicada e reconciliada na homologação; a Edge Function `gerenciar-usuarios` foi republicada;
+- GitHub Actions `34888083203`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
+- último resultado confirmado: lint aprovado, 100 testes unitários aprovados, build aprovado e 24 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `041` e aprovou 55 provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
 
-## Lote em andamento em 14 de setembro
+## Lote concluído em 14 de setembro
 
-- implementado localmente: correção de recuperação/convite, sessão isolada por aba, convite com empresa/CNPJ/cargo, edição ampliada de Clientes, painel administrativo analítico, busca/filtros/ordenação, paginação da equipe, necessidade multilinha, gráficos de Conhecimento e fechamento de janelas com `Esc`;
+- publicado: correção de recuperação/convite, sessão isolada por aba, convite com empresa/CNPJ/cargo, edição ampliada de Clientes, painel administrativo analítico, busca/filtros/ordenação, paginação da equipe, necessidade multilinha, gráficos de Conhecimento e fechamento de janelas com `Esc`;
 - banco homologado: o SQL Editor confirmou a origem remota em `040`, aplicou `202609140041_contas_analiticas_e_detalhes_portal.sql` em transação e confirmou versão `202609140041`, coluna de cargo e função do portal; a Edge Function `gerenciar-usuarios` também foi republicada;
 - testes aprovados neste ponto: lint, 100 testes unitários, build e 24 cenários E2E em desktop e Pixel 7, incluindo convite, ordenação e `Esc`;
 - observação operacional: o pooler remoto encerrou ou expirou oito tentativas; por isso foi usado o SQL Editor autenticado, conforme alternativa já documentada, com registro explícito em `supabase_migrations.schema_migrations`;
+- observação de homologação: a entrega efetiva de convite e recuperação ainda exige uma caixa de e-mail real; a URL pública também pode apresentar uma verificação automática do provedor a clientes sem JavaScript/cookies, o que não equivale a falha da aplicação;
 - não versionar nem alterar `docs/atividade-aula-07.md`.
 
 ## Implementado e publicado no último lote
