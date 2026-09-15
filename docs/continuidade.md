@@ -1,17 +1,17 @@
 # Registro de continuidade
 
-Atualizado em 14 de setembro de 2026.
+Atualizado em 15 de setembro de 2026.
 
 Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for interrompida por limite de uso, contexto, energia ou outro motivo. Antes de continuar um lote, conferir este registro, `docs/roadmap.md`, `docs/homologacao.md`, o estado da `main` e a execução mais recente do GitHub Actions.
 
 ## Último estado confirmado
 
-- fonte publicada: `6ca31085a4bec7ada2944d733bc1f00a6cdb418c`;
-- versão pública atual: 40, publicação concluída com sucesso;
+- fonte publicada: `6026847ff6e68401ea74e435a3c843c5cca5822a`;
+- versão pública atual: 41, publicação concluída com sucesso;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
-- migration mais recente: `202609140041_contas_analiticas_e_detalhes_portal.sql`, aplicada e reconciliada na homologação; a Edge Function `gerenciar-usuarios` foi republicada;
-- GitHub Actions `34888083203`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
-- último resultado confirmado: lint aprovado, 100 testes unitários aprovados, build aprovado e 24 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `041` e aprovou 55 provas pgTAP;
+- migration mais recente: `202609150042_cms_publico_multilingue.sql`, aplicada e reconciliada na homologação;
+- GitHub Actions `34924980385`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
+- último resultado confirmado: lint aprovado, 103 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `042` e aprovou 65 provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
 
 ## Lote concluído em 14 de setembro
@@ -33,13 +33,13 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 - notificações transitórias migradas para pop-up nos fluxos revisados;
 - correções de fundo e contenção horizontal da área de Orçamentos;
 - instruções de uso e metodologia na página Conhecimento;
-- Conteúdo Público identificado corretamente como inventário de planejamento, ainda sem persistência de CMS;
-- regra de idiomas documentada: área interna dos funcionários somente em português; área pública e área do Cliente futuramente em PT-BR, inglês e alemão.
+- Conteúdo Público identificado corretamente como inventário de planejamento; o CMS persistente entrou no lote seguinte;
+- regra de idiomas documentada: área interna dos funcionários somente em português; área pública e área do Cliente em migração progressiva para PT-BR, inglês e alemão.
 
 ## Limites conhecidos do estado publicado
 
 - a entrega real do e-mail de recuperação precisa ser homologada com uma caixa de entrada válida; endereços `@example.test` não recebem mensagens;
-- CMS persistente e traduções ainda não foram implementados;
+- o CMS persistente e a seleção de idioma estão publicados, mas a tradução integral das áreas pública e Cliente ainda não foi realizada;
 - não existe comprovação de uma auditoria campo a campo de todos os inputs do portal;
 - os gráficos precisam ser exercitados com novos registros persistidos para validar todas as atualizações;
 - dados reais continuam separados dos demonstrativos. A flexibilização dessa regra não foi autorizada porque contraria os requisitos de segurança e segregação do projeto.
@@ -61,14 +61,15 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 1. homologar pela interface o convite em uma caixa real, a criação de senha e a recuperação de senha; isso depende da entrega SMTP externa;
 2. testar envio/download de anexos em mensagens e bloqueio/desbloqueio de uma empresa;
-3. desenvolver em seguida o CMS persistente e a internacionalização PT-BR/inglês/alemão das áreas pública e Cliente;
+3. migrar todos os textos restantes das áreas pública e Cliente para o CMS/i18n e fazer revisão humana em PT-BR, inglês e alemão;
 4. depois importar históricos sanitizados e ampliar as integrações de IA sem cliente, preço, margem, anexos ou identificadores.
 
-## Lote iniciado em 15 de setembro
+## Lote concluído em 15 de setembro
 
-- migration nova: `202609150042_cms_publico_multilingue.sql`, ainda deve ser confirmada pela recriação do banco no GitHub Actions e aplicada na homologação;
+- migration nova: `202609150042_cms_publico_multilingue.sql`, confirmada pela recriação do banco no GitHub Actions, aplicada e reconciliada na homologação;
 - interface nova: editor administrativo de conteúdo com versões, pesquisa, filtro, histórico e publicação explícita;
 - leitura pública conectada: cabeçalhos de Catálogo, Solicitação e Privacidade em PT-BR, inglês e alemão, com fallback português sinalizado;
 - seleção de idioma: disponível no cabeçalho público, menu móvel e área do Cliente; a tradução integral dos demais textos ainda não foi realizada;
-- testes locais aprovados neste ponto: lint, 103 testes unitários, build e 26 cenários E2E em desktop e Pixel 7;
-- pendente neste lote: validar pgTAP, aplicar a migration remota, publicar a nova versão do site e atualizar este registro com os identificadores finais.
+- testes aprovados: lint, 103 testes unitários, build, 26 cenários E2E em desktop e Pixel 7 e 65 provas pgTAP;
+- publicação: fonte `6026847ff6e68401ea74e435a3c843c5cca5822a`, versão pública 41, concluída com sucesso no endereço oficial;
+- pendente após este lote: migrar o conteúdo integral das áreas pública e Cliente e homologar as traduções com revisão humana.

@@ -147,3 +147,5 @@ A migration `202609150042_cms_publico_multilingue.sql` cria publicação por idi
 5. como Técnico e Validador, confirmar que o módulo editorial não aparece;
 6. em desktop e celular, alternar o seletor de idioma e confirmar que a escolha permanece na mesma rota;
 7. observar que este lote localiza os três cabeçalhos conectados; demais textos continuam em português até a migração progressiva e não devem ser considerados traduzidos.
+
+A migration foi aplicada e reconciliada no projeto remoto em 15 de setembro. O GitHub Actions `34924980385` recriou o banco do zero até `042` e aprovou as 65 provas pgTAP, além de lint, 103 testes unitários, build e 26 cenários E2E em Chromium desktop e Pixel 7. A fonte `6026847ff6e68401ea74e435a3c843c5cca5822a` foi publicada como versão 41. A homologação manual ainda deve cobrir edição, rascunho sem publicação, publicação e fallback, e não substitui a revisão humana das traduções integrais que serão adicionadas progressivamente.
