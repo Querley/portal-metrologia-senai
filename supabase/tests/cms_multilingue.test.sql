@@ -20,7 +20,7 @@ insert into perfis(usuario_id,nome,perfil_interno,origem_ativa) values
 set local role authenticated;
 select set_config('request.jwt.claim.sub','d1000000-0000-0000-0000-000000000001',true);
 select lives_ok($$select salvar_versao_conteudo_demonstrativo('inicio.teste','secao','pt-BR','Conteúdo de teste','{"texto":"Texto público sintético criado para validar o CMS."}'::jsonb)$$,'Administrador salva nova versão');
-select lives_ok($$select publicar_versao_conteudo_demonstrativo((select v.id from versoes_conteudo v join conteudos c on c.id=v.conteudo_id where c.chave='inicio.teste' order by v.criada_em desc limit 1))$$,'Administrador publica nova versão');
+select lives_ok($$select publicar_versao_conteudo_demonstrativo((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.teste' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Administrador publica nova versão');
 select ok(jsonb_array_length(listar_cms_demonstrativo()) >= 4,'Administrador recebe inventário e histórico do CMS');
 reset role;
 
