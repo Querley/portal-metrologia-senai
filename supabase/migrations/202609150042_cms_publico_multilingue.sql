@@ -181,8 +181,8 @@ grant execute on function publicar_versao_conteudo_demonstrativo(uuid) to authen
 do $$
 declare
   item record;
-  conteudo_id uuid;
-  versao_id uuid;
+  conteudo_semente_id uuid;
+  versao_semente_id uuid;
 begin
   for item in select * from (values
     ('catalogo.cabecalho','pt-BR','Serviços e equipamentos','Conheça as tecnologias disponíveis no Centro e encontre o caminho mais adequado para o seu desafio de medição.'),
@@ -198,15 +198,15 @@ begin
   loop
     insert into conteudos(chave,tipo,estado) values(item.chave,'cabecalho','publicado')
     on conflict(chave) do update set tipo='cabecalho',estado='publicado'
-    returning id into conteudo_id;
+    returning id into conteudo_semente_id;
     insert into versoes_conteudo(conteudo_id,numero,idioma,titulo,corpo)
-    values(conteudo_id,1,item.idioma,item.titulo,jsonb_build_object('texto',item.texto))
+    values(conteudo_semente_id,1,item.idioma,item.titulo,jsonb_build_object('texto',item.texto))
     on conflict(conteudo_id,numero,idioma) do update set titulo=excluded.titulo,corpo=excluded.corpo
-    returning id into versao_id;
+    returning id into versao_semente_id;
     insert into publicacoes_conteudo(conteudo_id,idioma,versao_conteudo_id)
-    values(conteudo_id,item.idioma,versao_id)
+    values(conteudo_semente_id,item.idioma,versao_semente_id)
     on conflict(conteudo_id,idioma) do update set versao_conteudo_id=excluded.versao_conteudo_id,publicada_em=now();
-    if item.idioma='pt-BR' then update conteudos set versao_publicada_id=versao_id where id=conteudo_id; end if;
+    if item.idioma='pt-BR' then update conteudos set versao_publicada_id=versao_semente_id where id=conteudo_semente_id; end if;
   end loop;
 end;
 $$;
