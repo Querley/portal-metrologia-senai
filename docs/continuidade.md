@@ -6,12 +6,12 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Último estado confirmado
 
-- fonte publicada: `6026847ff6e68401ea74e435a3c843c5cca5822a`;
-- versão pública atual: 41, publicação concluída com sucesso;
+- fonte publicada: `eb63126546d6f5fe166d8d0e528037c51cd197fd`;
+- versão pública atual: 42, publicação concluída com sucesso;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
-- migration mais recente: `202609150042_cms_publico_multilingue.sql`, aplicada e reconciliada na homologação;
-- GitHub Actions `34924980385`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
-- último resultado confirmado: lint aprovado, 103 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `042` e aprovou 65 provas pgTAP;
+- migration mais recente: `202609150043_revisao_cms_e_acontecimentos.sql`, aplicada e reconciliada na homologação;
+- GitHub Actions `35001303916`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
+- último resultado confirmado: lint aprovado, 108 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `043` e aprovou 70 provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
 
 ## Lote concluído em 14 de setembro
@@ -39,7 +39,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 ## Limites conhecidos do estado publicado
 
 - a entrega real do e-mail de recuperação precisa ser homologada com uma caixa de entrada válida; endereços `@example.test` não recebem mensagens;
-- o CMS persistente e a seleção de idioma estão publicados, mas a tradução integral das áreas pública e Cliente ainda não foi realizada;
+- o CMS persistente e a tradução reativa das superfícies pública e Cliente estão publicados; os textos técnicos longos de equipamentos ainda exigem revisão linguística humana antes de serem considerados tradução definitiva;
 - não existe comprovação de uma auditoria campo a campo de todos os inputs do portal;
 - os gráficos precisam ser exercitados com novos registros persistidos para validar todas as atualizações;
 - dados reais continuam separados dos demonstrativos. A flexibilização dessa regra não foi autorizada porque contraria os requisitos de segurança e segregação do projeto.
@@ -76,6 +76,6 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Ponto exato de retomada — lote 043
 
-Implementado localmente: perfil administrativo recolhível, indicadores clicáveis, janela única de edição empresarial/contatos, lista densa de Clientes, agrupamento de usos de máquinas por versão, gráficos de inteligência, catálogo reativo PT-BR/EN/DE, acontecimentos públicos e CMS com aprovação administrativa. Arquivo pessoal `docs/atividade-aula-07.md` permanece fora do Git.
+Implementado e publicado: perfil administrativo recolhível, indicadores clicáveis, janela única de edição empresarial/contatos, lista densa de Clientes, agrupamento de usos de máquinas por versão, gráficos de inteligência, catálogo reativo PT-BR/EN/DE, acontecimentos públicos e CMS com aprovação administrativa. Arquivo pessoal `docs/atividade-aula-07.md` permanece fora do Git.
 
-Validado localmente: lint sem erros, 108 testes unitários e 26 E2E em Chromium desktop e Pixel 7. Validado no Actions `35000617846`: build, mesmos testes de interface e 70 provas pgTAP com banco recriado até `043`. A migration `043` está aplicada e reconciliada na homologação; o lint remoto não tem erros. Pendente: publicar a fonte e executar revisão linguística humana dos textos técnicos. Se a execução for interrompida, não repetir banco ou testes; retomar pela publicação do commit `8d81796`.
+Validado localmente: lint sem erros, 108 testes unitários e 26 E2E em Chromium desktop e Pixel 7. Validado no Actions `35001303916`: build, mesmos testes de interface e 70 provas pgTAP com banco recriado até `043`. A migration `043` está aplicada e reconciliada na homologação; o lint remoto não tem erros. A fonte `eb63126546d6f5fe166d8d0e528037c51cd197fd` foi publicada como versão 42 no endereço oficial. Pendente: homologação manual do fluxo editorial e revisão linguística humana dos textos técnicos longos; não repetir banco, testes ou publicação.

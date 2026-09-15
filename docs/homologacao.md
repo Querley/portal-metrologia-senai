@@ -154,4 +154,6 @@ A migration foi aplicada e reconciliada no projeto remoto em 15 de setembro. O G
 
 O lote acrescenta revisão Validador → Administrador, acontecimentos com mídia localizada, tradução reativa das superfícies pública/Cliente, agrupamento multiequipamento e reformulação administrativa. A migration `043` foi aplicada e o histórico remoto foi reconciliado até ela; o lint remoto não encontrou erros (permanecem cinco avisos anteriores de volatilidade/variáveis não lidas). O GitHub Actions `35000617846` recriou o banco do zero, aprovou 70 provas pgTAP, 108 testes unitários, build e 26 E2E em desktop e Pixel 7.
 
+A fonte `eb63126546d6f5fe166d8d0e528037c51cd197fd` foi publicada com sucesso como versão 42 no endereço oficial em 15 de setembro de 2026. O GitHub Actions `35001303916`, executado sobre essa fonte, também terminou integralmente verde.
+
 Homologar manualmente: editar acontecimentos como Validador; confirmar que não publica; enviar; aprovar e publicar como Administrador; alternar os três idiomas na página inicial e Cliente; conferir mídia específica; abrir proposta multiequipamento como uma linha; editar todos os contatos de uma empresa na mesma janela; navegar pelos quatro indicadores administrativos; conferir gráficos de Conhecimento.
