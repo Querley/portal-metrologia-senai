@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { MidiaEquipamento } from '../lib/equipamentos';
 import { prepararVideoPublico, VideoPublico } from './video-publico';
+import { useTraducaoPublica } from '../lib/traducao-publica';
 
 const imagensEmCarregamento = new Map<string, Promise<void>>();
 
@@ -22,6 +23,7 @@ function prepararImagem(src: string) {
 }
 
 export function CarrosselMidia({ midias, rotulo }: { midias: MidiaEquipamento[]; rotulo: string }) {
+  const { t } = useTraducaoPublica();
   const [indice, setIndice] = useState(0);
   const [carregando, setCarregando] = useState(false);
   const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
@@ -58,9 +60,9 @@ export function CarrosselMidia({ midias, rotulo }: { midias: MidiaEquipamento[];
         {atual.tipo === 'imagem'
           ? <Image key={atual.src} src={atual.src} fill unoptimized sizes="(max-width: 900px) 100vw, 60vw" alt={atual.alt} priority={indice === 0} />
           : <VideoPublico key={atual.src} src={atual.src} poster={atual.poster} rotulo={atual.alt} />}
-        {carregando && <span className="carrossel-carregando" role="status">Carregando próxima mídia…</span>}
+        {carregando && <span className="carrossel-carregando" role="status">{t('Carregando próxima mídia…')}</span>}
         <div className="carrossel-legenda"><span>{String(indice + 1).padStart(2, '0')} / {String(midias.length).padStart(2, '0')}</span><strong>{atual.legenda}</strong></div>
-        {midias.length > 1 && <div className="carrossel-controles"><button type="button" onClick={() => navegar(-1)} aria-label="Mídia anterior"><ChevronLeft /></button><button type="button" onClick={() => navegar(1)} aria-label="Próxima mídia"><ChevronRight /></button></div>}
+        {midias.length > 1 && <div className="carrossel-controles"><button type="button" onClick={() => navegar(-1)} aria-label={t('Mídia anterior')}><ChevronLeft /></button><button type="button" onClick={() => navegar(1)} aria-label={t('Próxima mídia')}><ChevronRight /></button></div>}
       </div>
       {midias.length > 1 && <div className="carrossel-miniaturas" role="tablist" aria-label="Selecionar mídia">{midias.map((midia, item) => <button type="button" role="tab" aria-selected={item === indice} key={`${midia.src}-${item}`} onClick={() => void selecionar(item)}><span>{item + 1}</span>{midia.legenda}</button>)}</div>}
     </section>

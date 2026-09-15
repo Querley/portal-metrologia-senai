@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import type { IdiomaPublico } from '../lib/idioma-publico';
-import { resolverIdiomaPublico } from '../lib/idioma-publico';
+import { CHAVE_IDIOMA_PUBLICO, EVENTO_IDIOMA_PUBLICO, resolverIdiomaPublico } from '../lib/idioma-publico';
 import { obterClienteSupabase } from '../lib/supabase/cliente';
-import { CHAVE_IDIOMA_PUBLICO, EVENTO_IDIOMA_PUBLICO } from './seletor-idioma';
 
 type ConteudoPublicado = { chave: string; idioma: IdiomaPublico; titulo: string; corpo: { texto?: string }; usou_fallback: boolean };
 

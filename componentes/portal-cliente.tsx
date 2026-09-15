@@ -16,6 +16,7 @@ import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { caminhoAnexoMensagem, validarAnexosMensagem, type AnexoMensagem } from '../lib/anexos-mensagem';
 import { tipoMimeArmazenado } from '../lib/anexos-solicitacao';
 import { SeletorIdioma } from './seletor-idioma';
+import { useTraducaoPublica } from '../lib/traducao-publica';
 
 type Propriedades = {
   cliente?: SupabaseClient;
@@ -31,14 +32,16 @@ const estadoEtapa = {
   a_fazer: { rotulo: 'A fazer', Icone: Circle },
 } as const;
 
-function dataCurta(valor: string) {
-  return new Intl.DateTimeFormat('pt-BR', {
+function dataCurta(valor: string, idioma = 'pt-BR') {
+  return new Intl.DateTimeFormat(idioma, {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(new Date(valor));
 }
 
 export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao, demonstracao = false, aoSair, mensagemInicial = '' }: Propriedades) {
+  const { t, idioma } = useTraducaoPublica();
+  const formatarData = useCallback((valor: string) => dataCurta(valor, idioma), [idioma]);
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoCliente[]>(demonstracao ? solicitacoesClienteDemonstracao : []);
   const [selecionadaId, setSelecionadaId] = useState(demonstracao ? solicitacoesClienteDemonstracao[0].id : '');
   const [mensagens, setMensagens] = useState<MensagemCliente[]>(demonstracao ? mensagensClienteDemonstracao : []);
@@ -498,36 +501,36 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
           <MarcaOficial />
         </a>
         <div>
-          <span>{demonstracao ? 'DEMONSTRAÇÃO' : 'ÁREA DO CLIENTE'}</span>
+          <span>{demonstracao ? t('DEMONSTRAÇÃO') : t('ÁREA DO CLIENTE')}</span>
           <strong>{nomeCliente}</strong>
           <small>{contexto.empresa_nome}</small>
         </div>
-        <div className="acoes-topo-cliente"><SeletorIdioma compacto /><button type="button" onClick={() => (aoSair ? void aoSair() : window.location.assign('/'))}><LogOut size={17} /> Sair</button></div>
+        <div className="acoes-topo-cliente"><SeletorIdioma compacto /><button type="button" onClick={() => (aoSair ? void aoSair() : window.location.assign('/'))}><LogOut size={17} /> {t('Sair')}</button></div>
       </header>
       <div className="conteudo-cliente">
         <section className="boas-vindas-cliente">
           <div>
             <p className="sobrelinha">
-              <span /> CENTRAL DO CLIENTE
+              <span /> {t('CENTRAL DO CLIENTE')}
             </p>
-            <h1>Todos os trabalhos da sua empresa em um só lugar.</h1>
-            <p>Abra novas solicitações, acompanhe vários trabalhos ao mesmo tempo e alterne livremente entre pré-propostas, etapas e mensagens sem repetir cadastro ou ativação.</p>
+            <h1>{t('Todos os trabalhos da sua empresa em um só lugar.')}</h1>
+            <p>{t('Abra novas solicitações, acompanhe vários trabalhos ao mesmo tempo e alterne livremente entre pré-propostas, etapas e mensagens sem repetir cadastro ou ativação.')}</p>
             <button className="novo-trabalho-cliente" type="button" onClick={() => setCriandoSolicitacao(true)}>
-              <Plus size={18} /> Registrar novo trabalho
+              <Plus size={18} /> {t('Registrar novo trabalho')}
             </button>
           </div>
           <aside className="resumo-acesso-cliente">
             <div className="selo-seguranca-cliente">
               <ShieldCheck size={22} />
               <span>
-                <strong>Acesso restrito à sua empresa</strong>
-                <small>Dados de homologação permanecem demonstrativos.</small>
+                <strong>{t('Acesso restrito à sua empresa')}</strong>
+                <small>{t('Dados de homologação permanecem demonstrativos.')}</small>
               </span>
             </div>
             <div className="perfil-cliente">
               <UserRound size={20} />
               <span>
-                <small>Perfil</small>
+                <small>{t('Perfil')}</small>
                 <strong>{cargoCliente}</strong>
                 <em>{emailCliente}</em>
               </span>
@@ -537,11 +540,11 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
             </div>
             {editandoPerfil && (
               <form className="editar-perfil-cliente" onSubmit={salvarPerfil}>
-                <label htmlFor="nome-cliente">Nome de exibição</label>
+                <label htmlFor="nome-cliente">{t('Nome de exibição')}</label>
                 <input id="nome-cliente" required minLength={2} maxLength={120} value={nomeEmEdicao} onChange={(evento) => setNomeEmEdicao(evento.target.value)} />
-                <label htmlFor="email-cliente">E-mail de acesso</label>
+                <label htmlFor="email-cliente">{t('E-mail de acesso')}</label>
                 <input id="email-cliente" type="email" required value={emailEmEdicao} onChange={(evento) => setEmailEmEdicao(evento.target.value)} />
-                <label htmlFor="cargo-cliente">Cargo ou função na empresa</label>
+                <label htmlFor="cargo-cliente">{t('Cargo ou função na empresa')}</label>
                 <input id="cargo-cliente" required minLength={2} maxLength={120} value={cargoEmEdicao} onChange={(evento) => setCargoEmEdicao(evento.target.value)} placeholder="Ex.: Analista da qualidade" />
                 <small>Este campo descreve sua função profissional e não altera suas permissões de acesso.</small>
                 <div>
@@ -554,10 +557,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                       setEditandoPerfil(false);
                     }}
                   >
-                    <X size={15} /> Cancelar
+                    <X size={15} /> {t('Cancelar')}
                   </button>
                   <button type="submit" disabled={salvandoPerfil}>
-                    <Save size={15} /> {salvandoPerfil ? 'Salvando…' : 'Salvar'}
+                    <Save size={15} /> {salvandoPerfil ? t('Salvando…') : t('Salvar')}
                   </button>
                 </div>
               </form>
@@ -569,27 +572,27 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
           <button type="button" onClick={() => abrirTrabalhosComFiltro('todos')}>
             <BriefcaseBusiness size={21} />
             <span>
-              <small>Trabalhos vinculados</small>
+              <small>{t('Trabalhos vinculados')}</small>
               <strong>{indicadores.total}</strong>
             </span>
           </button>
           <button type="button" onClick={() => abrirTrabalhosComFiltro('ativos')}>
             <Activity size={21} />
             <span>
-              <small>Em execução</small>
+              <small>{t('Em execução')}</small>
               <strong>{indicadores.emExecucao}</strong>
             </span>
           </button>
           <button type="button" onClick={() => abrirTrabalhosComFiltro('aguardando')}>
             <CheckCircle2 size={21} />
             <span>
-              <small>Aguardando sua decisão</small>
+              <small>{t('Aguardando sua decisão')}</small>
               <strong>{indicadores.aguardandoCliente}</strong>
             </span>
           </button>
           <button type="button" onClick={() => document.getElementById('mensagens-trabalho-cliente')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
             <MessageSquareText size={21} />
-            <span><small>Mensagens não lidas</small><strong>{indicadores.mensagens}</strong></span>
+            <span><small>{t('Mensagens não lidas')}</small><strong>{indicadores.mensagens}</strong></span>
           </button>
         </section>
 
@@ -598,22 +601,22 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
           <BarraBuscaFiltros
             busca={buscaTrabalho}
             aoMudarBusca={setBuscaTrabalho}
-            placeholder="Pesquisar por protocolo, serviço, estado ou data"
+            placeholder={t('Pesquisar por protocolo, serviço, estado ou data')}
             total={solicitacoesVisiveis.length}
-            ordenacao={{ valor: ordenacaoTrabalho, aoMudar: setOrdenacaoTrabalho, opcoes: [{ valor: 'recentes', rotulo: 'Mais novos primeiro' }, { valor: 'antigas', rotulo: 'Mais antigos primeiro' }, { valor: 'maior_valor', rotulo: 'Maior valor' }, { valor: 'servico', rotulo: 'Tipo de serviço' }] }}
+            ordenacao={{ valor: ordenacaoTrabalho, aoMudar: setOrdenacaoTrabalho, opcoes: [{ valor: 'recentes', rotulo: t('Mais novos primeiro') }, { valor: 'antigas', rotulo: t('Mais antigos primeiro') }, { valor: 'maior_valor', rotulo: t('Maior valor') }, { valor: 'servico', rotulo: t('Tipo de serviço') }] }}
             filtros={[
               {
                 id: 'estado-trabalho',
-                rotulo: 'Situação',
+                rotulo: t('Situação'),
                 valor: filtroTrabalho,
                 aoMudar: setFiltroTrabalho,
                 opcoes: [
-                  { valor: 'todos', rotulo: 'Todos os trabalhos' },
-                  { valor: 'aguardando', rotulo: 'Aguardando minha decisão' },
-                  { valor: 'ativos', rotulo: 'Serviços ativos' },
-                  { valor: 'concluidos', rotulo: 'Serviços concluídos' },
-                  { valor: 'recusados', rotulo: 'Revisão solicitada' },
-                  { valor: 'sem_proposta', rotulo: 'Ainda sem pré-proposta' },
+                  { valor: 'todos', rotulo: t('Todos os trabalhos') },
+                  { valor: 'aguardando', rotulo: t('Aguardando minha decisão') },
+                  { valor: 'ativos', rotulo: t('Serviços ativos') },
+                  { valor: 'concluidos', rotulo: t('Serviços concluídos') },
+                  { valor: 'recusados', rotulo: t('Revisão solicitada') },
+                  { valor: 'sem_proposta', rotulo: t('Ainda sem pré-proposta') },
                 ],
               },
             ]}
@@ -628,10 +631,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         {!carregando && solicitacoes.length === 0 && (
           <section className="vazio-cliente">
             <FileText size={30} />
-            <h2>Comece seu primeiro trabalho</h2>
+            <h2>{t('Comece seu primeiro trabalho')}</h2>
             <p>Registre a solicitação nesta área protegida. Ela já nascerá vinculada à sua empresa e aparecerá aqui imediatamente.</p>
             <button className="botao" type="button" onClick={() => setCriandoSolicitacao(true)}>
-              Registrar solicitação
+              {t('Registrar solicitação')}
             </button>
           </section>
         )}
@@ -641,8 +644,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
             <aside className="lista-projetos-cliente">
               <header>
                 <div>
-                  <h2>Seus trabalhos</h2>
-                  <small>Selecione o que deseja acompanhar</small>
+                  <h2>{t('Seus trabalhos')}</h2>
+                  <small>{t('Selecione o que deseja acompanhar')}</small>
                 </div>
                 <button className="adicionar-trabalho-lista" type="button" onClick={() => setCriandoSolicitacao(true)} aria-label="Registrar novo trabalho">
                   <Plus size={17} />
@@ -664,7 +667,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   <strong>{tituloServicoCliente(item.servico)}</strong>
                   <small className="detalhes-necessidade-cliente">{item.quantidade ? `${item.quantidade} peça(s)` : 'Quantidade não informada'}{item.material ? ` · ${item.material}` : ''}</small>
                   {item.descricao && <small className="descricao-necessidade-cliente" title={item.descricao}>{item.descricao}</small>}
-                  <small>Recebida em {dataCurta(item.criada_em)}</small>
+                  <small>{t('Recebida em')} {formatarData(item.criada_em)}</small>
                 </button>
               ))}
               {solicitacoesVisiveis.length === 0 && <p className="sem-resultados-filtro">Nenhum trabalho corresponde à pesquisa e aos filtros.</p>}
@@ -676,17 +679,17 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   <h2>{tituloServicoCliente(selecionada.servico)}</h2>
                 </div>
                 <button type="button" onClick={() => void carregar()}>
-                  <RefreshCw size={15} /> Atualizar
+                  <RefreshCw size={15} /> {t('Atualizar')}
                 </button>
               </header>
               <div className="resumo-projeto-cliente">
                 <article>
-                  <small>Pré-proposta comercial</small>
+                  <small>{t('Pré-proposta comercial')}</small>
                   <strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong>
                   <span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise'}</span>
                   {selecionada.valor_pre_proposta !== null && (
                     <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}>
-                      <Download size={15} /> {baixandoPdf ? 'Baixando…' : 'Baixar PDF emitido'}
+                      <Download size={15} /> {baixandoPdf ? t('Baixando…') : t('Baixar PDF emitido')}
                     </button>
                   )}
                   {podeAceitarPreProposta(selecionada.proposta_estado) && (
@@ -698,10 +701,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                       </label>
                       <div className="acoes-decisao-cliente">
                         <button type="button" onClick={() => void aceitarPreProposta()} disabled={!confirmouAceite || aceitandoPreProposta || recusandoPreProposta}>
-                          <CheckCircle2 size={16} /> {aceitandoPreProposta ? 'Registrando…' : 'Aceitar pré-proposta'}
+                          <CheckCircle2 size={16} /> {aceitandoPreProposta ? t('Registrando…') : t('Aceitar pré-proposta')}
                         </button>
                         <button className="recusar-pre-proposta" type="button" onClick={() => setRecusaAberta((aberta) => !aberta)} disabled={aceitandoPreProposta || recusandoPreProposta}>
-                          <Ban size={16} /> Recusar e solicitar revisão
+                          <Ban size={16} /> {t('Recusar e solicitar revisão')}
                         </button>
                       </div>
                       {recusaAberta && (
@@ -718,7 +721,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                                 setMotivoRecusa('');
                               }}
                             >
-                              Cancelar
+                              {t('Cancelar')}
                             </button>
                             <button type="submit" disabled={!normalizarMotivoRecusa(motivoRecusa) || recusandoPreProposta}>
                               {recusandoPreProposta ? 'Registrando…' : 'Confirmar recusa'}
@@ -733,7 +736,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                       <CheckCircle2 size={20} />
                       <div>
                         <strong>Aceite registrado</strong>
-                        <p>{descricaoAceiteCliente(selecionada.aceita_em, selecionada.execucao_estado, dataCurta)}</p>
+                        <p>{descricaoAceiteCliente(selecionada.aceita_em, selecionada.execucao_estado, formatarData)}</p>
                       </div>
                     </div>
                   )}
@@ -743,13 +746,13 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                       <div>
                         <strong>Revisão solicitada</strong>
                         <p>{selecionada.recusa_motivo || 'A equipe foi informada e poderá enviar uma nova pré-proposta.'}</p>
-                        {selecionada.recusada_em && <small>Registrada em {dataCurta(selecionada.recusada_em)}</small>}
+                        {selecionada.recusada_em && <small>{t('Registrada em')} {formatarData(selecionada.recusada_em)}</small>}
                       </div>
                     </div>
                   )}
                 </article>
                 <article>
-                  <small>Andamento do serviço</small>
+                  <small>{t('Andamento do serviço')}</small>
                   <strong>{situacaoAtual?.titulo}</strong>
                   <span>{situacaoAtual?.descricao}</span>
                 </article>
@@ -758,7 +761,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 <div className="titulo-bloco-cliente">
                   <div>
                     <h3>
-                      <Paperclip size={18} /> Arquivos da solicitação
+                      <Paperclip size={18} /> {t('Arquivos da solicitação')}
                     </h3>
                     <p>Documentos privados vinculados somente a este trabalho.</p>
                   </div>
@@ -773,11 +776,11 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                         <span>
                           <strong>{anexo.nome_original}</strong>
                           <small>
-                            {(Number(anexo.tamanho_bytes) / 1024 / 1024).toFixed(2)} MB · enviado em {dataCurta(anexo.criado_em)}
+                            {(Number(anexo.tamanho_bytes) / 1024 / 1024).toFixed(2)} MB · {t('enviado em')} {formatarData(anexo.criado_em)}
                           </small>
                         </span>
                         <button type="button" onClick={() => void baixarAnexo(anexo)} disabled={baixandoAnexoId === anexo.id}>
-                          <Download size={15} /> {baixandoAnexoId === anexo.id ? 'Baixando…' : 'Baixar'}
+                          <Download size={15} /> {baixandoAnexoId === anexo.id ? t('Baixando…') : t('Baixar')}
                         </button>
                       </li>
                     ))}
@@ -787,7 +790,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
               <section className="acompanhamento-etapas">
                 <div className="titulo-bloco-cliente">
                   <div>
-                    <h3>Etapas do trabalho</h3>
+                      <h3>{t('Etapas do trabalho')}</h3>
                     <p>A porcentagem indica o progresso da etapa atual, não do contrato inteiro.</p>
                   </div>
                 </div>
@@ -820,7 +823,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                             <div className="barra-progresso" aria-label={`${etapa.progresso}% concluído`}>
                               <i style={{ width: `${etapa.progresso}%` }} />
                             </div>
-                            <small>Atualizado em {dataCurta(etapa.atualizada_em)}</small>
+                            <small>{t('Atualizado em')} {formatarData(etapa.atualizada_em)}</small>
                           </div>
                         </li>
                       );
@@ -832,7 +835,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 <div className="titulo-bloco-cliente">
                   <div>
                     <h3>
-                      <MessageSquareText size={18} /> Mensagens
+                      <MessageSquareText size={18} /> {t('Mensagens')}
                     </h3>
                     <p>Canal vinculado a esta solicitação.</p>
                   </div>
@@ -846,7 +849,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                           <FileText size={14} /> {anexo.nome_original} <Download size={13} />
                         </button>
                       ))}
-                      <small>{dataCurta(mensagem.criada_em)}</small>
+                      <small>{formatarData(mensagem.criada_em)}</small>
                     </p>
                   ))}
                 </div>
@@ -855,9 +858,9 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                     Nova mensagem
                   </label>
                   <input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para a equipe" />
-                  <label className="anexar-mensagem"><Paperclip size={16} /><span>Anexar</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(evento) => selecionarArquivosMensagem(evento.target.files)} /></label>
+                  <label className="anexar-mensagem"><Paperclip size={16} /><span>{t('Anexar')}</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(evento) => selecionarArquivosMensagem(evento.target.files)} /></label>
                   <button type="submit">
-                    <Send size={16} /> Enviar
+                    <Send size={16} /> {t('Enviar')}
                   </button>
                 </form>
                 {arquivosMensagem.length > 0 && <div className="arquivos-mensagem-selecionados">{arquivosMensagem.map((arquivo, indice) => <span key={`${arquivo.name}-${indice}`}>{arquivo.name}<button type="button" aria-label={`Remover ${arquivo.name}`} onClick={() => setArquivosMensagem((atuais) => atuais.filter((_, posicao) => posicao !== indice))}><X size={12} /></button></span>)}</div>}
@@ -874,9 +877,9 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         <div className="fundo-modal-privacidade" role="presentation">
           <section className="modal-privacidade" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-privacidade">
             <span>
-              <ShieldCheck size={21} /> Proteção de dados
+              <ShieldCheck size={21} /> {t('Proteção de dados')}
             </span>
-            <h2 id="titulo-modal-privacidade">Antes de acessar sua área</h2>
+            <h2 id="titulo-modal-privacidade">{t('Antes de acessar sua área')}</h2>
             <p>Usamos seus dados para identificar a empresa, analisar solicitações, acompanhar trabalhos e manter este canal de mensagens. O acesso é restrito a usuários aprovados e à equipe autorizada.</p>
             <ul>
               <li>Não envie dados pessoais ou industriais que não sejam necessários ao serviço.</li>
@@ -888,10 +891,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
             </label>
             <div>
               <a href="/privacidade" target="_blank" rel="noreferrer">
-                Ler política completa
+                {t('Ler política completa')}
               </a>
               <button type="button" onClick={() => void aceitarPrivacidade()} disabled={aceitando}>
-                <Check size={16} /> {aceitando ? 'Registrando…' : 'Continuar'}
+                <Check size={16} /> {aceitando ? t('Registrando…') : t('Continuar')}
               </button>
             </div>
             <small>Versão {VERSAO_AVISO_PRIVACIDADE} · texto de homologação sujeito à validação institucional.</small>

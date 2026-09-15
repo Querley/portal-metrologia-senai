@@ -7,6 +7,7 @@ import { caminhoAnexoSolicitacao, tipoMimeArmazenado, validarAnexosSolicitacao, 
 import { necessidadesCliente, prazosPagamento } from '../lib/solicitacao';
 import { MATERIAIS_PECA, normalizarTelefoneDigitado, telefoneValido, valorPadronizado } from '../lib/campos-padronizados';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
+import { useTraducaoPublica } from '../lib/traducao-publica';
 
 export type DadosNovaSolicitacaoCliente = {
   telefone: string;
@@ -34,6 +35,7 @@ type Propriedades = {
 };
 
 export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaNome, aoFechar, aoCriada }: Propriedades) {
+  const { t } = useTraducaoPublica();
   const [necessidade, setNecessidade] = useState('');
   const [prazoPagamento, setPrazoPagamento] = useState('30');
   const [enviando, setEnviando] = useState(false);
@@ -222,9 +224,9 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
         <header>
           <div>
             <span>
-              <BriefcaseBusiness size={18} /> NOVO TRABALHO
+               <BriefcaseBusiness size={18} /> {t('NOVO TRABALHO')}
             </span>
-            <h2 id="titulo-nova-solicitacao">Registrar outra solicitação</h2>
+             <h2 id="titulo-nova-solicitacao">{t('Registrar outra solicitação')}</h2>
             <p>
               Este trabalho ficará vinculado a <strong>{empresaNome}</strong> e aparecerá imediatamente no seu acompanhamento.
             </p>
@@ -235,65 +237,65 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
         </header>
         <div className="seguranca-nova-solicitacao">
           <ShieldCheck size={19} />
-          <p>Seu perfil e sua empresa já foram confirmados. Não é necessário informar CNPJ nem ativar outra conta.</p>
+           <p>{t('Seu perfil e sua empresa já foram confirmados. Não é necessário informar CNPJ nem ativar outra conta.')}</p>
         </div>
         <form onSubmit={enviar}>
           <div className="grade-nova-solicitacao">
             <label>
-              Tipo de necessidade
+               {t('Tipo de necessidade')}
               <select required name="necessidade" value={necessidade} onChange={(evento) => setNecessidade(evento.target.value)}>
                 <option value="" disabled>
-                  Selecione
+                   {t('Selecione')}
                 </option>
                 {necessidadesCliente.map((item) => (
                   <option value={item.valor} key={item.valor}>
-                    {item.rotulo}
+                     {t(item.rotulo)}
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              Material da peça
+               {t('Material da peça')}
               <select required name="material" value={material} onChange={(evento) => setMaterial(evento.target.value)}>
                 <option value="" disabled>
-                  Selecione
+                   {t('Selecione')}
                 </option>
                 {MATERIAIS_PECA.map((item) => (
                   <option key={item} value={item}>
-                    {item}
+                     {t(item)}
                   </option>
                 ))}
               </select>
             </label>
             {material === 'Outros' && (
               <label>
-                Outro material
+                 {t('Outro material')}
                 <input required name="material-outro" minLength={2} maxLength={120} />
               </label>
             )}
             {(necessidade === 'outro' || necessidade === 'orientacao-tecnica') && (
               <label className="campo-largo">
-                Qual resultado você espera?
+                 {t('Qual resultado você espera?')}
                 <input required name="necessidade-personalizada" maxLength={500} placeholder="Ex.: modelo STEP, relatório dimensional ou investigação de falha" />
               </label>
             )}
             <label>
-              Quantidade
+               {t('Quantidade')}
               <input required name="quantidade" type="number" min="1" max="100000" defaultValue="1" />
             </label>
             <label>
-              Prazo desejado para o serviço
+               {t('Prazo desejado para o serviço')}
               <input required name="prazo" type="date" min={new Date().toISOString().slice(0, 10)} />
             </label>
             <label>
-              Prazo de pagamento desejado
+               {t('Prazo de pagamento desejado')}
               <select required name="prazo-pagamento" value={prazoPagamento} onChange={(evento) => setPrazoPagamento(evento.target.value)}>
                 {prazosPagamento.map((dias) => (
                   <option key={dias} value={dias}>
-                    {dias} dias
+                     {dias} {t('dias')}
                   </option>
                 ))}
-                <option value="outro">Outro prazo</option>
+                 <option value="outro">{t('Outro prazo')}</option>
               </select>
             </label>
             <label>
@@ -316,15 +318,15 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
               </label>
             )}
             <label className="campo-largo">
-              Descreva o desafio
+               {t('Descreva o desafio')}
               <textarea required name="descricao" minLength={10} maxLength={5000} rows={5} placeholder="Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado." />
             </label>
             <div className="campo-largo anexos-nova-solicitacao">
               <label className="seletor-anexos-cliente">
                 <FileUp size={22} />
                 <span>
-                  <strong>Adicionar imagens ou outros arquivos</strong>
-                  <small>Até 5 arquivos. PDF e imagens: 10 MB cada. CAD: 50 MB cada.</small>
+                   <strong>{t('Adicionar imagens ou outros arquivos')}</strong>
+                   <small>{t('Até 5 arquivos. PDF e imagens: 10 MB cada. CAD: 50 MB cada.')}</small>
                 </span>
                 <input
                   type="file"
@@ -356,10 +358,10 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
           </div>
           <footer>
             <button type="button" onClick={() => void cancelar()}>
-              {resultadoPendente ? 'Concluir sem os arquivos restantes' : 'Cancelar'}
+               {resultadoPendente ? t('Concluir sem os arquivos restantes') : t('Cancelar')}
             </button>
             <button type="submit" disabled={enviando || (!resultadoPendente && !necessidade)}>
-              <Send size={16} /> {enviando ? 'Enviando…' : resultadoPendente ? 'Tentar enviar arquivos' : 'Registrar novo trabalho'}
+               <Send size={16} /> {enviando ? t('Enviando…') : resultadoPendente ? t('Tentar enviar arquivos') : t('Registrar novo trabalho')}
             </button>
           </footer>
         </form>

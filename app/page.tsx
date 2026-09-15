@@ -1,3 +1,5 @@
+'use client';
+
 import { CarrosselMidia } from '../componentes/carrossel-midia';
 import { ContatoEmail } from '../componentes/contato-email';
 import { MarcaOficial } from '../componentes/marca-oficial';
@@ -8,14 +10,9 @@ import { VideoPublico } from '../componentes/video-publico';
 import type { MidiaEquipamento } from '../lib/equipamentos';
 import { acoesNavegacaoPublica, linksNavegacaoPublica } from '../lib/navegacao-publica';
 import { SeletorIdioma } from '../componentes/seletor-idioma';
+import { SecaoAcontecimentos } from '../componentes/secao-acontecimentos';
+import { useTraducaoPublica } from '../lib/traducao-publica';
 import './publico.css';
-
-const etapas = [
-  ['01', 'Orçar', 'Dados históricos apoiam uma estimativa transparente.'],
-  ['02', 'Executar', 'O serviço registra esforço, recursos e ocorrências reais.'],
-  ['03', 'Comparar', 'Indicadores revelam desvios de custo, prazo e esforço.'],
-  ['04', 'Aprender', 'Lições validadas passam a orientar novos orçamentos.'],
-];
 
 const midiasLaboratorio = [
   { tipo: 'imagem', src: '/imagens/laboratorio-prismo.jpeg', alt: 'ZEISS PRISMO instalada no Centro', legenda: 'ZEISS PRISMO no Centro' },
@@ -28,31 +25,32 @@ const midiasLaboratorio = [
 ] satisfies MidiaEquipamento[];
 
 export default function Home() {
+  const { t } = useTraducaoPublica();
   return (
     <main>
       <header className="topo">
         <a className="marca" href="#inicio" aria-label="Centro de Excelência em Metrologia SENAI ZEISS — início"><MarcaOficial /></a>
         <nav aria-label="Navegação principal">
-          {linksNavegacaoPublica.map((item) => <a href={item.href} key={item.href}>{item.rotulo}</a>)}
+          {linksNavegacaoPublica.map((item) => <a href={item.href} key={item.href}>{t(item.rotulo)}</a>)}
         </nav>
         <div className="acoes-topo">
           <SeletorIdioma />
-          {acoesNavegacaoPublica.map((item) => <a className={'destaque' in item && item.destaque ? 'botao botao-menor' : 'entrar'} href={item.href} key={item.href}>{item.rotulo}</a>)}
+          {acoesNavegacaoPublica.map((item) => <a className={'destaque' in item && item.destaque ? 'botao botao-menor' : 'entrar'} href={item.href} key={item.href}>{t(item.rotulo)}</a>)}
         </div>
         <MenuMovel />
       </header>
 
       <section className="hero" id="inicio">
         <div className="hero-conteudo">
-          <p className="sobrelinha"><span /> METROLOGIA QUE GERA CONHECIMENTO</p>
-          <h1>Precisão para medir.<br /><em>Inteligência para evoluir.</em></h1>
-          <p className="hero-texto">Serviços de metrologia avançada com propostas transparentes, acompanhamento digital e conhecimento acumulado a cada projeto.</p>
+          <p className="sobrelinha"><span /> {t('METROLOGIA QUE GERA CONHECIMENTO')}</p>
+          <h1>{t('Precisão para medir.')}<br /><em>{t('Inteligência para evoluir.')}</em></h1>
+          <p className="hero-texto">{t('Serviços de metrologia avançada com propostas transparentes, acompanhamento digital e conhecimento acumulado a cada projeto.')}</p>
           <div className="hero-acoes">
-            <a className="botao" href="/solicitar">Solicitar orçamento <span aria-hidden="true">→</span></a>
-            <a className="link-seta" href="#servicos">Conhecer serviços <span aria-hidden="true">↘</span></a>
+            <a className="botao" href="/solicitar">{t('Solicitar orçamento')} <span aria-hidden="true">→</span></a>
+            <a className="link-seta" href="#servicos">{t('Conhecer serviços')} <span aria-hidden="true">↘</span></a>
           </div>
           <div className="selos" aria-label="Diferenciais">
-            <span><b>6</b> equipamentos disponíveis</span><span><b>3</b> idiomas planejados</span><span><b>100%</b> acompanhamento digital</span>
+            <span><b>6</b> {t('equipamentos disponíveis')}</span><span><b>3</b> {t('idiomas disponíveis')}</span><span><b>100%</b> {t('acompanhamento digital')}</span>
           </div>
         </div>
         <div className="hero-visual" aria-label="Centro de Excelência em Metrologia SENAI ZEISS">
@@ -61,24 +59,21 @@ export default function Home() {
       </section>
 
       <section className="diferencial-zeiss" aria-labelledby="titulo-diferencial-zeiss">
-        <div><p className="sobrelinha"><span /> DIFERENCIAL GLOBAL</p><h2 id="titulo-diferencial-zeiss">Por que escolher o laboratório ZEISS?</h2><p>Integramos uma rede extremamente rara de centros de excelência, com estrutura avançada e atendimento próximo à indústria latino-americana.</p></div>
-        <dl><div><dt>5</dt><dd>laboratórios como este no mundo</dd></div><div><dt>1</dt><dd>o único da América Latina</dd></div></dl>
+        <div><p className="sobrelinha"><span /> {t('DIFERENCIAL GLOBAL')}</p><h2 id="titulo-diferencial-zeiss">{t('Por que escolher o laboratório ZEISS?')}</h2><p>{t('Integramos uma rede extremamente rara de centros de excelência, com estrutura avançada e atendimento próximo à indústria latino-americana.')}</p></div>
+        <dl><div><dt>5</dt><dd>{t('laboratórios como este no mundo')}</dd></div><div><dt>1</dt><dd>{t('o único da América Latina')}</dd></div></dl>
       </section>
 
       <section className="laboratorio-real" id="equipamentos">
-        <div className="laboratorio-texto"><p className="sobrelinha"><span /> ESTRUTURA REAL</p><h2>Um centro de excelência preparado para medir o que importa.</h2><p>O laboratório reúne medição por coordenadas, inspeção por raios X e digitalização óptica em um ambiente dedicado à precisão.</p><a className="link-seta" href="/catalogo#equipamentos">Conheça os equipamentos <span aria-hidden="true">→</span></a></div>
+        <div className="laboratorio-texto"><p className="sobrelinha"><span /> {t('ESTRUTURA REAL')}</p><h2>{t('Um centro de excelência preparado para medir o que importa.')}</h2><p>{t('O laboratório reúne medição por coordenadas, inspeção por raios X e digitalização óptica em um ambiente dedicado à precisão.')}</p><a className="link-seta" href="/catalogo#equipamentos">{t('Conheça os equipamentos')} <span aria-hidden="true">→</span></a></div>
         <CarrosselMidia midias={midiasLaboratorio} rotulo="Galeria do Centro de Excelência em Metrologia" />
       </section>
 
       <div className="secao" id="servicos"><SetoresIndustria /></div>
 
-      <section className="ciclo" id="como-funciona">
-        <div className="ciclo-intro"><p className="sobrelinha sobrelinha-clara"><span /> UM CICLO DE MELHORIA CONTÍNUA</p><h2>Cada serviço torna o próximo orçamento mais confiável.</h2><p>Experiência deixa de ficar dispersa e se transforma em recomendações revisadas por especialistas.</p></div>
-        <ol className="etapas">{etapas.map(([numero, titulo, texto]) => <li key={numero}><span>{numero}</span><h3>{titulo}</h3><p>{texto}</p></li>)}</ol>
-      </section>
+      <SecaoAcontecimentos />
 
       <section className="chamada" id="solicitar">
-        <p className="sobrelinha"><span /> COMECE AGORA</p><h2>Tem um desafio de medição?</h2><p>Conte o que você precisa. Nossa equipe analisa os dados e prepara uma proposta sob medida.</p><a className="botao" href="/solicitar">Solicitar orçamento <span aria-hidden="true">→</span></a><small>Ambiente de demonstração — nenhum dado real é exibido nesta versão.</small>
+        <p className="sobrelinha"><span /> {t('COMECE AGORA')}</p><h2>{t('Tem um desafio de medição?')}</h2><p>{t('Conte o que você precisa. Nossa equipe analisa os dados e prepara uma proposta sob medida.')}</p><a className="botao" href="/solicitar">{t('Solicitar orçamento')} <span aria-hidden="true">→</span></a>
       </section>
       <div id="contato"><ContatoEmail /></div>
       <RodapePublico />

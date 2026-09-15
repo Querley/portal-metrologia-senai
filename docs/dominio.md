@@ -74,3 +74,9 @@ A solicitação é a raiz obrigatória da pré-proposta. A recusa preserva vers�
 Cargo empresarial descreve a função profissional do contato e não altera seu papel externo nem concede capacidades internas. Usuário com vínculo empresarial ativo não pode receber perfil interno. Uma execução ainda não finalizada pode retornar justificadamente a uma etapa anterior: a etapa escolhida volta a `em_andamento`, as posteriores voltam a `a_fazer` e o histórico da decisão fica na auditoria. Execução concluída, cancelada ou com fechamento em validação não pode usar esse retorno.
 
 O Administrador pode convidar contas, editar nome/e-mail/cargo de contatos, alterar papéis internos entre Técnico, Validador e Administrador e bloquear uma empresa com motivo. Essas ações são auditadas; bloqueio empresarial não transforma Cliente em perfil interno.
+
+## Complemento editorial — 15 de setembro de 2026
+
+Conteúdo mutável possui versões imutáveis por idioma. `rascunho` pode ser enviado para `em_validacao`; o Administrador decide por `aprovada` ou `devolvida`, preservando justificativa e autoria, e somente uma versão aprovada pode se tornar a publicação corrente. A publicação é independente em PT-BR, inglês e alemão e PT-BR continua sendo o fallback explícito.
+
+Acontecimento é conteúdo da página inicial com momento (`recente`, `agora` ou `proximo`), data/período, título e resumo. Mídia localizada pertence à versão editorial; as especificações técnicas fixas dos equipamentos permanecem no catálogo versionado em código.

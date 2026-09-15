@@ -2,10 +2,7 @@
 
 import { Languages } from 'lucide-react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { idiomasPublicos, resolverIdiomaPublico, rotulosIdiomaPublico, urlComIdioma, type IdiomaPublico } from '../lib/idioma-publico';
-
-export const EVENTO_IDIOMA_PUBLICO = 'portal:idioma-publico';
-export const CHAVE_IDIOMA_PUBLICO = 'portal-metrologia:idioma-publico';
+import { CHAVE_IDIOMA_PUBLICO, EVENTO_IDIOMA_PUBLICO, idiomasPublicos, resolverIdiomaPublico, rotulosIdiomaPublico, urlComIdioma, type IdiomaPublico } from '../lib/idioma-publico';
 
 export function SeletorIdioma({ compacto = false }: { compacto?: boolean }) {
   const [idioma, setIdioma] = useState<IdiomaPublico>('pt-BR');

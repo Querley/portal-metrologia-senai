@@ -1,5 +1,7 @@
 export const idiomasPublicos = ['pt-BR', 'en', 'de'] as const;
 export type IdiomaPublico = (typeof idiomasPublicos)[number];
+export const EVENTO_IDIOMA_PUBLICO = 'portal:idioma-publico';
+export const CHAVE_IDIOMA_PUBLICO = 'portal-metrologia:idioma-publico';
 
 export const rotulosIdiomaPublico: Record<IdiomaPublico, string> = {
   'pt-BR': 'PT-BR',

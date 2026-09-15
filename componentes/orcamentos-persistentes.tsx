@@ -17,6 +17,7 @@ import { BarraBuscaFiltros } from './barra-busca-filtros';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { AnexosSolicitacaoInternos } from './anexos-solicitacao-internos';
 import { tituloDescritivoTrabalho } from '../lib/titulos-trabalho';
+import { agruparLinhasOrcamento, type UsoEquipamentoOrcamento } from '../lib/agrupar-orcamentos';
 
 type Servico = { id: string; slug: string; ativo: boolean };
 type Equipamento = { id: string; codigo: string; nome: string; ativo: boolean };
@@ -87,6 +88,7 @@ type Orcamento = {
   recusa_motivo?: string | null;
   recusada_em?: string | null;
   entrega_estimada?: string | null;
+  usos_equipamentos: UsoEquipamentoOrcamento[];
 };
 
 const apresentacaoEstado = {
@@ -194,14 +196,14 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
     const recusas = new Map(((respostaRecusas.data ?? []) as RecusaCliente[]).map((item) => [item.versao_id, item]));
     const entregas = new Map(((respostaEntregas.data ?? []) as EntregaPreProposta[]).map((item) => [item.versao_id, item]));
     setOrcamentos(
-      ((respostaOrcamentos.data ?? []) as Orcamento[]).map((orcamento) => ({
+      agruparLinhasOrcamento(((respostaOrcamentos.data ?? []) as Omit<Orcamento, 'usos_equipamentos'>[]).map((orcamento) => ({
         ...orcamento,
         ...dadosPreProposta.get(orcamento.versao_id),
         ...situacoesExecucao.get(orcamento.versao_id),
         ...justificativas.get(orcamento.versao_id),
         ...recusas.get(orcamento.versao_id),
         ...entregas.get(orcamento.versao_id),
-      })),
+      }))),
     );
     setServicoId((atual) => atual || servicosEncontrados[0]?.id || '');
     setEquipamentoId((atual) => atual || equipamentosElegiveis[0]?.id || '');
@@ -216,7 +218,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
   const orcamentosVisiveis = useMemo(
     () =>
       orcamentos.filter((orcamento) => {
-        if (!correspondeBusca(busca, orcamento.descricao, orcamento.servico_slug, orcamento.equipamento_nome, orcamento.empresa_nome, orcamento.solicitacao_codigo, orcamento.destinatario, orcamento.estado, formatosDataParaBusca(orcamento.criada_em))) return false;
+        if (!correspondeBusca(busca, orcamento.descricao, orcamento.servico_slug, orcamento.usos_equipamentos.map((uso) => uso.equipamento_nome), orcamento.empresa_nome, orcamento.solicitacao_codigo, orcamento.destinatario, orcamento.estado, formatosDataParaBusca(orcamento.criada_em))) return false;
         if (filtroEstado !== 'todos' && orcamento.estado !== filtroEstado) return false;
         if (filtroTipo === 'vinculados' && !orcamento.cliente_vinculado) return false;
         if (filtroTipo === 'internos' && orcamento.cliente_vinculado) return false;
@@ -921,9 +923,9 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                           {orcamento.ultima_justificativa_interna && <small className="justificativa-decisao">Motivo interno: {orcamento.ultima_justificativa_interna}</small>}
                           {orcamento.recusa_motivo && <small className="justificativa-decisao recusa-cliente">Motivo informado pelo Cliente: {orcamento.recusa_motivo}</small>}
                         </td>
-                        <td>{orcamento.equipamento_nome}</td>
-                        <td>{String(orcamento.horas).replace('.', ',')} h</td>
-                        {podeConsultarCustos(perfil) && <td>{orcamento.custo_hora_congelado === null ? '—' : formatarDinheiro(orcamento.custo_hora_congelado)}</td>}
+                        <td><span className="usos-equipamentos-orcamento">{orcamento.usos_equipamentos.map((uso) => <span key={`${uso.equipamento_nome}-${uso.horas}`}>{uso.equipamento_nome}</span>)}</span></td>
+                        <td><span className="usos-equipamentos-orcamento">{orcamento.usos_equipamentos.map((uso) => <span key={`${uso.equipamento_nome}-${uso.horas}`}>{String(uso.horas).replace('.', ',')} h</span>)}</span></td>
+                        {podeConsultarCustos(perfil) && <td><span className="usos-equipamentos-orcamento">{orcamento.usos_equipamentos.map((uso) => <span key={`${uso.equipamento_nome}-${uso.horas}`}>{uso.custo_hora_congelado === null ? '—' : formatarDinheiro(uso.custo_hora_congelado)}</span>)}</span></td>}
                         {podeConsultarCustos(perfil) && (
                           <td>
                             <strong>{formatarDinheiro(orcamento.preco_final)}</strong>

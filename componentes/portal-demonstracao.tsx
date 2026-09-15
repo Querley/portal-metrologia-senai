@@ -83,7 +83,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
   const solicitacoesPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
   const mensagensPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
   const menu = useMemo(() => {
-    const permitido = perfilInterno === 'administrador' ? menuBase : menuBase.filter((item) => item.id !== 'conteudo');
+    const permitido = perfilInterno === 'administrador' || perfilInterno === 'validador' ? menuBase : menuBase.filter((item) => item.id !== 'conteudo');
     return custosDisponiveis ? [...permitido, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }] : permitido;
   }, [custosDisponiveis, perfilInterno]);
 
@@ -246,7 +246,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         {secao === 'servicos' && (clienteSupabase && perfilInterno ? <ExecucoesPersistentes key={`servicos-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroEstadoInicial={filtroNavegacao} /> : <ExecucaoDemonstrativa />)}
         {secao === 'conhecimento' && (clienteSupabase && perfilInterno ? <ConhecimentoPersistente key={`conhecimento-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroInicial={filtroNavegacao} /> : <Conhecimento recomendacao={recomendacao} />)}
         {secao === 'mensagens' && (mensagensPersistentesDisponiveis && clienteSupabase && perfilInterno ? <MensagensPersistentes cliente={clienteSupabase} perfil={perfilInterno} /> : <Mensagens />)}
-        {secao === 'conteudo' && clienteSupabase && perfilInterno === 'administrador' && <ConteudoPublicoCms cliente={clienteSupabase} />}
+        {secao === 'conteudo' && clienteSupabase && (perfilInterno === 'administrador' || perfilInterno === 'validador') && <ConteudoPublicoCms cliente={clienteSupabase} perfil={perfilInterno} />}
         {secao === 'custos' && clienteSupabase && perfilInterno && <CustosEquipamento cliente={clienteSupabase} perfil={perfilInterno} />}
       </main>
 

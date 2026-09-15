@@ -128,3 +128,15 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] conectar os cabeçalhos de Catálogo, Solicitação e Privacidade ao CMS, com fallback português sinalizado;
 - [x] disponibilizar o seletor de idioma no desktop, menu móvel e área autenticada do Cliente;
 - [ ] migrar todos os demais textos públicos e do Cliente para o catálogo trilíngue e realizar revisão humana das traduções;
+
+### Revisão editorial e experiência — 15 de setembro de 2026
+
+- [x] tornar o perfil próprio do Administrador recolhível e os indicadores administrativos navegáveis;
+- [x] substituir a edição sequencial de Cliente por uma janela única para empresa, CNPJ e todos os contatos;
+- [x] apresentar Clientes em linhas responsivas e densas, com busca, filtros, ordenação e métricas preservados;
+- [x] consolidar em uma linha as máquinas de uma mesma versão de pré-proposta;
+- [x] transformar Inteligência Operacional em gráficos de barras comparáveis;
+- [x] substituir o ciclo estático da página inicial por acontecimentos localizados e administráveis;
+- [x] permitir edição editorial por Validador, com decisão e publicação exclusivas do Administrador;
+- [~] localizar a navegação, páginas públicas, formulários e área do Cliente em PT-BR, inglês e alemão; a revisão linguística humana dos textos técnicos extensos permanece obrigatória antes da produção;
+- [ ] ampliar o CMS visual para outras regiões mutáveis além da página inicial, sem incluir as fichas técnicas imutáveis dos equipamentos.

@@ -73,3 +73,9 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 - testes aprovados: lint, 103 testes unitários, build, 26 cenários E2E em desktop e Pixel 7 e 65 provas pgTAP;
 - publicação: fonte `6026847ff6e68401ea74e435a3c843c5cca5822a`, versão pública 41, concluída com sucesso no endereço oficial;
 - pendente após este lote: migrar o conteúdo integral das áreas pública e Cliente e homologar as traduções com revisão humana.
+
+## Ponto exato de retomada — lote 043
+
+Implementado localmente: perfil administrativo recolhível, indicadores clicáveis, janela única de edição empresarial/contatos, lista densa de Clientes, agrupamento de usos de máquinas por versão, gráficos de inteligência, catálogo reativo PT-BR/EN/DE, acontecimentos públicos e CMS com aprovação administrativa. Arquivo pessoal `docs/atividade-aula-07.md` permanece fora do Git.
+
+Validado localmente: lint sem erros, 108 testes unitários e 26 E2E em Chromium desktop e Pixel 7. Pendente de infraestrutura: aplicar a migration `043`, obter pgTAP pelo Actions, publicar a fonte e executar revisão linguística humana dos textos técnicos. Se a execução for interrompida, não repetir o lote; retomar por `migration list --linked`, aplicação de `043`, push da `main`, Actions e publicação.

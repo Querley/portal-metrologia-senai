@@ -7,10 +7,12 @@ import { obterClienteSupabase } from '../lib/supabase/cliente';
 import { MATERIAIS_PECA, normalizarTelefoneDigitado, telefoneValido, valorPadronizado } from '../lib/campos-padronizados';
 import { campoEstaInvalido, mensagemCampoInvalido } from './validacao-global';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
+import { useTraducaoPublica } from '../lib/traducao-publica';
 
 const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'application/octet-stream'];
 
 export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?: string }) {
+  const { t } = useTraducaoPublica();
   const cliente = obterClienteSupabase();
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [erro, setErro] = useState('');
@@ -111,13 +113,13 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
     return (
       <section className="confirmacao" role="status">
         <CheckCircle2 size={42} />
-        <h1>Solicitação salva na homologação</h1>
+        <h1>{t('Solicitação salva na homologação')}</h1>
         <p>
           Protocolo <strong>DEM-SOL-{String(confirmacao.codigo).padStart(4, '0')}</strong>, vinculado ao e-mail <strong>{emailEnviado}</strong>.
         </p>
-        <p>Use o acesso abaixo com o mesmo e-mail. Se o Cliente já estiver cadastrado, este novo trabalho será acrescentado à empresa existente; caso seja o primeiro, a área protegida será ativada. Os arquivos selecionados permaneceram neste dispositivo e poderão ser enviados na etapa autenticada.</p>
+        <p>{t('Use o acesso abaixo com o mesmo e-mail. Se o Cliente já estiver cadastrado, este novo trabalho será acrescentado à empresa existente; caso seja o primeiro, a área protegida será ativada. Os arquivos selecionados permaneceram neste dispositivo e poderão ser enviados na etapa autenticada.')}</p>
         <a className="botao" href={`/portal?ativar=${encodeURIComponent(confirmacao.token_ativacao)}`}>
-          Vincular ao acompanhamento do Cliente <span>→</span>
+          {t('Vincular ao acompanhamento do Cliente')} <span>→</span>
         </a>
       </section>
     );
@@ -128,7 +130,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
       <div className="aviso-demo">
         <ShieldCheck size={18} />
         <span>
-          <strong>Homologação persistente.</strong> Você pode usar uma caixa de e-mail válida para receber acesso e recuperar a senha. Não inclua informações industriais confidenciais; os registros continuam isolados na origem de homologação.
+          <strong>{t('Homologação persistente.')}</strong> {t('Você pode usar uma caixa de e-mail válida para receber acesso e recuperar a senha. Não inclua informações industriais confidenciais; os registros continuam isolados na origem de homologação.')}
         </span>
       </div>
       <label className="campo-armadilha" aria-hidden="true">
@@ -136,18 +138,18 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
         <input name="website" tabIndex={-1} autoComplete="off" />
       </label>
       <fieldset>
-        <legend>1. Você e sua empresa</legend>
+        <legend>{t('1. Você e sua empresa')}</legend>
         <div className="grade-form">
           <label>
-            Nome completo
+            {t('Nome completo')}
             <input required name="nome" autoComplete="name" minLength={2} maxLength={120} />
           </label>
           <label>
-            E-mail para o acesso Cliente
+            {t('E-mail para o acesso Cliente')}
             <input required name="email" type="email" autoComplete="email" maxLength={254} placeholder="nome@empresa.com.br" />
           </label>
           <label>
-            Nome da empresa
+            {t('Nome da empresa')}
             <input required name="empresa" autoComplete="organization" minLength={2} maxLength={180} />
           </label>
           <label>
@@ -155,7 +157,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
             <input required name="cnpj" inputMode="numeric" autoComplete="off" minLength={18} maxLength={18} pattern="[0-9]{2}\.[0-9]{3}\.[0-9]{3}/[0-9]{4}-[0-9]{2}" title="Informe os 14 números do CNPJ no formato 00.000.000/0000-00." value={cnpj} onChange={(evento) => setCnpj(formatarCnpj(evento.target.value))} placeholder="00.000.000/0000-00" aria-invalid={cnpj.length === 18 && !cnpjValido(cnpj)} />
           </label>
           <label>
-            Telefone
+            {t('Telefone')}
             <input
               name="telefone"
               type="tel"
@@ -169,85 +171,85 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
             />
           </label>
           <label>
-            Prazo de pagamento desejado
+            {t('Prazo de pagamento desejado')}
             <select required name="prazo-pagamento" value={prazoPagamento} onChange={(evento) => setPrazoPagamento(evento.target.value)}>
               {prazosPagamento.map((dias) => (
                 <option key={dias} value={dias}>
-                  {dias} dias
+                  {dias} {t('dias')}
                 </option>
               ))}
-              <option value="outro">Outro prazo</option>
+              <option value="outro">{t('Outro prazo')}</option>
             </select>
           </label>
           {prazoPagamento === 'outro' && (
             <label className="campo-largo">
-              Informe o prazo desejado em dias
+              {t('Informe o prazo desejado em dias')}
               <input required name="prazo-pagamento-outro" type="number" inputMode="numeric" min="1" max="365" placeholder="Ex.: 120" />
             </label>
           )}
         </div>
       </fieldset>
       <fieldset>
-        <legend>2. O que você precisa?</legend>
+        <legend>{t('2. O que você precisa?')}</legend>
         <div className="grade-form">
           <label>
-            Tipo de necessidade
+            {t('Tipo de necessidade')}
             <select required name="servico" value={servico} onChange={(evento) => setServico(evento.target.value)}>
               <option value="" disabled>
-                Selecione
+                {t('Selecione')}
               </option>
               {necessidadesCliente.map((item) => (
                 <option value={item.valor} key={item.valor}>
-                  {item.rotulo}
+                  {t(item.rotulo)}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            Material da peça
+            {t('Material da peça')}
             <select required name="material" value={material} onChange={(evento) => setMaterial(evento.target.value)}>
               <option value="" disabled>
-                Selecione
+                {t('Selecione')}
               </option>
               {MATERIAIS_PECA.map((item) => (
                 <option key={item} value={item}>
-                  {item}
+                  {t(item)}
                 </option>
               ))}
             </select>
           </label>
           {material === 'Outros' && (
             <label>
-              Outro material
+              {t('Outro material')}
               <input required name="material-outro" minLength={2} maxLength={120} placeholder="Informe o material" />
             </label>
           )}
           {(servico === 'outro' || servico === 'orientacao-tecnica' || servicoInicial) && (
             <label className="campo-largo">
-              Qual resultado você espera?
+              {t('Qual resultado você espera?')}
               <input required name="necessidade-personalizada" minLength={5} maxLength={500} placeholder="Ex.: modelo STEP, relatório dimensional ou investigação de falha" />
             </label>
           )}
           <label>
-            Quantidade
+            {t('Quantidade')}
             <input required name="quantidade" type="number" min="1" max="100000" />
           </label>
           <label>
-            Prazo desejado para o serviço
+            {t('Prazo desejado para o serviço')}
             <input required name="prazo" type="date" min={new Date().toISOString().slice(0, 10)} />
           </label>
           <label className="campo-largo">
-            Descreva o desafio
+            {t('Descreva o desafio')}
             <textarea required name="descricao" minLength={10} maxLength={5000} rows={5} placeholder="Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado." />
           </label>
         </div>
       </fieldset>
       <fieldset>
-        <legend>3. Arquivos técnicos</legend>
+        <legend>{t('3. Arquivos técnicos')}</legend>
         <label className="area-arquivo">
           <FileUp size={26} />
-          <strong>Prepare PDF, imagem ou arquivo CAD</strong>
-          <span>Na homologação, os arquivos permanecem no dispositivo até o acesso autenticado.</span>
+          <strong>{t('Prepare PDF, imagem ou arquivo CAD')}</strong>
+          <span>{t('Na homologação, os arquivos permanecem no dispositivo até o acesso autenticado.')}</span>
           <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(evento) => selecionar(evento.target.files)} />
         </label>
         <ul className="lista-arquivos">
@@ -265,10 +267,10 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
         </ul>
       </fieldset>
       <label className="aceite">
-        <input required type="checkbox" /> Confirmo que todos os dados são fictícios e aceito a <a href="/privacidade">política de privacidade</a> da demonstração.
+        <input required type="checkbox" /> {t('Confirmo que compreendi o uso dos dados e aceito a')} <a href="/privacidade">{t('política de privacidade')}</a>.
       </label>
       <button className="botao" type="submit" disabled={enviando}>
-        {enviando ? 'Salvando…' : 'Enviar solicitação demonstrativa'} <span aria-hidden="true">→</span>
+        {enviando ? t('Salvando…') : t('Enviar solicitação')} <span aria-hidden="true">→</span>
       </button>
     </form>
   );

@@ -37,6 +37,11 @@ function Metrica({ titulo, estimado, realizado, desvio, assertivo, moeda = false
   );
 }
 
+function GraficoBarras({ titulo, vazio, dados, cor }: { titulo: string; vazio: string; dados: Array<{ id: string; rotulo: string; valor: number; destaque: string; detalhe: string }>; cor: 'azul' | 'verde' | 'ouro' }) {
+  const maximo = Math.max(...dados.map((item) => item.valor), 1);
+  return <article className={`grafico-conhecimento grafico-${cor}`}><h3>{titulo}</h3>{dados.length === 0 ? <p>{vazio}</p> : <ol>{dados.slice(0, 8).map((item) => <li key={item.id}><div><strong title={item.rotulo}>{item.rotulo}</strong><b>{item.destaque}</b></div><span className="trilho-grafico-conhecimento"><i style={{ width: `${Math.max(8, item.valor / maximo * 100)}%` }}><em>{item.valor}</em></i></span><small>{item.detalhe}</small></li>)}</ol>}</article>;
+}
+
 export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }: { cliente: SupabaseClient; perfil: PerfilInterno; filtroInicial?: string }) {
   const [indicadores, setIndicadores] = useState<IndicadorExecucaoPersistente[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -275,9 +280,9 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
       <section className="bloco inteligencia-operacional">
         <header><div><h2>Inteligência operacional</h2><p>Padrões consolidados dos trabalhos registrados; nenhum dado é inventado.</p></div><Activity /></header>
         <div className="grade-inteligencia-operacional">
-          <article><h3>Serviços e produtos mais usados</h3>{inteligencia.servicos.length === 0 ? <p>Os padrões surgirão após as primeiras execuções.</p> : <ol>{inteligencia.servicos.slice(0, 8).map((item) => <li key={item.slug}><span><strong>{tituloServico(item.slug)}</strong><small>{item.quantidade} trabalho(s) · {item.retrabalhos} retrabalho(s)</small><i className="barra-conhecimento"><em style={{ width: `${item.quantidade / Math.max(inteligencia.servicos[0]?.quantidade || 1, 1) * 100}%` }} /></i></span><b>{item.horas_medias == null ? '—' : `${item.horas_medias} h médias`}</b></li>)}</ol>}</article>
-          <article><h3>Materiais recorrentes</h3>{inteligencia.materiais.length === 0 ? <p>Sem materiais suficientes para análise.</p> : <ol>{inteligencia.materiais.slice(0, 8).map((item) => <li key={item.material}><span><strong>{item.material}</strong><small>Vocabulário padronizado das solicitações</small><i className="barra-conhecimento"><em style={{ width: `${item.quantidade / Math.max(inteligencia.materiais[0]?.quantidade || 1, 1) * 100}%` }} /></i></span><b>{item.quantidade}</b></li>)}</ol>}</article>
-          <article><h3>Técnicas e estratégias aprendidas</h3>{inteligencia.assuntos.length === 0 ? <p>Formalize lições e seus assuntos para gerar dicas pesquisáveis.</p> : <ol>{inteligencia.assuntos.slice(0, 8).map((item) => <li key={item.assunto}><span><strong>{item.assunto}</strong><small>Presente em lições formalizadas</small><i className="barra-conhecimento"><em style={{ width: `${item.quantidade / Math.max(inteligencia.assuntos[0]?.quantidade || 1, 1) * 100}%` }} /></i></span><b>{item.quantidade}</b></li>)}</ol>}</article>
+          <GraficoBarras titulo="Serviços e produtos mais usados" vazio="Os padrões surgirão após as primeiras execuções." cor="azul" dados={inteligencia.servicos.map((item) => ({ id: item.slug, rotulo: tituloServico(item.slug), valor: item.quantidade, destaque: item.horas_medias == null ? '—' : `${item.horas_medias} h médias`, detalhe: `${item.quantidade} trabalho(s) · ${item.retrabalhos} retrabalho(s)` }))} />
+          <GraficoBarras titulo="Materiais recorrentes" vazio="Sem materiais suficientes para análise." cor="verde" dados={inteligencia.materiais.map((item) => ({ id: item.material, rotulo: item.material, valor: item.quantidade, destaque: `${item.quantidade}`, detalhe: 'Ocorrências nas solicitações' }))} />
+          <GraficoBarras titulo="Técnicas e estratégias aprendidas" vazio="Formalize lições e seus assuntos para gerar dicas pesquisáveis." cor="ouro" dados={inteligencia.assuntos.map((item) => ({ id: item.assunto, rotulo: item.assunto, valor: item.quantidade, destaque: `${item.quantidade}`, detalhe: 'Lições formalizadas relacionadas' }))} />
         </div>
         <p className="nota-inteligencia">Análises comerciais identificáveis por cliente ficam restritas ao Administrador, na área administrativa; Técnicos e Validadores recebem aqui somente padrões operacionais necessários ao trabalho.</p>
       </section>

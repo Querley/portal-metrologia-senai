@@ -60,6 +60,8 @@ test('idioma público pode ser alternado em desktop e mobile', async ({ page }) 
   await seletor.selectOption('de');
   await expect(page).toHaveURL(/\/catalogo\?lang=de/);
   await expect(mobile ? page.locator('.menu-movel .seletor-idioma select') : page.locator('.acoes-cabecalho-publico .seletor-idioma select')).toHaveValue('de');
+  await expect(page.getByRole('link', { name: 'Angebot anfordern' }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Drei Technologiebereiche tragen dieses Portfolio.' })).toBeVisible();
 });
 
 test('formulário explica claramente uma entrada inválida', async ({ page }) => {
@@ -67,7 +69,7 @@ test('formulário explica claramente uma entrada inválida', async ({ page }) =>
   await expect(page.locator('.formulario-solicitacao')).toHaveAttribute('data-hidratado', 'sim');
   const nome = page.getByLabel('Nome completo');
   await nome.fill('A');
-  await page.getByRole('button', { name: /Enviar solicitação demonstrativa/ }).click();
+  await page.getByRole('button', { name: /Enviar solicitação/ }).click();
   await expect(page.getByRole('alert')).toContainText('pelo menos 2 caracteres');
 });
 
