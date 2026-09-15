@@ -135,3 +135,15 @@ A migration `202609140041_contas_analiticas_e_detalhes_portal.sql` acrescenta ca
 8. fechamento de janelas com `Esc`.
 
 Aplicação confirmada no SQL Editor em 14 de setembro: o histórico remoto avançou de `202609110040` para `202609140041`, e a consulta pós-aplicação confirmou `cargo_profissional` e `listar_portal_cliente`. A função `gerenciar-usuarios` foi republicada no mesmo projeto. A prova completa de recriação do banco e pgTAP permanece no GitHub Actions.
+
+## CMS e idiomas — 15 de setembro de 2026
+
+A migration `202609150042_cms_publico_multilingue.sql` cria publicação por idioma sobre as tabelas de conteúdo já existentes. A prova pgTAP deve confirmar leitura PT-BR/EN/DE, fallback explícito, edição e publicação exclusivas do Administrador e auditoria. A interface deve ser homologada assim:
+
+1. como Administrador, abrir `Conteúdo público`, pesquisar um cabeçalho e alternar entre PT-BR, EN e DE;
+2. salvar uma nova versão sem publicá-la e confirmar que a página pública ainda apresenta a versão anterior;
+3. publicar a versão e recarregar a página pública correspondente;
+4. retirar uma tradução apenas por procedimento técnico controlado e confirmar o aviso de fallback em português;
+5. como Técnico e Validador, confirmar que o módulo editorial não aparece;
+6. em desktop e celular, alternar o seletor de idioma e confirmar que a escolha permanece na mesma rota;
+7. observar que este lote localiza os três cabeçalhos conectados; demais textos continuam em português até a migração progressiva e não devem ser considerados traduzidos.

@@ -17,7 +17,7 @@ export const metadata = { title: 'Serviços e equipamentos — Portal de Metrolo
 export default function Catalogo() {
   return (
     <main>
-      <CabecalhoPublico titulo="Serviços e equipamentos" texto="Conheça as tecnologias disponíveis no Centro e encontre o caminho mais adequado para o seu desafio de medição." />
+      <CabecalhoPublico chaveCms="catalogo.cabecalho" titulo="Serviços e equipamentos" texto="Conheça as tecnologias disponíveis no Centro e encontre o caminho mais adequado para o seu desafio de medição." />
       <section className="conteudo-publico">
         <SetoresIndustria />
 

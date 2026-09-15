@@ -47,6 +47,21 @@ test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Abrir Gmail' })).toHaveAttribute('href', /mail\.google\.com/);
 });
 
+test('idioma público pode ser alternado em desktop e mobile', async ({ page }) => {
+  await page.goto('/catalogo');
+  const mobile = (page.viewportSize()?.width ?? 1000) <= 980;
+  if (mobile) {
+    await expect(page.locator('.menu-movel')).toHaveAttribute('data-hidratado', 'sim');
+    await page.getByRole('button', { name: 'Abrir menu' }).click();
+  }
+  const seletor = mobile ? page.locator('.menu-movel .seletor-idioma select') : page.locator('.acoes-cabecalho-publico .seletor-idioma select');
+  await expect(seletor).toBeVisible();
+  await expect(seletor).toBeEnabled();
+  await seletor.selectOption('de');
+  await expect(page).toHaveURL(/\/catalogo\?lang=de/);
+  await expect(mobile ? page.locator('.menu-movel .seletor-idioma select') : page.locator('.acoes-cabecalho-publico .seletor-idioma select')).toHaveValue('de');
+});
+
 test('formulário explica claramente uma entrada inválida', async ({ page }) => {
   await page.goto('/solicitar');
   await expect(page.locator('.formulario-solicitacao')).toHaveAttribute('data-hidratado', 'sim');

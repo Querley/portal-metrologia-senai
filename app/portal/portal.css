@@ -306,6 +306,24 @@
 .campo-data-orcamento input { margin:0!important; cursor:pointer; }.campo-data-orcamento small { color:#64808d; font-size:10px; }
 .guia-conhecimento { margin-bottom:14px; }.guia-conhecimento > ol { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0; padding:18px 20px; list-style:none; }.guia-conhecimento li { display:grid; gap:7px; padding:14px; background:#f2f8fa; border-left:3px solid #1685b2; }.guia-conhecimento li span { color:#527181; line-height:1.55; }.guia-conhecimento > p { margin:0; padding:0 20px 20px; color:#345d70; line-height:1.6; }
 .status-conteudo-publico { margin-bottom:14px; }.status-conteudo-publico > div { display:grid; gap:8px; padding:18px 20px; color:#416678; line-height:1.6; }.status-conteudo-publico p { margin:0; }.tabela-licoes button:disabled { opacity:.58; cursor:not-allowed; }
+.painel-cms { display:grid; gap:14px; }
+.topo-cliente > .acoes-topo-cliente { display:flex; flex-direction:row; align-items:center; gap:10px; width:auto; margin-left:0; text-align:left; }.acoes-topo-cliente .seletor-idioma select { color:#183f52; }.acoes-topo-cliente > button { display:inline-flex; align-items:center; gap:7px; min-height:38px; padding:10px 14px; color:#31576b; background:white; border:1px solid #c9d9e0; cursor:pointer; font-size:13px; font-weight:700; }
+.cards-cms { padding:0!important; }
+.grade-cms { display:grid; grid-template-columns:minmax(320px,.9fr) minmax(420px,1.1fr); gap:14px; align-items:start; }
+.lista-cms,.editor-cms { min-width:0; overflow:hidden; }
+.lista-cms > header button,.acoes-editor-cms button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:42px; padding:10px 15px; color:white; background:#075f86; border:0; border-radius:7px; font-weight:800; cursor:pointer; }
+.lista-cms .barra-busca-filtros { padding:14px 18px; border-bottom:1px solid #dbe8ed; }
+.itens-cms { display:grid; max-height:610px; overflow:auto; }
+.itens-cms > button { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; gap:10px; align-items:center; width:100%; padding:14px 18px; color:#274e60; background:white; border:0; border-bottom:1px solid #e0eaee; text-align:left; cursor:pointer; }
+.itens-cms > button:hover,.itens-cms > button.ativo { background:#edf8fc; box-shadow:inset 4px 0 #1188b8; }
+.itens-cms > button span { display:grid; gap:4px; min-width:0; }.itens-cms small { overflow:hidden; color:#66808b; text-overflow:ellipsis; white-space:nowrap; }
+.idiomas-cms { display:flex!important; grid-auto-flow:column; gap:4px!important; }.idiomas-cms b { padding:3px 5px; color:#7c8e96; background:#edf1f3; border-radius:4px; font-size:9px; }.idiomas-cms b.publicado { color:#087348; background:#dff5e9; }
+.campos-cms { display:grid; gap:14px; padding:18px 20px 22px; }.campos-cms label { display:grid; gap:7px; color:#31596b; font-size:12px; font-weight:800; }.campos-cms input,.campos-cms select,.campos-cms textarea { width:100%; padding:11px 12px; color:#173f52; background:white; border:1px solid #b8d0da; border-radius:6px; font:inherit; font-weight:500; }.campos-cms textarea { resize:vertical; line-height:1.55; }
+.acoes-editor-cms { display:flex; flex-wrap:wrap; gap:8px; }.acoes-editor-cms button:disabled { opacity:.55; cursor:wait; }.acoes-editor-cms .botao-publicar-cms { background:#087348; }.acoes-editor-cms .botao-atualizar-cms { color:#28566a; background:#e8f1f5; }
+.historico-cms { display:grid; gap:7px; padding:13px 15px; color:#587582; background:#f2f7f9; border-radius:7px; font-size:11px; }.historico-cms strong { color:#204c60; font-size:12px; }
+@media (max-width:1100px) { .grade-cms { grid-template-columns:1fr; }.itens-cms { max-height:420px; } }
+@media (max-width:640px) { .itens-cms > button { grid-template-columns:auto minmax(0,1fr) auto; }.idiomas-cms { grid-column:2; }.grade-cms { gap:10px; }.acoes-editor-cms button { width:100%; } }
+@media (max-width:650px) { .topo-cliente > .acoes-topo-cliente { order:4; width:100%; align-items:center; }.acoes-topo-cliente > button { margin-left:auto; } }
 .botao-link-acesso { width:100%; justify-content:center; border:0; background:transparent; cursor:pointer; }
 .aplicacao { width:100%; min-width:0; background:#f3f7f9; }
 .conteudo-interno { width:calc(100% - 286px); min-width:0; background:#f3f7f9; }

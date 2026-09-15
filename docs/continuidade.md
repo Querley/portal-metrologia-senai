@@ -63,3 +63,12 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 2. testar envio/download de anexos em mensagens e bloqueio/desbloqueio de uma empresa;
 3. desenvolver em seguida o CMS persistente e a internacionalização PT-BR/inglês/alemão das áreas pública e Cliente;
 4. depois importar históricos sanitizados e ampliar as integrações de IA sem cliente, preço, margem, anexos ou identificadores.
+
+## Lote iniciado em 15 de setembro
+
+- migration nova: `202609150042_cms_publico_multilingue.sql`, ainda deve ser confirmada pela recriação do banco no GitHub Actions e aplicada na homologação;
+- interface nova: editor administrativo de conteúdo com versões, pesquisa, filtro, histórico e publicação explícita;
+- leitura pública conectada: cabeçalhos de Catálogo, Solicitação e Privacidade em PT-BR, inglês e alemão, com fallback português sinalizado;
+- seleção de idioma: disponível no cabeçalho público, menu móvel e área do Cliente; a tradução integral dos demais textos ainda não foi realizada;
+- testes locais aprovados neste ponto: lint, 103 testes unitários, build e 26 cenários E2E em desktop e Pixel 7;
+- pendente neste lote: validar pgTAP, aplicar a migration remota, publicar a nova versão do site e atualizar este registro com os identificadores finais.

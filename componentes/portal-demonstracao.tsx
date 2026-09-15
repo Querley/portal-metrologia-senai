@@ -19,6 +19,7 @@ import { MensagensPersistentes } from './mensagens-persistentes';
 import { OrcamentosPersistentes } from './orcamentos-persistentes';
 import { SolicitacoesPersistentes } from './solicitacoes-persistentes';
 import { VisaoGeralPersistente } from './visao-geral-persistente';
+import { ConteudoPublicoCms } from './conteudo-publico-cms';
 
 const menuBase = [
   { id: 'visao', rotulo: 'Visão geral', icone: LayoutDashboard },
@@ -81,7 +82,10 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
   const orcamentosPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno && podeConsultarOrcamentos(perfilInterno));
   const solicitacoesPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
   const mensagensPersistentesDisponiveis = Boolean(clienteSupabase && perfilInterno);
-  const menu = useMemo(() => (custosDisponiveis ? [...menuBase, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }] : menuBase), [custosDisponiveis]);
+  const menu = useMemo(() => {
+    const permitido = perfilInterno === 'administrador' ? menuBase : menuBase.filter((item) => item.id !== 'conteudo');
+    return custosDisponiveis ? [...permitido, { id: 'custos', rotulo: 'Custos-hora', icone: CircleDollarSign }] : permitido;
+  }, [custosDisponiveis, perfilInterno]);
 
   useEffect(() => {
     function fecharComEscape(evento: KeyboardEvent) {
@@ -242,7 +246,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         {secao === 'servicos' && (clienteSupabase && perfilInterno ? <ExecucoesPersistentes key={`servicos-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroEstadoInicial={filtroNavegacao} /> : <ExecucaoDemonstrativa />)}
         {secao === 'conhecimento' && (clienteSupabase && perfilInterno ? <ConhecimentoPersistente key={`conhecimento-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroInicial={filtroNavegacao} /> : <Conhecimento recomendacao={recomendacao} />)}
         {secao === 'mensagens' && (mensagensPersistentesDisponiveis && clienteSupabase && perfilInterno ? <MensagensPersistentes cliente={clienteSupabase} perfil={perfilInterno} /> : <Mensagens />)}
-        {secao === 'conteudo' && <ConteudoPublico />}
+        {secao === 'conteudo' && clienteSupabase && perfilInterno === 'administrador' && <ConteudoPublicoCms cliente={clienteSupabase} />}
         {secao === 'custos' && clienteSupabase && perfilInterno && <CustosEquipamento cliente={clienteSupabase} perfil={perfilInterno} />}
       </main>
 
@@ -646,51 +650,6 @@ function Mensagens() {
             <button type="submit">Enviar</button>
           </form>
         </div>
-      </section>
-    </div>
-  );
-}
-
-function ConteudoPublico() {
-  return (
-    <div className="painel">
-      <section className="bloco status-conteudo-publico">
-        <header><div><h2>Para que serve este módulo</h2><p>Ele será o CMS do portal: conteúdo público, publicação e traduções sem necessidade de alterar o código.</p></div><FileCheck2 /></header>
-        <div>
-          <p><strong>Situação atual:</strong> esta tela é um inventário de planejamento. As páginas públicas ainda são mantidas no código e os botões de edição permanecem desabilitados para não simular uma gravação inexistente.</p>
-          <p><strong>Próxima entrega:</strong> persistência das páginas, revisão antes da publicação, histórico e traduções em PT-BR, inglês e alemão. A área interna dos funcionários continuará somente em português.</p>
-        </div>
-      </section>
-      <section className="bloco tabela-licoes">
-        <header>
-          <div>
-            <h2>Páginas e catálogo</h2>
-            <p>Português é canônico; traduções ausentes usam fallback sinalizado.</p>
-          </div>
-          <button type="button" disabled title="Disponível quando a persistência do CMS for conectada">
-            <Plus size={15} /> Novo conteúdo — em desenvolvimento
-          </button>
-        </header>
-        {[
-          ['Início', 'PT · tradução pendente', 'Publicado'],
-          ['Medição tridimensional', 'PT · tradução pendente', 'Publicado'],
-          ['Raios X industrial', 'PT · tradução pendente', 'Rascunho'],
-          ['Política de privacidade', 'PT · tradução pendente', 'Em validação'],
-        ].map(([titulo, idiomas, estado]) => (
-          <article key={titulo}>
-            <span className="numero-licao">
-              <FileCheck2 size={17} />
-            </span>
-            <div>
-              <strong>{titulo}</strong>
-              <p>{idiomas} · atualmente mantido no código</p>
-            </div>
-            <span className={`estado estado-${estado.toLowerCase().replace(' ', '-')}`}>{estado}</span>
-            <button type="button" disabled aria-label={`Edição de ${titulo} ainda não disponível`}>
-              <ChevronRight size={17} />
-            </button>
-          </article>
-        ))}
       </section>
     </div>
   );

@@ -4,7 +4,7 @@ import '../publico.css';
 
 export default function Privacidade() {
   return <main>
-    <CabecalhoPublico titulo="Privacidade e uso seguro" texto="Diretrizes da demonstração pública; o texto institucional definitivo será validado antes da operação com dados reais." />
+    <CabecalhoPublico chaveCms="privacidade.cabecalho" titulo="Privacidade e uso seguro" texto="Diretrizes da demonstração pública; o texto institucional definitivo será validado antes da operação com dados reais." />
     <article className="conteudo-publico privacidade">
       <p><strong>Última atualização:</strong> 28 de agosto de 2026.</p>
       <h2>Sobre esta demonstração</h2>

@@ -7,6 +7,7 @@ import { SetoresIndustria } from '../componentes/setores-industria';
 import { VideoPublico } from '../componentes/video-publico';
 import type { MidiaEquipamento } from '../lib/equipamentos';
 import { acoesNavegacaoPublica, linksNavegacaoPublica } from '../lib/navegacao-publica';
+import { SeletorIdioma } from '../componentes/seletor-idioma';
 import './publico.css';
 
 const etapas = [
@@ -35,7 +36,7 @@ export default function Home() {
           {linksNavegacaoPublica.map((item) => <a href={item.href} key={item.href}>{item.rotulo}</a>)}
         </nav>
         <div className="acoes-topo">
-          <button className="idioma" type="button" aria-label="Selecionar idioma">PT <span aria-hidden="true">⌄</span></button>
+          <SeletorIdioma />
           {acoesNavegacaoPublica.map((item) => <a className={'destaque' in item && item.destaque ? 'botao botao-menor' : 'entrar'} href={item.href} key={item.href}>{item.rotulo}</a>)}
         </div>
         <MenuMovel />

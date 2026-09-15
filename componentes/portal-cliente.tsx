@@ -15,6 +15,7 @@ import { NovaSolicitacaoCliente, type DadosNovaSolicitacaoCliente } from './nova
 import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { caminhoAnexoMensagem, validarAnexosMensagem, type AnexoMensagem } from '../lib/anexos-mensagem';
 import { tipoMimeArmazenado } from '../lib/anexos-solicitacao';
+import { SeletorIdioma } from './seletor-idioma';
 
 type Propriedades = {
   cliente?: SupabaseClient;
@@ -501,9 +502,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
           <strong>{nomeCliente}</strong>
           <small>{contexto.empresa_nome}</small>
         </div>
-        <button type="button" onClick={() => (aoSair ? void aoSair() : window.location.assign('/'))}>
-          <LogOut size={17} /> Sair
-        </button>
+        <div className="acoes-topo-cliente"><SeletorIdioma compacto /><button type="button" onClick={() => (aoSair ? void aoSair() : window.location.assign('/'))}><LogOut size={17} /> Sair</button></div>
       </header>
       <div className="conteudo-cliente">
         <section className="boas-vindas-cliente">

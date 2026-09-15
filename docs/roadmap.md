@@ -5,7 +5,7 @@
 - [x] **22–24 ago** — organização inicial, documentação, identidade visual, contratos e estrutura Supabase.
 - [ ] **25 ago–1º set** — autenticação real, perfis, custos, orçamento, execução, lições, reset demonstrativo e recomendação.
 - [ ] **31 ago–4 set** — empresas, solicitações, propostas, PDF, aceite, anexos e chat.
-- [ ] **5–8 set** — CMS completo, catálogo, equipamentos, contato e traduções revisadas.
+- [~] **5–15 set** — CMS versionado conectado aos primeiros cabeçalhos públicos e seleção de idioma entregue; falta localizar o conteúdo integral do catálogo, equipamentos, contato, formulários e área do Cliente.
 - [ ] **9–10 set** — gerador de lições, bot público e assistente interno com sanitização.
 - [ ] **11–12 set** — E2E, RLS, acessibilidade, backup, observabilidade, documentação e ensaio.
 - [ ] **13 set** — congelamento, verificação, tag e entrega.
@@ -106,7 +106,7 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [ ] avançar CMS e idiomas, depois importação sanitizada de históricos e integrações de IA.
 - [x] iniciar a etapa de gestão de contas com recuperação segura de senha e restrição temporária aos papéis Técnico, Validador e Administrador;
 - [ ] configurar e testar o remetente de homologação para entrega real dos links de recuperação;
-- [ ] conectar o CMS persistente e localizar somente as áreas pública e do Cliente em PT-BR, inglês e alemão;
+- [~] conectar o CMS persistente e localizar somente as áreas pública e do Cliente em PT-BR, inglês e alemão; migration `042`, editor administrativo, publicação por idioma, fallback e seletores foram implementados, mas a tradução integral das telas continua pendente;
 
 ### Revisão de 14 de setembro de 2026
 
@@ -119,3 +119,12 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] acrescentar gráficos de barras aos padrões de serviços, materiais e assuntos da área Conhecimento;
 - [x] fechar com `Esc` as janelas que já permitem fechamento por `X` ou clique externo;
 - [~] migration `202609140041` e Edge Function homologadas; falta repetir o fluxo real de convite/recuperação com uma caixa autorizada após a publicação do front-end;
+
+### Início do CMS e idiomas — 15 de setembro de 2026
+
+- [x] transformar a estrutura histórica de conteúdo em publicação versionada independente para PT-BR, inglês e alemão;
+- [x] restringir edição e publicação ao Administrador e registrar ambas em auditoria;
+- [x] criar editor com pesquisa, filtro, histórico, rascunho e ação explícita de publicação;
+- [x] conectar os cabeçalhos de Catálogo, Solicitação e Privacidade ao CMS, com fallback português sinalizado;
+- [x] disponibilizar o seletor de idioma no desktop, menu móvel e área autenticada do Cliente;
+- [ ] migrar todos os demais textos públicos e do Cliente para o catálogo trilíngue e realizar revisão humana das traduções;
