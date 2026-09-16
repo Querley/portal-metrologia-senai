@@ -76,6 +76,10 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
   const completas = conteudos.filter((item) => idiomasPublicos.every((codigo) => item.publicacoes[codigo])).length;
   const pendentes = conteudos.flatMap((item) => item.versoes).filter((item) => item.estado_revisao === 'em_validacao').length;
   const ehAcontecimentos = tipo === 'acontecimentos' || chave === 'inicio.acontecimentos';
+  const secoesInicio = useMemo(() => {
+    const ordem = ['inicio.hero', 'inicio.diferencial', 'inicio.estrutura', 'inicio.acontecimentos', 'inicio.chamada'];
+    return ordem.map((chaveInicio) => conteudos.find((item) => item.chave === chaveInicio)).filter((item): item is ConteudoCms => Boolean(item));
+  }, [conteudos]);
 
   function carregarCampos(item: ConteudoCms, codigo: IdiomaPublico) {
     const versao = item.versoes.find((registro) => registro.idioma === codigo) ?? item.publicacoes[codigo];
@@ -134,6 +138,26 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
       <div className="cards-operacionais cards-cms"><button type="button" onClick={() => setFiltro('todos')}><small>Conteúdos</small><strong>{conteudos.length}</strong><span>Ver inventário</span></button><button type="button" onClick={() => setFiltro('publicado')}><small>Publicados</small><strong>{publicadas}</strong><span>Filtrar publicados</span></button><button type="button" onClick={() => setFiltro('pendentes')}><small>Aguardando decisão</small><strong>{pendentes}</strong><span>Revisar pendências</span></button><button type="button" onClick={() => setFiltro('incompletos')}><small>3 idiomas publicados</small><strong>{completas}</strong><span>Localizar traduções pendentes</span></button></div>
       <div className="fluxo-editorial-cms"><strong>Fluxo editorial</strong><span>Validador ou Administrador edita e envia</span><b>→</b><span>Administrador aprova ou devolve</span><b>→</b><span>Administrador publica</span></div>
     </section>
+    <section className="bloco previa-site-cms">
+      <header><div><h2>Prévia clicável da página inicial</h2><p>Selecione o idioma e clique diretamente na seção que deseja alterar. O bloco aberto mostra as mudanças enquanto você digita; o site público só muda depois da aprovação e publicação.</p></div><Eye /></header>
+      <div className="idiomas-previa-cms" role="group" aria-label="Idioma da prévia">{idiomasPublicos.map((codigo) => <button type="button" className={codigo === idioma ? 'ativo' : ''} onClick={() => trocarIdioma(codigo)} key={codigo}>{rotulosIdiomaPublico[codigo]}</button>)}</div>
+      <div className="moldura-site-cms">
+        <div className="barra-site-cms"><strong>Centro de Excelência em Metrologia</strong><span>Início · Serviços · Acontece no Centro · Equipamentos</span></div>
+        <div className="pagina-miniatura-cms">{secoesInicio.map((item) => {
+          const publicada = item.publicacoes[idioma] ?? item.publicacoes['pt-BR'] ?? item.versoes.find((versao) => versao.idioma === idioma) ?? item.versoes[0];
+          const estaEditando = item.id === selecionadoId;
+          const tituloPrevia = estaEditando ? titulo : publicada?.titulo ?? 'Sem título';
+          const textoPrevia = estaEditando ? texto : publicada?.corpo.texto ?? 'Sem texto publicado.';
+          const urlPrevia = urlMidiaSegura(estaEditando ? midiaUrl : publicada?.corpo.midia_url ?? '');
+          const tipoPrevia = estaEditando ? midiaTipo : publicada?.corpo.midia_tipo ?? 'imagem';
+          return <button type="button" className={`secao-miniatura-cms ${item.chave.replace('.', '-')}${estaEditando ? ' ativo' : ''}`} onClick={() => editar(item, idioma)} key={item.id}>
+            <small>{item.chave}</small><strong>{tituloPrevia}</strong><span>{textoPrevia}</span>
+            {urlPrevia && <span className="midia-miniatura-cms">{tipoPrevia === 'video' ? <video src={urlPrevia} muted /> : <Image src={urlPrevia} alt="" width={360} height={150} unoptimized />}</span>}
+            <em><Pencil size={13} /> Editar esta seção</em>
+          </button>;
+        })}</div>
+      </div>
+    </section>
     <section className="grade-cms">
       <div className="bloco lista-cms">
         <header><div><h2>Prévia das páginas</h2><p>Clique no bloco que deseja editar.</p></div><button type="button" onClick={novo}><Plus size={16} /> Novo</button></header>
@@ -146,7 +170,7 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
       <form className="bloco editor-cms" onSubmit={salvar}>
         <header><div><h2>{selecionadoId ? 'Editor visual' : 'Selecione uma seção'}</h2><p>Textos e mídia desta versão podem variar por idioma.</p></div><Languages /></header>
         {selecionadoId ? <div className="campos-cms">
-          <div className="linha-editor-cms"><label>Chave técnica<input required pattern="[a-z0-9.-]{3,100}" title="Use letras minúsculas, números, ponto ou hífen." value={chave} onChange={(evento) => setChave(evento.target.value.toLowerCase())} readOnly={selecionadoId !== 'novo'} /></label><label>Tipo<select value={tipo} onChange={(evento) => setTipo(evento.target.value)}><option value="secao">Seção de texto</option><option value="cabecalho">Cabeçalho</option><option value="acontecimentos">Acontecimentos</option></select></label></div>
+          <div className="linha-editor-cms"><label>Chave técnica<input required pattern="(?!equipamentos\.)[a-z0-9.-]{3,100}" title="Use letras minúsculas, números, ponto ou hífen. Páginas técnicas de equipamentos não pertencem ao CMS." value={chave} onChange={(evento) => setChave(evento.target.value.toLowerCase())} readOnly={selecionadoId !== 'novo'} /></label><label>Tipo<select value={tipo} onChange={(evento) => setTipo(evento.target.value)}><option value="secao">Seção de texto</option><option value="cabecalho">Cabeçalho</option><option value="acontecimentos">Acontecimentos</option></select></label></div>
           <label>Idioma<select value={idioma} onChange={(evento) => trocarIdioma(evento.target.value as IdiomaPublico)}>{idiomasPublicos.map((codigo) => <option value={codigo} key={codigo}>{rotulosIdiomaPublico[codigo]}</option>)}</select></label>
           <label>Título<input required minLength={3} maxLength={180} value={titulo} onChange={(evento) => setTitulo(evento.target.value)} /></label>
           <label>Texto de apresentação<textarea required minLength={10} maxLength={5000} rows={5} value={texto} onChange={(evento) => setTexto(evento.target.value)} /></label>

@@ -31,7 +31,8 @@ export function ContatoEmail({ compacto = false, contexto }: { compacto?: boolea
     window.setTimeout(() => setCopiado(false), 2200);
   }
 
-  const assunto = contexto ? `Solicitação de análise metrológica — ${contexto}` : 'Solicitação de análise metrológica';
+  const assuntoBase = t('Solicitação de análise metrológica');
+  const assunto = contexto ? `${assuntoBase} — ${contexto}` : assuntoBase;
   const mailto = `mailto:${EMAIL_CONTATO}?subject=${encodeURIComponent(assunto)}`;
   const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CONTATO)}&su=${encodeURIComponent(assunto)}`;
 

@@ -12,7 +12,7 @@ import { useTraducaoPublica } from '../lib/traducao-publica';
 const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'application/octet-stream'];
 
 export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?: string }) {
-  const { t } = useTraducaoPublica();
+  const { t, tm } = useTraducaoPublica();
   const cliente = obterClienteSupabase();
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [erro, setErro] = useState('');
@@ -30,11 +30,11 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
 
   function selecionar(novos: FileList | null) {
     const lista = [...arquivos, ...Array.from(novos ?? [])];
-    if (lista.length > 5) return setErro('Envie no máximo cinco arquivos.');
+    if (lista.length > 5) return setErro(t('Envie no máximo cinco arquivos.'));
     const invalido = lista.find((arquivo) => !tiposPermitidos.includes(arquivo.type) && !/\.(step|stp|iges|igs|stl|obj|dxf|dwg)$/i.test(arquivo.name));
-    if (invalido) return setErro(`Formato não permitido: ${invalido.name}`);
+    if (invalido) return setErro(`${t('Formato não permitido:')} ${invalido.name}`);
     const excedido = lista.find((arquivo) => arquivo.size > (/\.(step|stp|iges|igs|stl|obj|dxf|dwg)$/i.test(arquivo.name) ? 50 : 10) * 1024 * 1024);
-    if (excedido) return setErro(`O arquivo ${excedido.name} excede o limite permitido.`);
+    if (excedido) return setErro(`${t('O arquivo')} ${excedido.name} ${t('excede o limite permitido.')}`);
     setErro('');
     setArquivos(lista);
   }
@@ -45,16 +45,16 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
       (elemento instanceof HTMLInputElement || elemento instanceof HTMLTextAreaElement || elemento instanceof HTMLSelectElement) && campoEstaInvalido(elemento),
     ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined;
     if (campoInvalido) {
-      setErro(mensagemCampoInvalido(campoInvalido));
+      setErro(tm(mensagemCampoInvalido(campoInvalido)));
       campoInvalido.focus();
       return;
     }
     if (!cnpjValido(cnpj)) {
-      setErro('Informe um CNPJ válido. A validação verifica apenas o formato e os dígitos verificadores.');
+      setErro(t('Informe um CNPJ válido. A validação verifica apenas o formato e os dígitos verificadores.'));
       return;
     }
     if (!cliente) {
-      setErro('A persistência da homologação está temporariamente indisponível.');
+      setErro(t('A persistência da homologação está temporariamente indisponível.'));
       return;
     }
 
@@ -65,7 +65,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
       .toLowerCase();
     const telefone = String(formulario.get('telefone') ?? '').trim();
     if (telefone && !telefoneValido(telefone)) {
-      setErro('Informe um telefone válido, usando somente números, espaços, parênteses, hífen e + no início.');
+      setErro(t('Informe um telefone válido, usando somente números, espaços, parênteses, hífen e + no início.'));
       return;
     }
 
@@ -92,13 +92,13 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
     setEnviando(false);
 
     if (error || !data || typeof data !== 'object') {
-      setErro(error?.message || 'Não foi possível registrar a solicitação demonstrativa.');
+      setErro(error?.message || t('Não foi possível registrar a solicitação demonstrativa.'));
       return;
     }
 
     const resultado = data as { codigo?: number; token_ativacao?: string };
     if (!resultado.codigo || !resultado.token_ativacao) {
-      setErro('A homologação não retornou o protocolo esperado.');
+      setErro(t('A homologação não retornou o protocolo esperado.'));
       return;
     }
     setEmailEnviado(email);
@@ -115,7 +115,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
         <CheckCircle2 size={42} />
         <h1>{t('Solicitação salva na homologação')}</h1>
         <p>
-          Protocolo <strong>DEM-SOL-{String(confirmacao.codigo).padStart(4, '0')}</strong>, vinculado ao e-mail <strong>{emailEnviado}</strong>.
+          {t('Protocolo')} <strong>DEM-SOL-{String(confirmacao.codigo).padStart(4, '0')}</strong>, {t('vinculado ao e-mail')} <strong>{emailEnviado}</strong>.
         </p>
         <p>{t('Use o acesso abaixo com o mesmo e-mail. Se o Cliente já estiver cadastrado, este novo trabalho será acrescentado à empresa existente; caso seja o primeiro, a área protegida será ativada. Os arquivos selecionados permaneceram neste dispositivo e poderão ser enviados na etapa autenticada.')}</p>
         <a className="botao" href={`/portal?ativar=${encodeURIComponent(confirmacao.token_ativacao)}`}>
@@ -154,7 +154,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           </label>
           <label>
             CNPJ
-            <input required name="cnpj" inputMode="numeric" autoComplete="off" minLength={18} maxLength={18} pattern="[0-9]{2}\.[0-9]{3}\.[0-9]{3}/[0-9]{4}-[0-9]{2}" title="Informe os 14 números do CNPJ no formato 00.000.000/0000-00." value={cnpj} onChange={(evento) => setCnpj(formatarCnpj(evento.target.value))} placeholder="00.000.000/0000-00" aria-invalid={cnpj.length === 18 && !cnpjValido(cnpj)} />
+            <input required name="cnpj" inputMode="numeric" autoComplete="off" minLength={18} maxLength={18} pattern="[0-9]{2}\.[0-9]{3}\.[0-9]{3}/[0-9]{4}-[0-9]{2}" title={t('Informe os 14 números do CNPJ no formato 00.000.000/0000-00.')} value={cnpj} onChange={(evento) => setCnpj(formatarCnpj(evento.target.value))} placeholder="00.000.000/0000-00" aria-invalid={cnpj.length === 18 && !cnpjValido(cnpj)} />
           </label>
           <label>
             {t('Telefone')}
@@ -221,13 +221,13 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           {material === 'Outros' && (
             <label>
               {t('Outro material')}
-              <input required name="material-outro" minLength={2} maxLength={120} placeholder="Informe o material" />
+              <input required name="material-outro" minLength={2} maxLength={120} placeholder={t('Informe o material')} />
             </label>
           )}
           {(servico === 'outro' || servico === 'orientacao-tecnica' || servicoInicial) && (
             <label className="campo-largo">
               {t('Qual resultado você espera?')}
-              <input required name="necessidade-personalizada" minLength={5} maxLength={500} placeholder="Ex.: modelo STEP, relatório dimensional ou investigação de falha" />
+              <input required name="necessidade-personalizada" minLength={5} maxLength={500} placeholder={t('Ex.: modelo STEP, relatório dimensional ou investigação de falha')} />
             </label>
           )}
           <label>
@@ -240,7 +240,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           </label>
           <label className="campo-largo">
             {t('Descreva o desafio')}
-            <textarea required name="descricao" minLength={10} maxLength={5000} rows={5} placeholder="Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado." />
+            <textarea required name="descricao" minLength={10} maxLength={5000} rows={5} placeholder={t('Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado.')} />
           </label>
         </div>
       </fieldset>
@@ -259,7 +259,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
                 {arquivo.name}
                 <small>{(arquivo.size / 1024 / 1024).toFixed(2)} MB</small>
               </span>
-              <button type="button" onClick={() => setArquivos(arquivos.filter((_, item) => item !== indice))} aria-label={`Remover ${arquivo.name}`}>
+              <button type="button" onClick={() => setArquivos(arquivos.filter((_, item) => item !== indice))} aria-label={`${t('Remover')} ${arquivo.name}`}>
                 <X size={16} />
               </button>
             </li>

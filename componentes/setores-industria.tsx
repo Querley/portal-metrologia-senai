@@ -24,9 +24,9 @@ export function SetoresIndustria() {
     })}</div>
     <article className="painel-setor" id={`painel-${setor.slug}`} role="tabpanel" aria-labelledby={`aba-${setor.slug}`}>
       <div className="midia-setor">{setor.midia.tipo === 'video'
-        ? <VideoPublico src={setor.midia.src} poster={setor.midia.poster} rotulo={setor.midia.alt} />
-        : <Image src={setor.midia.src} fill sizes="(max-width: 900px) 100vw, 46vw" alt={setor.midia.alt} />}
-        <span>{setor.midia.legenda}</span>
+        ? <VideoPublico src={setor.midia.src} poster={setor.midia.poster} rotulo={t(setor.midia.alt)} />
+        : <Image src={setor.midia.src} fill sizes="(max-width: 900px) 100vw, 46vw" alt={t(setor.midia.alt)} />}
+        <span>{t(setor.midia.legenda)}</span>
       </div>
       <div className="conteudo-setor"><p className="sobrelinha"><span /> {t(setor.titulo).toUpperCase()}</p><h3>{t(setor.resumo)}</h3><p>{t(setor.exemplos)}</p><h4>{t('Serviços que podem fazer sentido')}</h4><ul>{servicos.map((servico) => <li key={servico.slug}><a href={`/solicitar?servico=${servico.slug}`}>{t(servico.titulo)}<ArrowRight size={15} /></a></li>)}</ul><small>{t('A combinação final depende da análise técnica da peça, do objetivo e dos arquivos enviados.')}</small></div>
     </article>

@@ -157,3 +157,9 @@ O lote acrescenta revisão Validador → Administrador, acontecimentos com mídi
 A fonte `eb63126546d6f5fe166d8d0e528037c51cd197fd` foi publicada com sucesso como versão 42 no endereço oficial em 15 de setembro de 2026. O GitHub Actions `35001303916`, executado sobre essa fonte, também terminou integralmente verde.
 
 Homologar manualmente: editar acontecimentos como Validador; confirmar que não publica; enviar; aprovar e publicar como Administrador; alternar os três idiomas na página inicial e Cliente; conferir mídia específica; abrir proposta multiequipamento como uma linha; editar todos os contatos de uma empresa na mesma janela; navegar pelos quatro indicadores administrativos; conferir gráficos de Conhecimento.
+
+## Auditoria corretiva e lote 044 — 15 de setembro de 2026
+
+A releitura dos requisitos encontrou duas entregas apenas parciais no lote anterior: textos técnicos e estados secundários do Cliente ainda podiam permanecer em português, e a interface do CMS era uma lista de cartões, não uma miniatura clicável da página inicial. A migration `044` e a interface correspondente corrigem essas lacunas.
+
+Homologar manualmente: alternar PT-BR/EN/DE no acesso, catálogo, cada uma das seis fichas técnicas, solicitação e Cliente; confirmar textos, validações, formatos de data e moeda; no CMS, alternar o idioma da miniatura, clicar em hero/diferencial/estrutura/acontecimentos/chamada, modificar título, texto e mídia, salvar e confirmar que a página pública não muda antes de aprovação e publicação. Confirmar também que não é possível criar conteúdo editorial com chave `equipamentos.*`.

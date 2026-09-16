@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CHAVE_IDIOMA_PUBLICO, EVENTO_IDIOMA_PUBLICO, resolverIdiomaPublico, type IdiomaPublico } from './idioma-publico';
+import { traducoesComplementares } from './traducoes-complementares';
+import { traducoesEquipamentos } from './traducoes-equipamentos';
 
 type Trio = readonly [portugues: string, ingles: string, alemao: string];
 
@@ -26,10 +28,36 @@ const textos = [
   ['Escaneamento 3D e digitalização de peças', '3D scanning and part digitization', '3D-Scannen und Bauteildigitalisierung'], ['Engenharia reversa e reconstrução CAD', 'Reverse engineering and CAD reconstruction', 'Reverse Engineering und CAD-Rekonstruktion'], ['Nacionalização e desenvolvimento de componentes', 'Localization and component development', 'Lokalisierung und Komponentenentwicklung'], ['Metrologia avançada ZEISS e inspeção dimensional', 'Advanced ZEISS metrology and dimensional inspection', 'Fortschrittliche ZEISS-Messtechnik und Maßprüfung'], ['Comparação CAD × peça física', 'CAD-to-part comparison', 'CAD-Bauteil-Vergleich'], ['Mapa de desgaste', 'Wear mapping', 'Verschleißanalyse'], ['Tomografia industrial para inspeção interna não destrutiva', 'Industrial CT for non-destructive internal inspection', 'Industrielle CT zur zerstörungsfreien Innenprüfung'], ['Análise de falhas, quebras e anomalias', 'Failure, breakage and anomaly analysis', 'Analyse von Fehlern, Brüchen und Anomalien'], ['Estruturação de árvore de equipamentos e peças críticas', 'Equipment hierarchy and critical-part mapping', 'Strukturierung von Anlagen und kritischen Bauteilen'], ['Apoio na criação de almoxarifado virtual e biblioteca digital de peças', 'Support for virtual inventory and digital part libraries', 'Unterstützung für virtuelle Lager und digitale Bauteilbibliotheken'],
 ] as const satisfies readonly Trio[];
 
-const mapas = Object.fromEntries((['pt-BR', 'en', 'de'] as const).map((idioma, indice) => [idioma, new Map(textos.map((trio) => [trio[0], trio[indice]]))])) as Record<IdiomaPublico, Map<string, string>>;
+const todasAsTraducoes = [...textos, ...traducoesComplementares, ...traducoesEquipamentos] as const;
+const mapas = Object.fromEntries((['pt-BR', 'en', 'de'] as const).map((idioma, indice) => [idioma, new Map(todasAsTraducoes.map((trio) => [trio[0], trio[indice]]))])) as Record<IdiomaPublico, Map<string, string>>;
 
 export function traduzirTextoPublico(texto: string, idioma: IdiomaPublico) {
   return mapas[idioma].get(texto) ?? texto;
+}
+
+export function traduzirMensagemPublica(texto: string, idioma: IdiomaPublico) {
+  const direta = traduzirTextoPublico(texto, idioma);
+  if (direta !== texto || idioma === 'pt-BR') return direta;
+  const formatoSolicitacao = texto.match(/^O formato de (.+) não é aceito\. Use PDF, imagem ou arquivo CAD\.$/);
+  if (formatoSolicitacao) return `${traduzirTextoPublico('O formato de', idioma)} ${formatoSolicitacao[1]} ${traduzirTextoPublico('não é aceito. Use PDF, imagem ou arquivo CAD.', idioma)}`;
+  const limiteSolicitacao = texto.match(/^(.+) excede o limite de (\d+) MB\.$/);
+  if (limiteSolicitacao) return `${limiteSolicitacao[1]} ${traduzirTextoPublico('excede o limite de', idioma)} ${limiteSolicitacao[2]} MB.`;
+  const formatoMensagem = texto.match(/^(.+): formato não permitido\.$/);
+  if (formatoMensagem) return `${formatoMensagem[1]}: ${traduzirTextoPublico('formato não permitido.', idioma)}`;
+  const limiteMensagem = texto.match(/^(.+): o limite por arquivo é 10 MB\.$/);
+  if (limiteMensagem) return `${limiteMensagem[1]}: ${traduzirTextoPublico('o limite por arquivo é 10 MB.', idioma)}`;
+  const etapa = texto.match(/^Etapa em andamento: (\d+)% concluída\.$/);
+  if (etapa) return `${traduzirTextoPublico('Etapa em andamento:', idioma)} ${etapa[1]}% ${traduzirTextoPublico('concluída.', idioma)}`;
+  const aceite = texto.match(/^(Registrado em .+?\. )(.+)$/);
+  if (aceite) {
+    const data = aceite[1].slice('Registrado em '.length, -2);
+    return `${traduzirTextoPublico('Registrado em', idioma)} ${data}. ${traduzirTextoPublico(aceite[2], idioma)}`;
+  }
+  return texto;
+}
+
+export function possuiTraducaoPublica(texto: string, idioma: Exclude<IdiomaPublico, 'pt-BR'>) {
+  return mapas[idioma].has(texto);
 }
 
 export function useIdiomaPublico() {
@@ -44,5 +72,6 @@ export function useIdiomaPublico() {
 export function useTraducaoPublica() {
   const idioma = useIdiomaPublico();
   const t = useCallback((texto: string) => traduzirTextoPublico(texto, idioma), [idioma]);
-  return { idioma, t };
+  const tm = useCallback((texto: string) => traduzirMensagemPublica(texto, idioma), [idioma]);
+  return { idioma, t, tm };
 }

@@ -12,7 +12,7 @@ export function CabecalhoPublico({ titulo, texto, chaveCms }: { titulo: string; 
   return (
     <header className="cabecalho-publico">
       <div className="navegacao-simples">
-        <a className="marca" href="/" aria-label="Centro de Excelência em Metrologia — início"><MarcaOficial /></a>
+        <a className="marca" href="/" aria-label={t('Centro de Excelência em Metrologia — início')}><MarcaOficial /></a>
         <nav aria-label={t('Navegação principal')}>{linksNavegacaoPublica.map((item) => <a href={item.href} key={item.href}>{t(item.rotulo)}</a>)}</nav>
         <div className="acoes-cabecalho-publico"><SeletorIdioma compacto />{acoesNavegacaoPublica.map((item) => <a className={'destaque' in item && item.destaque ? 'botao botao-menor' : 'entrar'} href={item.href} key={item.href}>{t(item.rotulo)}</a>)}</div>
         <MenuMovel />

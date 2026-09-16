@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { traduzirTextoPublico } from './traducao-publica';
+import { traduzirMensagemPublica, traduzirTextoPublico } from './traducao-publica';
 
 describe('tradução da experiência pública e Cliente', () => {
   it('mantém português como conteúdo canônico', () => {
@@ -15,5 +15,10 @@ describe('tradução da experiência pública e Cliente', () => {
 
   it('preserva conteúdo técnico sem tradução cadastrada', () => {
     expect(traduzirTextoPublico('ZEISS PRISMO VAST', 'de')).toBe('ZEISS PRISMO VAST');
+  });
+
+  it('traduz mensagens dinâmicas de progresso e arquivos', () => {
+    expect(traduzirMensagemPublica('Etapa em andamento: 50% concluída.', 'en')).toBe('Stage in progress: 50% complete.');
+    expect(traduzirMensagemPublica('modelo.step: formato não permitido.', 'de')).toBe('modelo.step: Dateiformat nicht zulässig.');
   });
 });

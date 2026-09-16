@@ -5,7 +5,7 @@
 - [x] **22–24 ago** — organização inicial, documentação, identidade visual, contratos e estrutura Supabase.
 - [ ] **25 ago–1º set** — autenticação real, perfis, custos, orçamento, execução, lições, reset demonstrativo e recomendação.
 - [ ] **31 ago–4 set** — empresas, solicitações, propostas, PDF, aceite, anexos e chat.
-- [~] **5–15 set** — CMS versionado conectado aos primeiros cabeçalhos públicos e seleção de idioma entregue; falta localizar o conteúdo integral do catálogo, equipamentos, contato, formulários e área do Cliente.
+- [x] **5–15 set** — CMS versionado, seleção de idioma e cobertura funcional integral PT-BR/EN/DE entregues para área pública, acesso e Cliente; permanece a revisão linguística institucional.
 - [ ] **9–10 set** — gerador de lições, bot público e assistente interno com sanitização.
 - [ ] **11–12 set** — E2E, RLS, acessibilidade, backup, observabilidade, documentação e ensaio.
 - [ ] **13 set** — congelamento, verificação, tag e entrega.
@@ -103,10 +103,11 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] permitir retorno justificado e auditado a etapa anterior e atualização direta pela barra de progresso;
 - [x] padronizar mensagens de validação dos campos e destacar o resultado da edição do perfil;
 - [~] concluir gestão administrativa de contatos adicionais e desativação individual; convites, edição, função e bloqueio empresarial já estão implementados;
-- [ ] avançar CMS e idiomas, depois importação sanitizada de históricos e integrações de IA.
+- [x] avançar CMS e idiomas na página inicial, área pública, acesso e Cliente;
+- [ ] realizar revisão linguística institucional e depois importar históricos sanitizados e ampliar integrações de IA.
 - [x] iniciar a etapa de gestão de contas com recuperação segura de senha e restrição temporária aos papéis Técnico, Validador e Administrador;
 - [ ] configurar e testar o remetente de homologação para entrega real dos links de recuperação;
-- [~] conectar o CMS persistente e localizar somente as áreas pública e do Cliente em PT-BR, inglês e alemão; migration `042`, editor administrativo, publicação por idioma, fallback e seletores foram implementados, mas a tradução integral das telas continua pendente;
+- [x] conectar o CMS persistente e localizar somente as áreas pública e do Cliente em PT-BR, inglês e alemão; migrations `042` a `044`, editor administrativo, publicação por idioma, fallback, seletores e cobertura automatizada foram implementados;
 
 ### Revisão de 14 de setembro de 2026
 
@@ -127,7 +128,8 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] criar editor com pesquisa, filtro, histórico, rascunho e ação explícita de publicação;
 - [x] conectar os cabeçalhos de Catálogo, Solicitação e Privacidade ao CMS, com fallback português sinalizado;
 - [x] disponibilizar o seletor de idioma no desktop, menu móvel e área autenticada do Cliente;
-- [ ] migrar todos os demais textos públicos e do Cliente para o catálogo trilíngue e realizar revisão humana das traduções;
+- [x] migrar os demais textos públicos, acesso e Cliente para o catálogo trilíngue, incluindo o conteúdo técnico dos seis equipamentos;
+- [ ] realizar revisão humana institucional das traduções antes do uso de produção;
 
 ### Revisão editorial e experiência — 15 de setembro de 2026
 
@@ -139,4 +141,5 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] substituir o ciclo estático da página inicial por acontecimentos localizados e administráveis;
 - [x] permitir edição editorial por Validador, com decisão e publicação exclusivas do Administrador;
 - [~] localizar a navegação, páginas públicas, formulários e área do Cliente em PT-BR, inglês e alemão; a revisão linguística humana dos textos técnicos extensos permanece obrigatória antes da produção;
-- [ ] ampliar o CMS visual para outras regiões mutáveis além da página inicial, sem incluir as fichas técnicas imutáveis dos equipamentos.
+- [x] oferecer prévia clicável da página inicial e edição localizada de título, texto e mídia nos três idiomas, sem incluir fichas técnicas imutáveis dos equipamentos;
+- [ ] ampliar futuramente o CMS visual para outras regiões mutáveis além da página inicial.

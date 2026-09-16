@@ -39,7 +39,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 ## Limites conhecidos do estado publicado
 
 - a entrega real do e-mail de recuperação precisa ser homologada com uma caixa de entrada válida; endereços `@example.test` não recebem mensagens;
-- o CMS persistente e a tradução reativa das superfícies pública e Cliente estão publicados; os textos técnicos longos de equipamentos ainda exigem revisão linguística humana antes de serem considerados tradução definitiva;
+- o CMS persistente e a tradução reativa das superfícies pública e Cliente estão publicados na versão 42; o lote 044 completa a cobertura técnica e a prévia visual, ainda pendente de homologação/publicação neste registro;
 - não existe comprovação de uma auditoria campo a campo de todos os inputs do portal;
 - os gráficos precisam ser exercitados com novos registros persistidos para validar todas as atualizações;
 - dados reais continuam separados dos demonstrativos. A flexibilização dessa regra não foi autorizada porque contraria os requisitos de segurança e segregação do projeto.
@@ -61,7 +61,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 1. homologar pela interface o convite em uma caixa real, a criação de senha e a recuperação de senha; isso depende da entrega SMTP externa;
 2. testar envio/download de anexos em mensagens e bloqueio/desbloqueio de uma empresa;
-3. migrar todos os textos restantes das áreas pública e Cliente para o CMS/i18n e fazer revisão humana em PT-BR, inglês e alemão;
+3. homologar o lote 044 e realizar revisão humana institucional em PT-BR, inglês e alemão;
 4. depois importar históricos sanitizados e ampliar as integrações de IA sem cliente, preço, margem, anexos ou identificadores.
 
 ## Lote concluído em 15 de setembro
@@ -79,3 +79,9 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 Implementado e publicado: perfil administrativo recolhível, indicadores clicáveis, janela única de edição empresarial/contatos, lista densa de Clientes, agrupamento de usos de máquinas por versão, gráficos de inteligência, catálogo reativo PT-BR/EN/DE, acontecimentos públicos e CMS com aprovação administrativa. Arquivo pessoal `docs/atividade-aula-07.md` permanece fora do Git.
 
 Validado localmente: lint sem erros, 108 testes unitários e 26 E2E em Chromium desktop e Pixel 7. Validado no Actions `35001303916`: build, mesmos testes de interface e 70 provas pgTAP com banco recriado até `043`. A migration `043` está aplicada e reconciliada na homologação; o lint remoto não tem erros. A fonte `eb63126546d6f5fe166d8d0e528037c51cd197fd` foi publicada como versão 42 no endereço oficial. Pendente: homologação manual do fluxo editorial e revisão linguística humana dos textos técnicos longos; não repetir banco, testes ou publicação.
+
+## Ponto exato de retomada — lote 044
+
+Auditoria corretiva implementada localmente: cobertura PT-BR/EN/DE de todos os textos estruturais, serviços, setores e conteúdo técnico dos seis equipamentos; acesso e recuperação localizados; notificações e validações do Cliente localizadas; quatro regiões da página inicial conectadas ao CMS; miniatura clicável com prévia do rascunho; fichas técnicas bloqueadas fora do escopo editorial. Migration nova: `202609150044_inicio_editavel_e_traducao_integral.sql`.
+
+Validação local neste ponto: lint aprovado, 114 testes unitários aprovados, build aprovado e 26 E2E aprovados em Chromium desktop e Pixel 7. Pendente: GitHub Actions com recriação do banco até `044`, aplicação/reconciliação remota da migration, publicação no Sites e atualização deste registro com fonte/versão finais.

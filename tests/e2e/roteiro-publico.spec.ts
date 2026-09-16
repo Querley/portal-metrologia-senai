@@ -62,6 +62,12 @@ test('idioma público pode ser alternado em desktop e mobile', async ({ page }) 
   await expect(mobile ? page.locator('.menu-movel .seletor-idioma select') : page.locator('.acoes-cabecalho-publico .seletor-idioma select')).toHaveValue('de');
   await expect(page.getByRole('link', { name: 'Angebot anfordern' }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Drei Technologiebereiche tragen dieses Portfolio.' })).toBeVisible();
+  await page.goto('/equipamentos/zeiss-duramax?lang=de');
+  await expect(page.getByText('Im Zentrum ist eine DuraMax HTG 5/5/5 installiert, ein kompaktes Koordinatenmessgerät mit offener Bauweise und direktem Zugang zum Messtisch.')).toBeVisible();
+  await page.goto('/portal/validacao-e2e?area=cliente&lang=de');
+  await expect(page.locator('.portal-cliente')).toHaveAttribute('data-hidratado', 'sim');
+  await expect(page.getByRole('heading', { name: 'Alle Aufträge Ihres Unternehmens an einem Ort.' })).toBeVisible();
+  await expect(page.getByText('Wie möchten Sie entscheiden?')).toBeVisible();
 });
 
 test('formulário explica claramente uma entrada inválida', async ({ page }) => {
@@ -109,6 +115,9 @@ test('área interna oferece autenticação e recuperação sem atalhos antigos',
   await expect(page.getByRole('button', { name: 'Enviar link seguro' })).toBeVisible();
   await page.getByRole('button', { name: 'Voltar ao login' }).click();
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
+  await page.locator('.idioma-acesso .seletor-idioma select').selectOption('de');
+  await expect(page.getByRole('heading', { name: 'Beim Messtechnik-Portal anmelden' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Passwort vergessen' })).toBeVisible();
 });
 
 test('link de convite permanece na definição de senha enquanto valida a sessão', async ({ page }) => {

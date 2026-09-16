@@ -35,7 +35,7 @@ type Propriedades = {
 };
 
 export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaNome, aoFechar, aoCriada }: Propriedades) {
-  const { t } = useTraducaoPublica();
+  const { t, tm } = useTraducaoPublica();
   const [necessidade, setNecessidade] = useState('');
   const [prazoPagamento, setPrazoPagamento] = useState('30');
   const [enviando, setEnviando] = useState(false);
@@ -57,12 +57,12 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
   function selecionarArquivos(lista: FileList | null) {
     const proximos = [...arquivos, ...Array.from(lista ?? [])];
     if (anexosEnviados.length + proximos.length > 5) {
-      setErro('Envie no máximo cinco arquivos por solicitação, incluindo os que já foram enviados.');
+      setErro(t('Envie no máximo cinco arquivos por solicitação, incluindo os que já foram enviados.'));
       return;
     }
     const falha = validarAnexosSolicitacao(proximos);
     if (falha) {
-      setErro(falha);
+      setErro(tm(falha));
       return;
     }
     setArquivos(proximos);
@@ -130,7 +130,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
       setDadosPendentes(dados);
       setAnexosEnviados(todosEnviados);
       setArquivos(falharam);
-      setErro(`${resultado.protocolo} já foi criada, mas ${falharam.length} arquivo(s) não foram enviados. Tente novamente ou conclua sem eles.`);
+      setErro(`${resultado.protocolo} ${t('já foi criada, mas')} ${falharam.length} ${t('arquivo(s) não foram enviados. Tente novamente ou conclua sem eles.')}`);
       return false;
     }
     await aoCriada(resultado, dados, todosEnviados);
@@ -155,7 +155,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
     const prazo = prazoPagamento === 'outro' ? Number(formulario.get('prazo-pagamento-outro')) : Number(prazoPagamento);
     const telefone = String(formulario.get('telefone') ?? '').trim();
     if (telefone && !telefoneValido(telefone)) {
-      setErro('Informe um telefone válido, sem letras ou símbolos inválidos.');
+      setErro(t('Informe um telefone válido, sem letras ou símbolos inválidos.'));
       return;
     }
     const dados: DadosNovaSolicitacaoCliente = {
@@ -173,7 +173,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
     setErro('');
     const falhaArquivos = validarAnexosSolicitacao(arquivos);
     if (falhaArquivos) {
-      setErro(falhaArquivos);
+      setErro(tm(falhaArquivos));
       setEnviando(false);
       return;
     }
@@ -194,7 +194,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
     }
 
     if (!cliente) {
-      setErro('A conexão protegida está indisponível. Atualize a página e tente novamente.');
+      setErro(t('A conexão protegida está indisponível. Atualize a página e tente novamente.'));
       setEnviando(false);
       return;
     }
@@ -202,7 +202,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
     const { data, error } = await cliente.rpc('criar_solicitacao_cliente_demonstrativa', { payload: dados });
     const resultado = data as ResultadoNovaSolicitacao | null;
     if (error || !resultado?.solicitacao_id || !resultado.protocolo) {
-      setErro(error?.message ?? 'Não foi possível registrar o novo trabalho.');
+      setErro(error?.message ?? t('Não foi possível registrar o novo trabalho.'));
       setEnviando(false);
       return;
     }
@@ -228,10 +228,10 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
             </span>
              <h2 id="titulo-nova-solicitacao">{t('Registrar outra solicitação')}</h2>
             <p>
-              Este trabalho ficará vinculado a <strong>{empresaNome}</strong> e aparecerá imediatamente no seu acompanhamento.
+              {t('Este trabalho ficará vinculado a')} <strong>{empresaNome}</strong> {t('e aparecerá imediatamente no seu acompanhamento.')}
             </p>
           </div>
-          <button type="button" onClick={aoFechar} aria-label="Fechar nova solicitação">
+          <button type="button" onClick={aoFechar} aria-label={t('Fechar nova solicitação')}>
             <X size={20} />
           </button>
         </header>
@@ -276,7 +276,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
             {(necessidade === 'outro' || necessidade === 'orientacao-tecnica') && (
               <label className="campo-largo">
                  {t('Qual resultado você espera?')}
-                <input required name="necessidade-personalizada" maxLength={500} placeholder="Ex.: modelo STEP, relatório dimensional ou investigação de falha" />
+                <input required name="necessidade-personalizada" maxLength={500} placeholder={t('Ex.: modelo STEP, relatório dimensional ou investigação de falha')} />
               </label>
             )}
             <label>
@@ -299,7 +299,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
               </select>
             </label>
             <label>
-              Telefone para este trabalho <small>(opcional)</small>
+              {t('Telefone para este trabalho')} <small>{t('(opcional)')}</small>
               <input
                 name="telefone"
                 type="tel"
@@ -313,13 +313,13 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
             </label>
             {prazoPagamento === 'outro' && (
               <label>
-                Prazo em dias
+                {t('Prazo em dias')}
                 <input required name="prazo-pagamento-outro" type="number" min="1" max="365" />
               </label>
             )}
             <label className="campo-largo">
                {t('Descreva o desafio')}
-              <textarea required name="descricao" minLength={10} maxLength={5000} rows={5} placeholder="Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado." />
+              <textarea required name="descricao" minLength={10} maxLength={5000} rows={5} placeholder={t('Inclua dimensões, tolerâncias, finalidade, pontos críticos e o entregável esperado.')} />
             </label>
             <div className="campo-largo anexos-nova-solicitacao">
               <label className="seletor-anexos-cliente">
@@ -347,7 +347,7 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
                         <strong>{arquivo.name}</strong>
                         <small>{(arquivo.size / 1024 / 1024).toFixed(2)} MB</small>
                       </span>
-                      <button type="button" onClick={() => setArquivos((atuais) => atuais.filter((_, item) => item !== indice))} aria-label={`Remover ${arquivo.name}`}>
+                      <button type="button" onClick={() => setArquivos((atuais) => atuais.filter((_, item) => item !== indice))} aria-label={`${t('Remover')} ${arquivo.name}`}>
                         <X size={16} />
                       </button>
                     </li>

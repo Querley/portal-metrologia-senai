@@ -40,7 +40,7 @@ function dataCurta(valor: string, idioma = 'pt-BR') {
 }
 
 export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao, demonstracao = false, aoSair, mensagemInicial = '' }: Propriedades) {
-  const { t, idioma } = useTraducaoPublica();
+  const { t, tm, idioma } = useTraducaoPublica();
   const formatarData = useCallback((valor: string) => dataCurta(valor, idioma), [idioma]);
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoCliente[]>(demonstracao ? solicitacoesClienteDemonstracao : []);
   const [selecionadaId, setSelecionadaId] = useState(demonstracao ? solicitacoesClienteDemonstracao[0].id : '');
@@ -48,15 +48,15 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [mensagemNova, setMensagemNova] = useState('');
   const [carregando, setCarregando] = useState(!demonstracao);
   const [erro, setErro] = useState('');
-  const [aviso, setAviso] = useState(mensagemInicial);
+  const [aviso, setAviso] = useState(mensagemInicial ? t(mensagemInicial) : '');
   const [aceitouPrivacidade, setAceitouPrivacidade] = useState(contexto.versao_aviso_privacidade === VERSAO_AVISO_PRIVACIDADE);
   const [aceitando, setAceitando] = useState(false);
   const [nomeCliente, setNomeCliente] = useState(contexto.usuario_nome);
   const [nomeEmEdicao, setNomeEmEdicao] = useState(contexto.usuario_nome);
   const [emailEmEdicao, setEmailEmEdicao] = useState(contexto.usuario_email);
   const [emailCliente, setEmailCliente] = useState(contexto.usuario_email);
-  const [cargoCliente, setCargoCliente] = useState(contexto.cargo || (contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'));
-  const [cargoEmEdicao, setCargoEmEdicao] = useState(contexto.cargo || (contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'));
+  const [cargoCliente, setCargoCliente] = useState(contexto.cargo || t(contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'));
+  const [cargoEmEdicao, setCargoEmEdicao] = useState(contexto.cargo || t(contexto.perfil === 'gestor_empresa' ? 'Gestor da empresa' : 'Contato da empresa'));
   const [editandoPerfil, setEditandoPerfil] = useState(false);
   const [salvandoPerfil, setSalvandoPerfil] = useState(false);
   const [baixandoPdf, setBaixandoPdf] = useState(false);
@@ -84,14 +84,14 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setCarregando(true);
     setErro('');
     const { data, error } = await cliente.rpc('listar_portal_cliente');
-    if (error) setErro('Não foi possível carregar seu acompanhamento. Tente novamente.');
+    if (error) setErro(t('Não foi possível carregar seu acompanhamento. Tente novamente.'));
     else {
       const lista = (Array.isArray(data) ? data : []) as SolicitacaoCliente[];
       setSolicitacoes(lista);
       setSelecionadaId((atual) => atual || lista[0]?.id || '');
     }
     setCarregando(false);
-  }, [cliente, demonstracao]);
+  }, [cliente, demonstracao, t]);
 
   const carregarMensagens = useCallback(
     async (solicitacaoId: string) => {
@@ -230,18 +230,18 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     }));
     setSelecionadaId(resultado.solicitacao_id);
     setCriandoSolicitacao(false);
-    setAviso(`${resultado.protocolo} registrada e vinculada à sua empresa. Você já pode alternar entre os trabalhos.`);
+    setAviso(`${resultado.protocolo} ${t('registrada e vinculada à sua empresa. Você já pode alternar entre os trabalhos.')}`);
   }
 
   async function baixarAnexo(anexo: AnexoSolicitacaoCliente) {
     if (!cliente || demonstracao) {
-      setAviso('Na demonstração local, o arquivo é apenas representativo. Use a homologação autenticada para testar o download privado.');
+      setAviso(t('Na demonstração local, o arquivo é apenas representativo. Use a homologação autenticada para testar o download privado.'));
       return;
     }
     setBaixandoAnexoId(anexo.id);
     setErro('');
     const { data, error } = await cliente.storage.from('solicitacoes').download(anexo.caminho_storage);
-    if (error || !data) setErro('Não foi possível baixar este anexo protegido.');
+    if (error || !data) setErro(t('Não foi possível baixar este anexo protegido.'));
     else {
       const url = URL.createObjectURL(data);
       const ancora = document.createElement('a');
@@ -258,7 +258,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     if (cliente && !demonstracao) {
       const { error } = await cliente.rpc('registrar_aceite_privacidade_cliente', { versao: VERSAO_AVISO_PRIVACIDADE });
       if (error) {
-        setErro('Não foi possível registrar a ciência do aviso de privacidade.');
+        setErro(t('Não foi possível registrar a ciência do aviso de privacidade.'));
         setAceitando(false);
         return;
       }
@@ -277,16 +277,16 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         conteudo,
       });
       if (error || !mensagemId) {
-        setErro('Não foi possível enviar a mensagem.');
+        setErro(t('Não foi possível enviar a mensagem.'));
         return;
       }
       for (const arquivo of arquivosMensagem) {
         const caminho = caminhoAnexoMensagem(String(mensagemId), arquivo);
         const tipo = tipoMimeArmazenado(arquivo) ?? 'application/octet-stream';
         const envio = await cliente.storage.from('mensagens').upload(caminho, arquivo, { contentType: tipo, upsert: false });
-        if (envio.error) { setErro(`A mensagem foi enviada, mas ${arquivo.name} não pôde ser anexado.`); break; }
+        if (envio.error) { setErro(`${t('A mensagem foi enviada, mas')} ${arquivo.name} ${t('não pôde ser anexado.')}`); break; }
         const registro = await cliente.rpc('registrar_anexo_mensagem_demonstrativa', { mensagem: mensagemId, caminho, nome_original: arquivo.name, tipo_mime: tipo, tamanho_bytes: arquivo.size });
-        if (registro.error) { setErro(`A mensagem foi enviada, mas ${arquivo.name} não pôde ser registrado.`); break; }
+        if (registro.error) { setErro(`${t('A mensagem foi enviada, mas')} ${arquivo.name} ${t('não pôde ser registrado.')}`); break; }
       }
       setArquivosMensagem([]);
       await carregarMensagens(selecionada.id);
@@ -307,15 +307,15 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   function selecionarArquivosMensagem(lista: FileList | null) {
     const arquivos = [...arquivosMensagem, ...Array.from(lista ?? [])];
     const falha = validarAnexosMensagem(arquivos);
-    if (falha) setErro(falha);
+    if (falha) setErro(tm(falha));
     else { setErro(''); setArquivosMensagem(arquivos); }
   }
 
   async function baixarAnexoMensagem(anexo: AnexoMensagem) {
-    if (!cliente || demonstracao) { setAviso('Use a área autenticada para baixar anexos de mensagens.'); return; }
+    if (!cliente || demonstracao) { setAviso(t('Use a área autenticada para baixar anexos de mensagens.')); return; }
     setBaixandoAnexoId(anexo.id);
     const { data, error } = await cliente.storage.from('mensagens').download(anexo.caminho_storage);
-    if (error || !data) setErro('Não foi possível baixar o anexo protegido.');
+    if (error || !data) setErro(t('Não foi possível baixar o anexo protegido.'));
     else {
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
@@ -333,15 +333,15 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     const email = emailEmEdicao.trim().toLowerCase();
     const cargo = cargoEmEdicao.trim();
     if (nome.length < 2 || nome.length > 120) {
-      setErro('Informe um nome entre 2 e 120 caracteres.');
+      setErro(t('Informe um nome entre 2 e 120 caracteres.'));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-      setErro('Informe um endereço de e-mail válido.');
+      setErro(t('Informe um endereço de e-mail válido.'));
       return;
     }
     if (cargo.length < 2 || cargo.length > 120) {
-      setErro('Informe um cargo ou função entre 2 e 120 caracteres.');
+      setErro(t('Informe um cargo ou função entre 2 e 120 caracteres.'));
       return;
     }
     setSalvandoPerfil(true);
@@ -352,14 +352,14 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         novo_cargo: cargo,
       });
       if (error || !data) {
-        setErro(error?.message || 'Não foi possível atualizar nome e cargo do perfil.');
+        setErro(error?.message || t('Não foi possível atualizar nome e cargo do perfil.'));
         setSalvandoPerfil(false);
         return;
       }
       if (email !== emailCliente.toLowerCase()) {
         const { error: erroEmail } = await cliente.rpc('atualizar_email_proprio_demonstrativo', { novo_email: email });
         if (erroEmail) {
-          setErro(erroEmail.message || 'Nome e cargo foram salvos, mas não foi possível alterar o e-mail.');
+          setErro(erroEmail.message || t('Nome e cargo foram salvos, mas não foi possível alterar o e-mail.'));
           setSalvandoPerfil(false);
           return;
         }
@@ -373,14 +373,14 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setCargoCliente(cargo);
     setCargoEmEdicao(cargo);
     setEditandoPerfil(false);
-    setAviso(emailMudou ? 'Nome, cargo e e-mail de acesso atualizados.' : 'Nome e cargo do perfil atualizados. A empresa e as permissões permanecem protegidas.');
+    setAviso(emailMudou ? t('Nome, cargo e e-mail de acesso atualizados.') : t('Nome e cargo do perfil atualizados. A empresa e as permissões permanecem protegidas.'));
     setSalvandoPerfil(false);
   }
 
   async function baixarPdfPreProposta() {
     if (!selecionada || selecionada.valor_pre_proposta === null) return;
     if (!cliente || demonstracao) {
-      setAviso('Na demonstração local, o PDF não é persistido. Use a homologação autenticada para testar o download protegido.');
+      setAviso(t('Na demonstração local, o PDF não é persistido. Use a homologação autenticada para testar o download protegido.'));
       return;
     }
     setBaixandoPdf(true);
@@ -391,17 +391,17 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       hash_sha256: string;
     } | null;
     if (erroReferencia || !referencia) {
-      setErro('O PDF emitido ainda não está disponível para download.');
+      setErro(t('O PDF emitido ainda não está disponível para download.'));
       setBaixandoPdf(false);
       return;
     }
     const { data, error } = await cliente.storage.from('pre-propostas').download(referencia.caminho);
-    if (error || !data) setErro('Não foi possível baixar o PDF protegido.');
+    if (error || !data) setErro(t('Não foi possível baixar o PDF protegido.'));
     else {
       const bytes = new Uint8Array(await data.arrayBuffer());
       const hashCalculado = await calcularSha256Hex(bytes);
       if (hashCalculado !== referencia.hash_sha256) {
-        setErro('A verificação de integridade do PDF falhou. O download foi bloqueado; avise a equipe do laboratório.');
+        setErro(t('A verificação de integridade do PDF falhou. O download foi bloqueado; avise a equipe do laboratório.'));
         setBaixandoPdf(false);
         return;
       }
@@ -411,7 +411,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       ancora.download = `pre-proposta-SOL-${String(selecionada.codigo).padStart(4, '0')}.pdf`;
       ancora.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
-      setAviso(`PDF verificado: ${referencia.hash_sha256.slice(0, 12)}…`);
+      setAviso(`${t('PDF verificado:')} ${referencia.hash_sha256.slice(0, 12)}…`);
     }
     setBaixandoPdf(false);
   }
@@ -428,7 +428,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         declaracao_versao: VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA,
       });
       if (error) {
-        setErro(error.code === '23514' ? 'Esta pré-proposta não pode mais ser aceita. Atualize a página ou fale com a equipe.' : 'Não foi possível registrar o aceite da pré-proposta. Tente novamente.');
+        setErro(t(error.code === '23514' ? 'Esta pré-proposta não pode mais ser aceita. Atualize a página ou fale com a equipe.' : 'Não foi possível registrar o aceite da pré-proposta. Tente novamente.'));
         setAceitandoPreProposta(false);
         return;
       }
@@ -448,7 +448,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     }
 
     setConfirmouAceite(false);
-    setAviso('Aceite registrado. O trabalho começará somente após a liberação do Administrador.');
+    setAviso(t('Aceite registrado. O trabalho começará somente após a liberação do Administrador.'));
     setAceitandoPreProposta(false);
   }
 
@@ -466,7 +466,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         motivo,
       });
       if (error) {
-        setErro(error.code === '23514' ? 'Esta pré-proposta não pode mais ser recusada. Atualize a página e confira o estado atual.' : 'Não foi possível registrar a recusa. Tente novamente.');
+        setErro(t(error.code === '23514' ? 'Esta pré-proposta não pode mais ser recusada. Atualize a página e confira o estado atual.' : 'Não foi possível registrar a recusa. Tente novamente.'));
         setRecusandoPreProposta(false);
         return;
       }
@@ -488,7 +488,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
 
     setMotivoRecusa('');
     setRecusaAberta(false);
-    setAviso('Recusa registrada. A equipe poderá preparar e emitir uma nova pré-proposta para este trabalho.');
+    setAviso(t('Recusa registrada. A equipe poderá preparar e emitir uma nova pré-proposta para este trabalho.'));
     setRecusandoPreProposta(false);
   }
 
@@ -497,7 +497,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       <NotificacaoFlutuante mensagem={aviso} tipo="sucesso" aoFechar={() => setAviso('')} />
       <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <header className="topo-cliente">
-        <a href="/" aria-label="Voltar ao site">
+        <a href="/" aria-label={t('Voltar ao site')}>
           <MarcaOficial />
         </a>
         <div>
@@ -534,7 +534,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 <strong>{cargoCliente}</strong>
                 <em>{emailCliente}</em>
               </span>
-              <button type="button" onClick={() => setEditandoPerfil(true)} aria-label="Editar dados do perfil">
+              <button type="button" onClick={() => setEditandoPerfil(true)} aria-label={t('Editar dados do perfil')}>
                 <Pencil size={15} />
               </button>
             </div>
@@ -545,8 +545,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 <label htmlFor="email-cliente">{t('E-mail de acesso')}</label>
                 <input id="email-cliente" type="email" required value={emailEmEdicao} onChange={(evento) => setEmailEmEdicao(evento.target.value)} />
                 <label htmlFor="cargo-cliente">{t('Cargo ou função na empresa')}</label>
-                <input id="cargo-cliente" required minLength={2} maxLength={120} value={cargoEmEdicao} onChange={(evento) => setCargoEmEdicao(evento.target.value)} placeholder="Ex.: Analista da qualidade" />
-                <small>Este campo descreve sua função profissional e não altera suas permissões de acesso.</small>
+                <input id="cargo-cliente" required minLength={2} maxLength={120} value={cargoEmEdicao} onChange={(evento) => setCargoEmEdicao(evento.target.value)} placeholder={t('Ex.: Analista da qualidade')} />
+                <small>{t('Este campo descreve sua função profissional e não altera suas permissões de acesso.')}</small>
                 <div>
                   <button
                     type="button"
@@ -568,7 +568,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
           </aside>
         </section>
 
-        <section className="indicadores-cliente" aria-label="Resumo dos trabalhos">
+        <section className="indicadores-cliente" aria-label={t('Resumo dos trabalhos')}>
           <button type="button" onClick={() => abrirTrabalhosComFiltro('todos')}>
             <BriefcaseBusiness size={21} />
             <span>
@@ -625,14 +625,14 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
 
         {carregando && (
           <div className="aviso-cliente" role="status">
-            <RefreshCw size={18} /> Carregando acompanhamento…
+            <RefreshCw size={18} /> {t('Carregando acompanhamento…')}
           </div>
         )}
         {!carregando && solicitacoes.length === 0 && (
           <section className="vazio-cliente">
             <FileText size={30} />
             <h2>{t('Comece seu primeiro trabalho')}</h2>
-            <p>Registre a solicitação nesta área protegida. Ela já nascerá vinculada à sua empresa e aparecerá aqui imediatamente.</p>
+            <p>{t('Registre a solicitação nesta área protegida. Ela já nascerá vinculada à sua empresa e aparecerá aqui imediatamente.')}</p>
             <button className="botao" type="button" onClick={() => setCriandoSolicitacao(true)}>
               {t('Registrar solicitação')}
             </button>
@@ -647,7 +647,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   <h2>{t('Seus trabalhos')}</h2>
                   <small>{t('Selecione o que deseja acompanhar')}</small>
                 </div>
-                <button className="adicionar-trabalho-lista" type="button" onClick={() => setCriandoSolicitacao(true)} aria-label="Registrar novo trabalho">
+                <button className="adicionar-trabalho-lista" type="button" onClick={() => setCriandoSolicitacao(true)} aria-label={t('Registrar novo trabalho')}>
                   <Plus size={17} />
                 </button>
               </header>
@@ -664,19 +664,19 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   }}
                 >
                   <span>{protocoloSolicitacaoCliente(item)}</span>
-                  <strong>{tituloServicoCliente(item.servico)}</strong>
-                  <small className="detalhes-necessidade-cliente">{item.quantidade ? `${item.quantidade} peça(s)` : 'Quantidade não informada'}{item.material ? ` · ${item.material}` : ''}</small>
+                  <strong>{t(tituloServicoCliente(item.servico))}</strong>
+                  <small className="detalhes-necessidade-cliente">{item.quantidade ? `${item.quantidade} ${t('peça(s)')}` : t('Quantidade não informada')}{item.material ? ` · ${t(item.material)}` : ''}</small>
                   {item.descricao && <small className="descricao-necessidade-cliente" title={item.descricao}>{item.descricao}</small>}
                   <small>{t('Recebida em')} {formatarData(item.criada_em)}</small>
                 </button>
               ))}
-              {solicitacoesVisiveis.length === 0 && <p className="sem-resultados-filtro">Nenhum trabalho corresponde à pesquisa e aos filtros.</p>}
+              {solicitacoesVisiveis.length === 0 && <p className="sem-resultados-filtro">{t('Nenhum trabalho corresponde à pesquisa e aos filtros.')}</p>}
             </aside>
             <section className="detalhe-projeto-cliente">
               <header>
                 <div>
                   <span>{protocoloSolicitacaoCliente(selecionada)}</span>
-                  <h2>{tituloServicoCliente(selecionada.servico)}</h2>
+                  <h2>{t(tituloServicoCliente(selecionada.servico))}</h2>
                 </div>
                 <button type="button" onClick={() => void carregar()}>
                   <RefreshCw size={15} /> {t('Atualizar')}
@@ -685,8 +685,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
               <div className="resumo-projeto-cliente">
                 <article>
                   <small>{t('Pré-proposta comercial')}</small>
-                  <strong>{selecionada.valor_pre_proposta === null ? 'Ainda não emitida' : formatarDinheiro(selecionada.valor_pre_proposta)}</strong>
-                  <span>{selecionada.valor_pre_proposta === null ? 'Será exibida após análise e publicação pela equipe.' : selecionada.prazo_pagamento_dias ? `Pagamento desejado: ${selecionada.prazo_pagamento_dias} dias` : 'Condição em análise'}</span>
+                  <strong>{selecionada.valor_pre_proposta === null ? t('Ainda não emitida') : formatarDinheiro(selecionada.valor_pre_proposta, 'BRL', idioma)}</strong>
+                  <span>{selecionada.valor_pre_proposta === null ? t('Será exibida após análise e publicação pela equipe.') : selecionada.prazo_pagamento_dias ? `${t('Pagamento desejado:')} ${selecionada.prazo_pagamento_dias} ${t('dias')}` : t('Condição em análise')}</span>
                   {selecionada.valor_pre_proposta !== null && (
                     <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}>
                       <Download size={15} /> {baixandoPdf ? t('Baixando…') : t('Baixar PDF emitido')}
@@ -694,10 +694,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   )}
                   {podeAceitarPreProposta(selecionada.proposta_estado) && (
                     <div className="aceite-pre-proposta-cliente">
-                      <strong>Qual é sua decisão?</strong>
-                      <p>O aceite manifesta interesse nesta pré-proposta do laboratório e não substitui a proposta oficial do Nectar. Se algo precisar mudar, recuse e explique o ajuste necessário; a equipe poderá emitir uma nova pré-proposta.</p>
+                      <strong>{t('Qual é sua decisão?')}</strong>
+                      <p>{t('O aceite manifesta interesse nesta pré-proposta do laboratório e não substitui a proposta oficial do Nectar. Se algo precisar mudar, recuse e explique o ajuste necessário; a equipe poderá emitir uma nova pré-proposta.')}</p>
                       <label>
-                        <input type="checkbox" checked={confirmouAceite} onChange={(evento) => setConfirmouAceite(evento.target.checked)} /> Li e desejo prosseguir com esta pré-proposta.
+                        <input type="checkbox" checked={confirmouAceite} onChange={(evento) => setConfirmouAceite(evento.target.checked)} /> {t('Li e desejo prosseguir com esta pré-proposta.')}
                       </label>
                       <div className="acoes-decisao-cliente">
                         <button type="button" onClick={() => void aceitarPreProposta()} disabled={!confirmouAceite || aceitandoPreProposta || recusandoPreProposta}>
@@ -710,8 +710,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                       {recusaAberta && (
                         <form className="formulario-recusa-cliente" onSubmit={recusarPreProposta}>
                           <label htmlFor="motivo-recusa-cliente">
-                            O que precisa ser alterado?
-                            <textarea id="motivo-recusa-cliente" required minLength={5} maxLength={1000} value={motivoRecusa} onChange={(evento) => setMotivoRecusa(evento.target.value)} placeholder="Ex.: prazo, escopo, quantidade ou condição comercial" />
+                            {t('O que precisa ser alterado?')}
+                            <textarea id="motivo-recusa-cliente" required minLength={5} maxLength={1000} value={motivoRecusa} onChange={(evento) => setMotivoRecusa(evento.target.value)} placeholder={t('Ex.: prazo, escopo, quantidade ou condição comercial')} />
                           </label>
                           <div>
                             <button
@@ -724,7 +724,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                               {t('Cancelar')}
                             </button>
                             <button type="submit" disabled={!normalizarMotivoRecusa(motivoRecusa) || recusandoPreProposta}>
-                              {recusandoPreProposta ? 'Registrando…' : 'Confirmar recusa'}
+                              {recusandoPreProposta ? t('Registrando…') : t('Confirmar recusa')}
                             </button>
                           </div>
                         </form>
@@ -735,8 +735,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                     <div className="aceite-pre-proposta-cliente confirmado">
                       <CheckCircle2 size={20} />
                       <div>
-                        <strong>Aceite registrado</strong>
-                        <p>{descricaoAceiteCliente(selecionada.aceita_em, selecionada.execucao_estado, formatarData)}</p>
+                        <strong>{t('Aceite registrado')}</strong>
+                        <p>{tm(descricaoAceiteCliente(selecionada.aceita_em, selecionada.execucao_estado, formatarData))}</p>
                       </div>
                     </div>
                   )}
@@ -744,8 +744,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                     <div className="aceite-pre-proposta-cliente recusada">
                       <Ban size={20} />
                       <div>
-                        <strong>Revisão solicitada</strong>
-                        <p>{selecionada.recusa_motivo || 'A equipe foi informada e poderá enviar uma nova pré-proposta.'}</p>
+                        <strong>{t('Revisão solicitada')}</strong>
+                        <p>{selecionada.recusa_motivo || t('A equipe foi informada e poderá enviar uma nova pré-proposta.')}</p>
                         {selecionada.recusada_em && <small>{t('Registrada em')} {formatarData(selecionada.recusada_em)}</small>}
                       </div>
                     </div>
@@ -753,8 +753,8 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 </article>
                 <article>
                   <small>{t('Andamento do serviço')}</small>
-                  <strong>{situacaoAtual?.titulo}</strong>
-                  <span>{situacaoAtual?.descricao}</span>
+                  <strong>{situacaoAtual ? t(situacaoAtual.titulo) : ''}</strong>
+                  <span>{situacaoAtual ? tm(situacaoAtual.descricao) : ''}</span>
                 </article>
               </div>
               <section className="anexos-trabalho-cliente">
@@ -763,11 +763,11 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                     <h3>
                       <Paperclip size={18} /> {t('Arquivos da solicitação')}
                     </h3>
-                    <p>Documentos privados vinculados somente a este trabalho.</p>
+                    <p>{t('Documentos privados vinculados somente a este trabalho.')}</p>
                   </div>
                 </div>
                 {(anexosPorSolicitacao[selecionada.id] ?? []).length === 0 ? (
-                  <p className="sem-anexos-cliente">Nenhum arquivo foi anexado a esta solicitação.</p>
+                  <p className="sem-anexos-cliente">{t('Nenhum arquivo foi anexado a esta solicitação.')}</p>
                 ) : (
                   <ul>
                     {(anexosPorSolicitacao[selecionada.id] ?? []).map((anexo) => (
@@ -791,15 +791,15 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 <div className="titulo-bloco-cliente">
                   <div>
                       <h3>{t('Etapas do trabalho')}</h3>
-                    <p>A porcentagem indica o progresso da etapa atual, não do contrato inteiro.</p>
+                    <p>{t('A porcentagem indica o progresso da etapa atual, não do contrato inteiro.')}</p>
                   </div>
                 </div>
                 {selecionada.etapas.length === 0 ? (
                   <div className="sem-etapas-cliente">
                     <Clock3 size={22} />
                     <div>
-                      <strong>A equipe ainda está preparando o acompanhamento</strong>
-                      <p>As etapas aparecerão aqui depois da triagem inicial da solicitação.</p>
+                      <strong>{t('A equipe ainda está preparando o acompanhamento')}</strong>
+                      <p>{t('As etapas aparecerão aqui depois da triagem inicial da solicitação.')}</p>
                     </div>
                   </div>
                 ) : (
@@ -813,14 +813,14 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                           </span>
                           <div>
                             <header>
-                              <strong>{etapa.titulo}</strong>
+                              <strong>{t(etapa.titulo)}</strong>
                               <b>
-                                {rotulo}
+                                {t(rotulo)}
                                 {etapa.estado === 'em_andamento' ? ` (${etapa.progresso}%)` : ''}
                               </b>
                             </header>
-                            {etapa.descricao && <p>{etapa.descricao}</p>}
-                            <div className="barra-progresso" aria-label={`${etapa.progresso}% concluído`}>
+                            {etapa.descricao && <p>{t(etapa.descricao)}</p>}
+                            <div className="barra-progresso" aria-label={`${etapa.progresso}% ${t('concluído')}`}>
                               <i style={{ width: `${etapa.progresso}%` }} />
                             </div>
                             <small>{t('Atualizado em')} {formatarData(etapa.atualizada_em)}</small>
@@ -837,7 +837,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                     <h3>
                       <MessageSquareText size={18} /> {t('Mensagens')}
                     </h3>
-                    <p>Canal vinculado a esta solicitação.</p>
+                    <p>{t('Canal vinculado a esta solicitação.')}</p>
                   </div>
                 </div>
                 <div className="lista-mensagens-cliente">
@@ -855,15 +855,15 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 </div>
                 <form onSubmit={enviarMensagem}>
                   <label htmlFor="mensagem-cliente" className="sr-only">
-                    Nova mensagem
+                    {t('Nova mensagem')}
                   </label>
-                  <input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para a equipe" />
+                  <input id="mensagem-cliente" required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder={t('Escreva uma mensagem para a equipe')} />
                   <label className="anexar-mensagem"><Paperclip size={16} /><span>{t('Anexar')}</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(evento) => selecionarArquivosMensagem(evento.target.files)} /></label>
                   <button type="submit">
                     <Send size={16} /> {t('Enviar')}
                   </button>
                 </form>
-                {arquivosMensagem.length > 0 && <div className="arquivos-mensagem-selecionados">{arquivosMensagem.map((arquivo, indice) => <span key={`${arquivo.name}-${indice}`}>{arquivo.name}<button type="button" aria-label={`Remover ${arquivo.name}`} onClick={() => setArquivosMensagem((atuais) => atuais.filter((_, posicao) => posicao !== indice))}><X size={12} /></button></span>)}</div>}
+                {arquivosMensagem.length > 0 && <div className="arquivos-mensagem-selecionados">{arquivosMensagem.map((arquivo, indice) => <span key={`${arquivo.name}-${indice}`}>{arquivo.name}<button type="button" aria-label={`${t('Remover')} ${arquivo.name}`} onClick={() => setArquivosMensagem((atuais) => atuais.filter((_, posicao) => posicao !== indice))}><X size={12} /></button></span>)}</div>}
               </section>
             </section>
           </div>
@@ -880,14 +880,14 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
               <ShieldCheck size={21} /> {t('Proteção de dados')}
             </span>
             <h2 id="titulo-modal-privacidade">{t('Antes de acessar sua área')}</h2>
-            <p>Usamos seus dados para identificar a empresa, analisar solicitações, acompanhar trabalhos e manter este canal de mensagens. O acesso é restrito a usuários aprovados e à equipe autorizada.</p>
+            <p>{t('Usamos seus dados para identificar a empresa, analisar solicitações, acompanhar trabalhos e manter este canal de mensagens. O acesso é restrito a usuários aprovados e à equipe autorizada.')}</p>
             <ul>
-              <li>Não envie dados pessoais ou industriais que não sejam necessários ao serviço.</li>
-              <li>Arquivos e mensagens ficam vinculados à solicitação e protegidos por controle de acesso.</li>
-              <li>Você pode consultar a política completa e solicitar correção ou atendimento pelo canal informado nela.</li>
+              <li>{t('Não envie dados pessoais ou industriais que não sejam necessários ao serviço.')}</li>
+              <li>{t('Arquivos e mensagens ficam vinculados à solicitação e protegidos por controle de acesso.')}</li>
+              <li>{t('Você pode consultar a política completa e solicitar correção ou atendimento pelo canal informado nela.')}</li>
             </ul>
             <label>
-              <input type="checkbox" required checked readOnly /> Li e estou ciente deste aviso de privacidade.
+              <input type="checkbox" required checked readOnly /> {t('Li e estou ciente deste aviso de privacidade.')}
             </label>
             <div>
               <a href="/privacidade" target="_blank" rel="noreferrer">
@@ -897,7 +897,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                 <Check size={16} /> {aceitando ? t('Registrando…') : t('Continuar')}
               </button>
             </div>
-            <small>Versão {VERSAO_AVISO_PRIVACIDADE} · texto de homologação sujeito à validação institucional.</small>
+            <small>{t('Versão')} {VERSAO_AVISO_PRIVACIDADE} · {t('texto de homologação sujeito à validação institucional.')}</small>
           </section>
         </div>
       )}

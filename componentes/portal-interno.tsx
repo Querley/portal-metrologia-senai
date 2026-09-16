@@ -13,6 +13,8 @@ import { PortalDemonstracao } from './portal-demonstracao';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { BarraBuscaFiltros } from './barra-busca-filtros';
 import { cnpjValido, formatarCnpj } from '../lib/solicitacao';
+import { SeletorIdioma } from './seletor-idioma';
+import { useTraducaoPublica } from '../lib/traducao-publica';
 
 type Perfil = {
   usuario_id: string;
@@ -174,6 +176,7 @@ export function PortalInterno() {
 }
 
 function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, modoSenha, linkSenhaPronto, aoConcluirRecuperacao }: { estado: Estado; cliente: SupabaseClient | null; mensagem: string; aoAutenticar: (usuarioId: string) => Promise<void>; modoSenha: ModoDefinicaoSenha; linkSenhaPronto: boolean; aoConcluirRecuperacao: () => void }) {
+  const { t } = useTraducaoPublica();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
@@ -193,7 +196,7 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, modoSenha, linkSe
       password: senha,
     });
     if (error || !data.user) {
-      setErro('E-mail ou senha inválidos. O acesso interno não permite autocadastro.');
+      setErro(t('E-mail ou senha inválidos. Verifique os dados ou recupere sua senha.'));
       setEnviando(false);
       return;
     }
@@ -210,9 +213,9 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, modoSenha, linkSe
     const { error } = await cliente.auth.resetPasswordForEmail(emailNormalizado, {
       redirectTo: `${window.location.origin}/portal?recuperar=senha`,
     });
-    if (error) setErro('Não foi possível iniciar a recuperação agora. Aguarde alguns instantes e tente novamente.');
+    if (error) setErro(t('Não foi possível iniciar a recuperação agora. Aguarde alguns instantes e tente novamente.'));
     else {
-      setAviso('Se o e-mail estiver cadastrado, você receberá um link seguro para criar uma nova senha.');
+      setAviso(t('Se o e-mail estiver cadastrado, você receberá um link seguro para criar uma nova senha.'));
       setSolicitandoRecuperacao(false);
     }
     setEnviando(false);
@@ -222,25 +225,25 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, modoSenha, linkSe
     evento.preventDefault();
     if (!cliente) return;
     if (novaSenha.length < 10) {
-      setErro('A nova senha deve ter pelo menos 10 caracteres.');
+      setErro(t('A nova senha deve ter pelo menos 10 caracteres.'));
       return;
     }
     if (novaSenha !== confirmacaoSenha) {
-      setErro('A confirmação não corresponde à nova senha.');
+      setErro(t('A confirmação não corresponde à nova senha.'));
       return;
     }
     setEnviando(true);
     setErro('');
     const { data: sessaoAtual } = await cliente.auth.getSession();
     if (!sessaoAtual.session?.user) {
-      setErro('O link ainda não foi validado ou já expirou. Abra novamente o link mais recente recebido por e-mail.');
+      setErro(t('O link ainda não foi validado ou já expirou. Abra novamente o link mais recente recebido por e-mail.'));
       setEnviando(false);
       return;
     }
     const { error } = await cliente.auth.updateUser({ password: novaSenha });
-    if (error) setErro('O link expirou ou a senha não pôde ser alterada. Solicite uma nova recuperação.');
+    if (error) setErro(t('O link expirou ou a senha não pôde ser alterada. Solicite uma nova recuperação.'));
     else {
-      setAviso('Senha alterada. Você já pode continuar com a sessão protegida.');
+      setAviso(t('Senha alterada. Você já pode continuar com a sessão protegida.'));
       setNovaSenha('');
       setConfirmacaoSenha('');
       window.history.replaceState({}, '', limparModoDefinicaoSenha(window.location.href));
@@ -256,93 +259,94 @@ function TelaAcesso({ estado, cliente, mensagem, aoAutenticar, modoSenha, linkSe
       <NotificacaoFlutuante mensagem={erro} tipo="erro" aoFechar={() => setErro('')} />
       <NotificacaoFlutuante mensagem={aviso} tipo="informacao" aoFechar={() => setAviso('')} />
       <section className="cartao-acesso">
-        <a href="/" aria-label="Voltar à página pública">
+        <div className="idioma-acesso"><SeletorIdioma compacto /></div>
+        <a href="/" aria-label={t('Voltar à página pública')}>
           <MarcaOficial />
         </a>
         <span className="selo-acesso">
-          <ShieldCheck size={15} /> Acesso protegido
+          <ShieldCheck size={15} /> {t('Acesso protegido')}
         </span>
         {estado === 'carregando' && (
           <>
-            <h1>Validando acesso</h1>
-            <p role="status">Aguarde enquanto confirmamos sua sessão e o tipo de acesso.</p>
+            <h1>{t('Validando acesso')}</h1>
+            <p role="status">{t('Aguarde enquanto confirmamos sua sessão e o tipo de acesso.')}</p>
           </>
         )}
         {estado === 'sem_configuracao' && (
           <>
-            <h1>Integração de homologação pendente</h1>
-            <p>O acesso permanece fechado até a URL e a chave pública do Supabase de homologação serem configuradas.</p>
+            <h1>{t('Integração de homologação pendente')}</h1>
+            <p>{t('O acesso permanece fechado até a URL e a chave pública do Supabase de homologação serem configuradas.')}</p>
           </>
         )}
         {estado === 'sem_perfil' && (
           <>
-            <h1>Acesso ainda não vinculado</h1>
-            <p>Sua identidade foi confirmada, mas não há perfil interno nem vínculo aprovado com uma empresa. Clientes recebem esse vínculo por convite da equipe após a análise da solicitação.</p>
+            <h1>{t('Acesso ainda não vinculado')}</h1>
+            <p>{t('Sua identidade foi confirmada, mas não há perfil interno nem vínculo aprovado com uma empresa. Clientes recebem esse vínculo por convite da equipe após a análise da solicitação.')}</p>
             {mensagem && (
               <p className="erro-acesso" role="alert">
                 {mensagem}
               </p>
             )}
             <button className="botao-acesso" type="button" onClick={() => void cliente?.auth.signOut()}>
-              Sair
+              {t('Sair')}
             </button>
           </>
         )}
         {estado === 'erro' && (
           <>
-            <h1>Não foi possível validar o acesso</h1>
-            <p role="alert">{mensagem || 'A autenticação está temporariamente indisponível.'}</p>
+            <h1>{t('Não foi possível validar o acesso')}</h1>
+            <p role="alert">{mensagem ? t(mensagem) : t('A autenticação está temporariamente indisponível.')}</p>
             <button className="botao-acesso" type="button" onClick={() => window.location.reload()}>
-              Tentar novamente
+              {t('Tentar novamente')}
             </button>
           </>
         )}
         {estado === 'anonimo' && modoSenha && (
           <>
-            <h1>{modoSenha === 'convite' ? 'Ative sua conta' : 'Crie uma nova senha'}</h1>
-            <p>{linkSenhaPronto ? 'Use uma senha exclusiva com pelo menos 10 caracteres.' : 'Validando o link seguro recebido por e-mail…'}</p>
+            <h1>{modoSenha === 'convite' ? t('Ative sua conta') : t('Crie uma nova senha')}</h1>
+            <p>{linkSenhaPronto ? t('Use uma senha exclusiva com pelo menos 10 caracteres.') : t('Validando o link seguro recebido por e-mail…')}</p>
             <form onSubmit={redefinirSenha}>
-              <label htmlFor="nova-senha">Nova senha</label>
+              <label htmlFor="nova-senha">{t('Nova senha')}</label>
               <input id="nova-senha" type="password" autoComplete="new-password" required minLength={10} value={novaSenha} onChange={(evento) => setNovaSenha(evento.target.value)} />
-              <label htmlFor="confirmar-nova-senha">Confirmar nova senha</label>
+              <label htmlFor="confirmar-nova-senha">{t('Confirmar nova senha')}</label>
               <input id="confirmar-nova-senha" type="password" autoComplete="new-password" required minLength={10} value={confirmacaoSenha} onChange={(evento) => setConfirmacaoSenha(evento.target.value)} />
               <button className="botao-acesso" type="submit" disabled={enviando || !linkSenhaPronto}>
-                <KeyRound size={16} /> {enviando ? 'Alterando…' : 'Salvar nova senha'}
+                <KeyRound size={16} /> {enviando ? t('Alterando…') : t('Salvar nova senha')}
               </button>
             </form>
           </>
         )}
         {estado === 'anonimo' && !modoSenha && solicitandoRecuperacao && (
           <>
-            <h1>Recuperar senha</h1>
-            <p>Informe o e-mail usado no portal. Por segurança, a confirmação não revela se o endereço está cadastrado.</p>
+            <h1>{t('Recuperar senha')}</h1>
+            <p>{t('Informe o e-mail usado no portal. Por segurança, a confirmação não revela se o endereço está cadastrado.')}</p>
             <form onSubmit={solicitarRecuperacao}>
               <label htmlFor="email-recuperacao">E-mail</label>
               <input id="email-recuperacao" type="email" autoComplete="email" required value={email} onChange={(evento) => setEmail(evento.target.value)} />
               <button className="botao-acesso" type="submit" disabled={enviando}>
-                <Mail size={16} /> {enviando ? 'Enviando…' : 'Enviar link seguro'}
+                <Mail size={16} /> {enviando ? t('Enviando…') : t('Enviar link seguro')}
               </button>
-              <button className="link-acesso botao-link-acesso" type="button" onClick={() => setSolicitandoRecuperacao(false)}>Voltar ao login</button>
+              <button className="link-acesso botao-link-acesso" type="button" onClick={() => setSolicitandoRecuperacao(false)}>{t('Voltar ao login')}</button>
             </form>
           </>
         )}
         {estado === 'anonimo' && !modoSenha && !solicitandoRecuperacao && (
           <>
-            <h1>Entrar no Portal de Metrologia</h1>
-            <p>Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.</p>
+            <h1>{t('Entrar no Portal de Metrologia')}</h1>
+            <p>{t('Equipe interna e clientes convidados usam o mesmo acesso. Não é preciso entrar para enviar uma solicitação.')}</p>
             <form onSubmit={entrar}>
               <label htmlFor="email-interno">E-mail</label>
               <input id="email-interno" type="email" autoComplete="username" required value={email} onChange={(evento) => setEmail(evento.target.value)} />
-              <label htmlFor="senha-interna">Senha</label>
+              <label htmlFor="senha-interna">{t('Senha')}</label>
               <input id="senha-interna" type="password" autoComplete="current-password" required value={senha} onChange={(evento) => setSenha(evento.target.value)} />
               <button className="botao-acesso" type="submit" disabled={enviando}>
                 <LockKeyhole size={16} />
-                {enviando ? 'Validando…' : 'Entrar'}
+                {enviando ? t('Validando…') : t('Entrar')}
               </button>
             </form>
-            <button className="link-acesso botao-link-acesso" type="button" onClick={() => setSolicitandoRecuperacao(true)}>Esqueci minha senha</button>
+            <button className="link-acesso botao-link-acesso" type="button" onClick={() => setSolicitandoRecuperacao(true)}>{t('Esqueci minha senha')}</button>
             <a className="link-acesso" href="/solicitar">
-              Fazer solicitação sem login
+              {t('Fazer solicitação sem login')}
             </a>
           </>
         )}

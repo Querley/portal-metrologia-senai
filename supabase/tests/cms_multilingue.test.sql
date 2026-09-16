@@ -1,11 +1,13 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(17);
 
-select is((select count(*) from listar_conteudos_publicados('pt-BR'))::integer,4,'CMS entrega os três cabeçalhos e os acontecimentos em português');
+select is((select count(*) from listar_conteudos_publicados('pt-BR'))::integer,8,'CMS entrega cabeçalhos, acontecimentos e quatro seções editáveis da página inicial em português');
 select is((select idioma from listar_conteudos_publicados('de') where chave='catalogo.cabecalho'),'de','CMS entrega a publicação alemã solicitada');
 select is((select titulo from listar_conteudos_publicados('en') where chave='solicitar.cabecalho'),'Request an analysis without creating an account','CMS entrega o título inglês publicado');
+select is((select titulo from listar_conteudos_publicados('de') where chave='inicio.hero'),'Präzision zum Messen. Intelligenz zur Weiterentwicklung.','CMS entrega a página inicial em alemão');
+select is((select count(*) from conteudos where chave like 'equipamentos.%')::integer,0,'Páginas técnicas de equipamentos permanecem fora do CMS');
 
 delete from publicacoes_conteudo where conteudo_id=(select id from conteudos where chave='privacidade.cabecalho') and idioma='de';
 select ok((select usou_fallback from listar_conteudos_publicados('de') where chave='privacidade.cabecalho'),'CMS sinaliza fallback para português quando falta tradução');
