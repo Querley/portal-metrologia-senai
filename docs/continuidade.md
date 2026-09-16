@@ -6,12 +6,12 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Último estado confirmado
 
-- fonte publicada: `eb63126546d6f5fe166d8d0e528037c51cd197fd`;
-- versão pública atual: 42, publicação concluída com sucesso;
+- fonte publicada: `2eb039d32a7d06e303515856ee1091631b365c3b`;
+- versão pública atual: 44, publicação concluída com sucesso;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
-- migration mais recente: `202609150043_revisao_cms_e_acontecimentos.sql`, aplicada e reconciliada na homologação;
-- GitHub Actions `35001303916`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
-- último resultado confirmado: lint aprovado, 108 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `043` e aprovou 70 provas pgTAP;
+- migration mais recente: `202609150044_inicio_editavel_e_traducao_integral.sql`, aplicada e reconciliada na homologação;
+- GitHub Actions `35040382203`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
+- último resultado confirmado: lint aprovado, 114 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `044` e aprovou 72 provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
 
 ## Lote concluído em 14 de setembro
@@ -39,7 +39,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 ## Limites conhecidos do estado publicado
 
 - a entrega real do e-mail de recuperação precisa ser homologada com uma caixa de entrada válida; endereços `@example.test` não recebem mensagens;
-- o CMS persistente e a tradução reativa das superfícies pública e Cliente estão publicados na versão 42; o lote 044 completa a cobertura técnica e a prévia visual, ainda pendente de homologação/publicação neste registro;
+- o CMS persistente, a prévia visual clicável e a cobertura automatizada das superfícies pública e Cliente estão publicados na versão 44; permanece pendente somente a revisão linguística institucional humana;
 - não existe comprovação de uma auditoria campo a campo de todos os inputs do portal;
 - os gráficos precisam ser exercitados com novos registros persistidos para validar todas as atualizações;
 - dados reais continuam separados dos demonstrativos. A flexibilização dessa regra não foi autorizada porque contraria os requisitos de segurança e segregação do projeto.
@@ -61,7 +61,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 1. homologar pela interface o convite em uma caixa real, a criação de senha e a recuperação de senha; isso depende da entrega SMTP externa;
 2. testar envio/download de anexos em mensagens e bloqueio/desbloqueio de uma empresa;
-3. homologar o lote 044 e realizar revisão humana institucional em PT-BR, inglês e alemão;
+3. homologar manualmente o lote 044 e realizar revisão humana institucional em PT-BR, inglês e alemão;
 4. depois importar históricos sanitizados e ampliar as integrações de IA sem cliente, preço, margem, anexos ou identificadores.
 
 ## Lote concluído em 15 de setembro
@@ -84,4 +84,4 @@ Validado localmente: lint sem erros, 108 testes unitários e 26 E2E em Chromium 
 
 Auditoria corretiva implementada localmente: cobertura PT-BR/EN/DE de todos os textos estruturais, serviços, setores e conteúdo técnico dos seis equipamentos; acesso e recuperação localizados; notificações e validações do Cliente localizadas; quatro regiões da página inicial conectadas ao CMS; miniatura clicável com prévia do rascunho; fichas técnicas bloqueadas fora do escopo editorial. Migration nova: `202609150044_inicio_editavel_e_traducao_integral.sql`.
 
-Validação local neste ponto: lint aprovado, 114 testes unitários aprovados, build aprovado e 26 E2E aprovados em Chromium desktop e Pixel 7. Pendente: GitHub Actions com recriação do banco até `044`, aplicação/reconciliação remota da migration, publicação no Sites e atualização deste registro com fonte/versão finais.
+Validação concluída: lint aprovado, 114 testes unitários aprovados, build aprovado e 26 E2E aprovados em Chromium desktop e Pixel 7. O GitHub Actions `35040382203` recriou o banco até `044` e aprovou 72 provas pgTAP. A migration está aplicada e reconciliada na homologação; o lint remoto não encontrou erros e preserva cinco avisos legados conhecidos. A fonte `2eb039d32a7d06e303515856ee1091631b365c3b` foi publicada como versão 44 no endereço oficial. Pendente apenas a homologação manual e a revisão linguística institucional; não repetir banco, testes ou publicação.

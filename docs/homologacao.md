@@ -162,4 +162,6 @@ Homologar manualmente: editar acontecimentos como Validador; confirmar que não 
 
 A releitura dos requisitos encontrou duas entregas apenas parciais no lote anterior: textos técnicos e estados secundários do Cliente ainda podiam permanecer em português, e a interface do CMS era uma lista de cartões, não uma miniatura clicável da página inicial. A migration `044` e a interface correspondente corrigem essas lacunas.
 
+A migration `044` foi aplicada e reconciliada no projeto remoto em 15 de setembro. O GitHub Actions `35040382203` aprovou lint, 114 testes unitários, build, 26 cenários E2E em Chromium desktop e Pixel 7 e 72 provas pgTAP após recriar o banco do zero até `044`. O lint remoto não encontrou erros; permanecem os cinco avisos legados já registrados. A fonte `2eb039d32a7d06e303515856ee1091631b365c3b` foi publicada com sucesso como versão 44 no endereço oficial.
+
 Homologar manualmente: alternar PT-BR/EN/DE no acesso, catálogo, cada uma das seis fichas técnicas, solicitação e Cliente; confirmar textos, validações, formatos de data e moeda; no CMS, alternar o idioma da miniatura, clicar em hero/diferencial/estrutura/acontecimentos/chamada, modificar título, texto e mídia, salvar e confirmar que a página pública não muda antes de aprovação e publicação. Confirmar também que não é possível criar conteúdo editorial com chave `equipamentos.*`.
