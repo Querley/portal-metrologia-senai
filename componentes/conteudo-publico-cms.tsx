@@ -2,7 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Image from 'next/image';
-import { CheckCircle2, Eye, FileCheck2, Image as ImageIcon, Languages, Pencil, Plus, RefreshCw, Save, Send, Trash2, Undo2 } from 'lucide-react';
+import { CheckCircle2, Eye, FileCheck2, Image as ImageIcon, Languages, Pencil, Plus, RefreshCw, Save, Send, Trash2, Undo2, UploadCloud } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PerfilInterno } from '../lib/contratos';
 import type { IdiomaPublico } from '../lib/idioma-publico';
@@ -12,7 +12,8 @@ import { NotificacaoFlutuante } from './notificacao-flutuante';
 
 type EstadoRevisao = 'rascunho' | 'em_validacao' | 'aprovada' | 'devolvida';
 type ItemAcontecimento = { tipo: 'recente' | 'agora' | 'proximo'; data: string; titulo: string; resumo: string };
-type CorpoCms = { texto?: string; midia_url?: string; midia_tipo?: 'imagem' | 'video'; midia_alt?: string; itens?: ItemAcontecimento[] };
+type MidiaCms = { src: string; tipo: 'imagem' | 'video'; alt: string; legenda: string };
+type CorpoCms = { texto?: string; midia_url?: string; midia_tipo?: 'imagem' | 'video'; midia_alt?: string; midias?: MidiaCms[]; itens?: ItemAcontecimento[] };
 type VersaoCms = { id: string; numero: number; idioma: IdiomaPublico; titulo: string; corpo: CorpoCms; criada_em: string; publicada: boolean; estado_revisao: EstadoRevisao; decisao_justificativa?: string | null };
 type PublicacaoCms = Partial<Record<IdiomaPublico, { versao_id: string; numero: number; titulo: string; corpo: CorpoCms; publicada_em: string }>>;
 type ConteudoCms = { id: string; chave: string; tipo: string; estado: 'rascunho' | 'publicado' | 'arquivado'; publicacoes: PublicacaoCms; versoes: VersaoCms[] };
@@ -47,10 +48,12 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
   const [midiaUrl, setMidiaUrl] = useState('');
   const [midiaTipo, setMidiaTipo] = useState<'imagem' | 'video'>('imagem');
   const [midiaAlt, setMidiaAlt] = useState('');
+  const [midias, setMidias] = useState<MidiaCms[]>([]);
   const [itens, setItens] = useState<ItemAcontecimento[]>(itensIniciais);
   const [justificativa, setJustificativa] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [enviandoMidia, setEnviandoMidia] = useState(false);
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
 
@@ -87,17 +90,38 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
     setSelecionadoId(item.id);
     setVersaoAtivaId(versao && 'id' in versao ? versao.id : '');
     setIdioma(codigo); setChave(item.chave); setTipo(item.tipo); setTitulo(versao?.titulo ?? ''); setTexto(corpo.texto ?? '');
-    setMidiaUrl(corpo.midia_url ?? ''); setMidiaTipo(corpo.midia_tipo ?? 'imagem'); setMidiaAlt(corpo.midia_alt ?? '');
+    setMidiaUrl(corpo.midia_url ?? ''); setMidiaTipo(corpo.midia_tipo ?? 'imagem'); setMidiaAlt(corpo.midia_alt ?? ''); setMidias(corpo.midias ?? []);
     setItens(corpo.itens?.length ? corpo.itens : itensIniciais); setJustificativa('');
   }
 
   function editar(item: ConteudoCms, codigo: IdiomaPublico = idiomaInicial) { carregarCampos(item, codigo); }
   function trocarIdioma(codigo: IdiomaPublico) { if (selecionado) carregarCampos(selecionado, codigo); else setIdioma(codigo); }
-  function novo() {
-    setSelecionadoId('novo'); setVersaoAtivaId(''); setIdioma(idiomaInicial); setChave(''); setTipo('secao'); setTitulo(''); setTexto(''); setMidiaUrl(''); setMidiaTipo('imagem'); setMidiaAlt(''); setItens(itensIniciais); setJustificativa('');
-  }
   function alterarItem(indice: number, campo: keyof ItemAcontecimento, valor: string) {
     setItens((atuais) => atuais.map((item, posicao) => posicao === indice ? { ...item, [campo]: valor } : item));
+  }
+
+  async function enviarMidia(arquivo?: File, adicionarAoCarrossel = false) {
+    if (!arquivo || !selecionado || !chave) return;
+    const ehImagem = arquivo.type.startsWith('image/');
+    const ehVideo = arquivo.type.startsWith('video/');
+    const limite = ehVideo ? 80 * 1024 * 1024 : 20 * 1024 * 1024;
+    if ((!ehImagem && !ehVideo) || arquivo.size > limite) {
+      setErro(ehImagem || ehVideo ? `O arquivo excede o limite de ${ehVideo ? 80 : 20} MB.` : 'Use uma imagem ou vídeo compatível.');
+      return;
+    }
+    setEnviandoMidia(true); setErro('');
+    const extensao = arquivo.name.split('.').pop()?.replace(/[^a-z0-9]/gi, '').toLowerCase() || (ehVideo ? 'mp4' : 'jpg');
+    const caminho = `${chave.replaceAll('.', '/')}/${idioma}/${crypto.randomUUID()}.${extensao}`;
+    const { error } = await cliente.storage.from('conteudo-publico').upload(caminho, arquivo, { contentType: arquivo.type, upsert: false });
+    if (error) setErro(error.message || 'Não foi possível enviar a mídia.');
+    else {
+      const { data } = cliente.storage.from('conteudo-publico').getPublicUrl(caminho);
+      const novaMidia: MidiaCms = { src: data.publicUrl, tipo: ehVideo ? 'video' : 'imagem', alt: midiaAlt.trim() || titulo.trim(), legenda: titulo.trim() };
+      if (adicionarAoCarrossel) setMidias((atuais) => [...atuais, novaMidia]);
+      else { setMidiaUrl(data.publicUrl); setMidiaTipo(novaMidia.tipo); }
+      setMensagem(adicionarAoCarrossel ? 'Mídia adicionada ao carrossel. Salve o rascunho.' : 'Mídia substituída. Salve o rascunho para vinculá-la a esta versão.');
+    }
+    setEnviandoMidia(false);
   }
 
   async function salvar(evento: React.FormEvent<HTMLFormElement>) {
@@ -108,6 +132,7 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
     setSalvando(true); setErro('');
     const corpo: CorpoCms = { texto: texto.trim() };
     if (midiaUrl.trim()) Object.assign(corpo, { midia_url: midiaUrl.trim(), midia_tipo: midiaTipo, midia_alt: midiaAlt.trim() || titulo.trim() });
+    if (chave === 'inicio.estrutura') corpo.midias = midias;
     if (ehAcontecimentos) corpo.itens = itens;
     const { data, error } = await cliente.rpc('salvar_versao_conteudo_demonstrativo', { chave_conteudo: chave.trim(), tipo_conteudo: tipo.trim(), idioma_conteudo: idioma, titulo_conteudo: titulo.trim(), corpo_conteudo: corpo });
     if (error || !data) setErro(error?.message || 'Não foi possível salvar a versão.');
@@ -136,13 +161,13 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
     <section className="bloco status-conteudo-publico">
       <header><div><h2>Conteúdo público</h2><p>Editor visual versionado para PT-BR, inglês e alemão.</p></div><FileCheck2 /></header>
       <div className="cards-operacionais cards-cms"><button type="button" onClick={() => setFiltro('todos')}><small>Conteúdos</small><strong>{conteudos.length}</strong><span>Ver inventário</span></button><button type="button" onClick={() => setFiltro('publicado')}><small>Publicados</small><strong>{publicadas}</strong><span>Filtrar publicados</span></button><button type="button" onClick={() => setFiltro('pendentes')}><small>Aguardando decisão</small><strong>{pendentes}</strong><span>Revisar pendências</span></button><button type="button" onClick={() => setFiltro('incompletos')}><small>3 idiomas publicados</small><strong>{completas}</strong><span>Localizar traduções pendentes</span></button></div>
-      <div className="fluxo-editorial-cms"><strong>Fluxo editorial</strong><span>Validador ou Administrador edita e envia</span><b>→</b><span>Administrador aprova ou devolve</span><b>→</b><span>Administrador publica</span></div>
+      <div className="fluxo-editorial-cms"><strong>Fluxo:</strong><span>Editar e enviar</span><b>→</b><span>Administrador aprova</span><b>→</b><span>Publicar</span></div>
     </section>
     <section className="bloco previa-site-cms">
       <header><div><h2>Prévia clicável da página inicial</h2><p>Selecione o idioma e clique diretamente na seção que deseja alterar. O bloco aberto mostra as mudanças enquanto você digita; o site público só muda depois da aprovação e publicação.</p></div><Eye /></header>
       <div className="idiomas-previa-cms" role="group" aria-label="Idioma da prévia">{idiomasPublicos.map((codigo) => <button type="button" className={codigo === idioma ? 'ativo' : ''} onClick={() => trocarIdioma(codigo)} key={codigo}>{rotulosIdiomaPublico[codigo]}</button>)}</div>
       <div className="moldura-site-cms">
-        <div className="barra-site-cms"><strong>Centro de Excelência em Metrologia</strong><span>Início · Serviços · Acontece no Centro · Equipamentos</span></div>
+        <div className="barra-site-cms"><strong>Centro de Excelência em Metrologia</strong><span>Início · Serviços · Novidades no Centro · Equipamentos</span></div>
         <div className="pagina-miniatura-cms">{secoesInicio.map((item) => {
           const publicada = item.publicacoes[idioma] ?? item.publicacoes['pt-BR'] ?? item.versoes.find((versao) => versao.idioma === idioma) ?? item.versoes[0];
           const estaEditando = item.id === selecionadoId;
@@ -160,7 +185,7 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
     </section>
     <section className="grade-cms">
       <div className="bloco lista-cms">
-        <header><div><h2>Prévia das páginas</h2><p>Clique no bloco que deseja editar.</p></div><button type="button" onClick={novo}><Plus size={16} /> Novo</button></header>
+        <header><div><h2>Inventário das seções</h2><p>Use esta lista apenas para localizar uma seção existente.</p></div></header>
         <BarraBuscaFiltros busca={busca} aoMudarBusca={setBusca} placeholder="Pesquisar página, seção ou título" total={visiveis.length} filtros={[{ id: 'estado-cms', rotulo: 'Situação', valor: filtro, aoMudar: setFiltro, opcoes: [{ valor: 'todos', rotulo: 'Todos' }, { valor: 'publicado', rotulo: 'Publicados' }, { valor: 'rascunho', rotulo: 'Rascunhos' }, { valor: 'pendentes', rotulo: 'Aguardando decisão' }, { valor: 'incompletos', rotulo: 'Traduções pendentes' }] }]} />
         {carregando ? <p className="estado-vazio">Carregando conteúdo…</p> : visiveis.length === 0 ? <p className="estado-vazio">Nenhum conteúdo corresponde aos filtros.</p> : <div className="paginas-previa-cms">{visiveis.map((item) => {
           const previa = item.publicacoes['pt-BR'] ?? item.versoes[0]; const src = urlMidiaSegura(previa?.corpo.midia_url ?? '');
@@ -174,13 +199,13 @@ export function ConteudoPublicoCms({ cliente, perfil }: { cliente: SupabaseClien
           <label>Idioma<select value={idioma} onChange={(evento) => trocarIdioma(evento.target.value as IdiomaPublico)}>{idiomasPublicos.map((codigo) => <option value={codigo} key={codigo}>{rotulosIdiomaPublico[codigo]}</option>)}</select></label>
           <label>Título<input required minLength={3} maxLength={180} value={titulo} onChange={(evento) => setTitulo(evento.target.value)} /></label>
           <label>Texto de apresentação<textarea required minLength={10} maxLength={5000} rows={5} value={texto} onChange={(evento) => setTexto(evento.target.value)} /></label>
-          <fieldset className="midia-editor-cms"><legend><ImageIcon size={16} /> Mídia desta versão</legend><div className="linha-editor-cms"><label>Tipo<select value={midiaTipo} onChange={(evento) => setMidiaTipo(evento.target.value as 'imagem' | 'video')}><option value="imagem">Imagem</option><option value="video">Vídeo</option></select></label><label>Endereço do arquivo<input placeholder="https://… ou /imagens/arquivo.jpg" value={midiaUrl} onChange={(evento) => setMidiaUrl(evento.target.value)} /></label></div><label>Descrição acessível<input maxLength={240} value={midiaAlt} onChange={(evento) => setMidiaAlt(evento.target.value)} /></label>{urlMidiaSegura(midiaUrl) && <div className="previa-midia-cms">{midiaTipo === 'video' ? <video controls src={urlMidiaSegura(midiaUrl)} /> : <Image src={urlMidiaSegura(midiaUrl)} alt={midiaAlt || titulo} width={720} height={400} unoptimized />}</div>}</fieldset>
+          <fieldset className="midia-editor-cms"><legend><ImageIcon size={16} /> Mídia desta versão</legend><label className="soltar-midia-cms" onDragOver={(evento) => evento.preventDefault()} onDrop={(evento) => { evento.preventDefault(); void enviarMidia(evento.dataTransfer.files[0]); }}><UploadCloud size={26} /><strong>{enviandoMidia ? 'Enviando arquivo…' : 'Arraste uma imagem ou vídeo para substituir a mídia atual'}</strong><span>ou clique para escolher · imagens até 20 MB · vídeos até 80 MB</span><input type="file" accept="image/*,video/mp4,video/webm" disabled={enviandoMidia} onChange={(evento) => void enviarMidia(evento.target.files?.[0])} /></label><label>Descrição acessível<input maxLength={240} value={midiaAlt} onChange={(evento) => setMidiaAlt(evento.target.value)} /></label>{urlMidiaSegura(midiaUrl) && <div className="previa-midia-cms">{midiaTipo === 'video' ? <video controls src={urlMidiaSegura(midiaUrl)} /> : <Image src={urlMidiaSegura(midiaUrl)} alt={midiaAlt || titulo} width={720} height={400} unoptimized />}</div>}{chave === 'inicio.estrutura' && <><label className="soltar-midia-cms adicionar-carrossel-cms" onDragOver={(evento) => evento.preventDefault()} onDrop={(evento) => { evento.preventDefault(); void enviarMidia(evento.dataTransfer.files[0], true); }}><Plus size={22} /><strong>Adicionar ao carrossel</strong><span>Arraste outro arquivo ou clique para escolher</span><input type="file" accept="image/*,video/mp4,video/webm" disabled={enviandoMidia} onChange={(evento) => void enviarMidia(evento.target.files?.[0], true)} /></label>{midias.length > 0 && <div className="midias-carrossel-cms">{midias.map((item, indice) => <article key={`${item.src}-${indice}`}><span>{item.tipo === 'video' ? 'Vídeo' : 'Imagem'} {indice + 1}</span><button type="button" onClick={() => setMidias((atuais) => atuais.filter((_, posicao) => posicao !== indice))}><Trash2 size={14} /> Remover</button></article>)}</div>}</>}</fieldset>
           {ehAcontecimentos && <fieldset className="editor-acontecimentos-cms"><legend>Acontecimentos exibidos na página inicial</legend>{itens.map((item, indice) => <article key={`${indice}-${item.tipo}`}><div className="linha-editor-cms"><label>Momento<select value={item.tipo} onChange={(evento) => alterarItem(indice, 'tipo', evento.target.value)}><option value="recente">Aconteceu</option><option value="agora">Está acontecendo</option><option value="proximo">Vai acontecer</option></select></label><label>Data ou período<input required value={item.data} onChange={(evento) => alterarItem(indice, 'data', evento.target.value)} /></label></div><label>Título<input required minLength={3} value={item.titulo} onChange={(evento) => alterarItem(indice, 'titulo', evento.target.value)} /></label><label>Resumo<textarea required minLength={10} rows={3} value={item.resumo} onChange={(evento) => alterarItem(indice, 'resumo', evento.target.value)} /></label>{itens.length > 1 && <button type="button" className="remover-item-cms" onClick={() => setItens((atuais) => atuais.filter((_, posicao) => posicao !== indice))}><Trash2 size={15} /> Remover</button>}</article>)}<button type="button" className="adicionar-item-cms" onClick={() => setItens((atuais) => [...atuais, { tipo: 'proximo', data: '', titulo: '', resumo: '' }])}><Plus size={15} /> Adicionar acontecimento</button></fieldset>}
           <div className="acoes-editor-cms"><button type="submit" disabled={salvando}><Save size={16} /> {salvando ? 'Salvando…' : 'Salvar rascunho'}</button>{versaoAtiva?.estado_revisao === 'rascunho' || versaoAtiva?.estado_revisao === 'devolvida' ? <button type="button" className="botao-enviar-cms" disabled={salvando} onClick={() => void executarAcao('enviar')}><Send size={16} /> Enviar para aprovação</button> : null}{perfil === 'administrador' && versaoAtiva?.estado_revisao === 'em_validacao' && <><button type="button" className="botao-publicar-cms" disabled={salvando} onClick={() => void executarAcao('aprovar')}><CheckCircle2 size={16} /> Aprovar</button><button type="button" className="botao-devolver-cms" disabled={salvando} onClick={() => void executarAcao('devolver')}><Undo2 size={16} /> Devolver</button></>}{perfil === 'administrador' && versaoAtiva?.estado_revisao === 'aprovada' && <button type="button" className="botao-publicar-cms" disabled={salvando} onClick={() => void executarAcao('publicar')}><CheckCircle2 size={16} /> Publicar no site</button>}<button type="button" className="botao-atualizar-cms" disabled={salvando} onClick={() => void carregar()}><RefreshCw size={16} /> Atualizar</button></div>
           {perfil === 'administrador' && versaoAtiva?.estado_revisao === 'em_validacao' && <label className="justificativa-cms">Motivo caso devolva<textarea minLength={5} maxLength={1000} rows={3} value={justificativa} onChange={(evento) => setJustificativa(evento.target.value)} placeholder="Explique ao editor o que deve ser ajustado." /></label>}
           {versaoAtiva && <div className={`estado-revisao-cms estado-revisao-${versaoAtiva.estado_revisao}`}><strong>{rotuloEstado(versaoAtiva.estado_revisao)}</strong>{versaoAtiva.decisao_justificativa && <span>Motivo: {versaoAtiva.decisao_justificativa}</span>}</div>}
-          {selecionado && <div className="historico-cms"><strong>Histórico versionado</strong>{selecionado.versoes.slice(0, 8).map((versao) => <button type="button" onClick={() => { setVersaoAtivaId(versao.id); setIdioma(versao.idioma); setTitulo(versao.titulo); setTexto(versao.corpo.texto ?? ''); setMidiaUrl(versao.corpo.midia_url ?? ''); setMidiaTipo(versao.corpo.midia_tipo ?? 'imagem'); setMidiaAlt(versao.corpo.midia_alt ?? ''); setItens(versao.corpo.itens?.length ? versao.corpo.itens : itensIniciais); }} key={versao.id}>v{versao.numero} · {rotulosIdiomaPublico[versao.idioma]} · {rotuloEstado(versao.estado_revisao)} · {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(versao.criada_em))}{versao.publicada ? ' · publicada' : ''}</button>)}</div>}
-        </div> : <p className="estado-vazio">Escolha uma prévia ao lado ou crie uma nova seção editável.</p>}
+          {selecionado && <div className="historico-cms"><strong>Histórico versionado</strong>{selecionado.versoes.slice(0, 8).map((versao) => <button type="button" onClick={() => { setVersaoAtivaId(versao.id); setIdioma(versao.idioma); setTitulo(versao.titulo); setTexto(versao.corpo.texto ?? ''); setMidiaUrl(versao.corpo.midia_url ?? ''); setMidiaTipo(versao.corpo.midia_tipo ?? 'imagem'); setMidiaAlt(versao.corpo.midia_alt ?? ''); setMidias(versao.corpo.midias ?? []); setItens(versao.corpo.itens?.length ? versao.corpo.itens : itensIniciais); }} key={versao.id}>v{versao.numero} · {rotulosIdiomaPublico[versao.idioma]} · {rotuloEstado(versao.estado_revisao)} · {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(versao.criada_em))}{versao.publicada ? ' · publicada' : ''}</button>)}</div>}
+        </div> : <p className="estado-vazio">Clique em uma seção da prévia para editá-la.</p>}
       </form>
     </section>
   </div>;

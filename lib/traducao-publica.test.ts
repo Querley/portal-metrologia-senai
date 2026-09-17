@@ -8,9 +8,16 @@ describe('tradução da experiência pública e Cliente', () => {
 
   it('traduz navegação, conteúdo e área do Cliente para inglês e alemão', () => {
     expect(traduzirTextoPublico('Solicitar orçamento', 'en')).toBe('Request a quote');
-    expect(traduzirTextoPublico('Acontece no Centro', 'de')).toBe('Aktuelles im Zentrum');
+    expect(traduzirTextoPublico('Novidades no Centro', 'de')).toBe('Neuigkeiten aus dem Zentrum');
     expect(traduzirTextoPublico('Trabalhos vinculados', 'en')).toBe('Linked work');
     expect(traduzirTextoPublico('Aguardando sua decisão', 'de')).toBe('Ihre Entscheidung steht aus');
+  });
+
+  it('traduz filtros, materiais, etapas e legendas que chegam dinamicamente do banco', () => {
+    expect(traduzirTextoPublico('Ordenar', 'de')).toBe('Sortieren');
+    expect(traduzirTextoPublico('Aço carbono', 'en')).toBe('Carbon steel');
+    expect(traduzirTextoPublico('Validação do relatório', 'de')).toBe('Berichtsvalidierung');
+    expect(traduzirTextoPublico('ZEISS ATOS Q no Centro', 'en')).toBe('ZEISS ATOS Q at the Center');
   });
 
   it('preserva conteúdo técnico sem tradução cadastrada', () => {

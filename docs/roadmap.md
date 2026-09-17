@@ -143,3 +143,7 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [~] localizar a navegação, páginas públicas, formulários e área do Cliente em PT-BR, inglês e alemão; a revisão linguística humana dos textos técnicos extensos permanece obrigatória antes da produção;
 - [x] oferecer prévia clicável da página inicial e edição localizada de título, texto e mídia nos três idiomas, sem incluir fichas técnicas imutáveis dos equipamentos;
 - [ ] ampliar futuramente o CMS visual para outras regiões mutáveis além da página inicial.
+- [x] substituir URL manual por upload protegido de mídia, impedir novas seções e permitir administrar o carrossel da estrutura por idioma;
+- [x] traduzir filtros compartilhados, etapas, materiais e legendas dinâmicas da experiência Cliente;
+- [ ] definir fonte, periodicidade e responsabilidade pela cotação congelada antes de exibir USD/EUR ou emitir PDFs localizados;
+- [ ] decidir se a homologação aceitará empresas estrangeiras sem CNPJ; até essa decisão, preservar o cadastro brasileiro obrigatório;

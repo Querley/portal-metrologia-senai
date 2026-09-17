@@ -45,7 +45,9 @@ export default function Home() {
   const midiaHero = urlMidiaSegura(hero?.corpo.midia_url) || '/videos/centro-metrologia-apresentacao.mp4';
   const tipoMidiaHero = hero?.corpo.midia_tipo ?? 'video';
   const midiaEstrutura = urlMidiaSegura(estrutura?.corpo.midia_url);
-  const galeriaEstrutura: MidiaEquipamento[] = midiaEstrutura ? [{ tipo: estrutura?.corpo.midia_tipo ?? 'imagem', src: midiaEstrutura, alt: estrutura?.corpo.midia_alt || estrutura?.titulo || t('Estrutura do Centro'), legenda: estrutura?.titulo || t('Estrutura do Centro') }, ...midiasLaboratorio.filter((item) => item.src !== midiaEstrutura)] : midiasLaboratorio;
+  const midiasCms = (estrutura?.corpo.midias ?? []).filter((item) => urlMidiaSegura(item.src));
+  const galeriaBase = midiasCms.length ? midiasCms : midiasLaboratorio;
+  const galeriaEstrutura: MidiaEquipamento[] = midiaEstrutura ? [{ tipo: estrutura?.corpo.midia_tipo ?? 'imagem', src: midiaEstrutura, alt: estrutura?.corpo.midia_alt || estrutura?.titulo || t('Estrutura do Centro'), legenda: estrutura?.titulo || t('Estrutura do Centro') }, ...galeriaBase.filter((item) => item.src !== midiaEstrutura)] : galeriaBase;
   return (
     <main>
       <header className="topo">

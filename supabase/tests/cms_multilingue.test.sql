@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(19);
 
 select is((select count(*) from listar_conteudos_publicados('pt-BR'))::integer,8,'CMS entrega cabeçalhos, acontecimentos e quatro seções editáveis da página inicial em português');
 select is((select idioma from listar_conteudos_publicados('de') where chave='catalogo.cabecalho'),'de','CMS entrega a publicação alemã solicitada');
@@ -24,21 +24,23 @@ insert into perfis(usuario_id,nome,perfil_interno,origem_ativa) values
 set local role authenticated;
 select set_config('request.jwt.claim.sub','d1000000-0000-0000-0000-000000000003',true);
 select lives_ok($$select listar_cms_demonstrativo()$$,'Validador visualiza o CMS');
-select lives_ok($$select salvar_versao_conteudo_demonstrativo('inicio.teste','secao','pt-BR','Conteúdo de teste','{"texto":"Texto público sintético criado para validar o CMS."}'::jsonb)$$,'Validador salva rascunho');
-select lives_ok($$select enviar_versao_conteudo_validacao_demonstrativa((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.teste' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Validador envia versão para validação');
-select throws_ok($$select publicar_versao_conteudo_demonstrativo((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.teste' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Somente Administrador pode publicar o Conteúdo Público.','Validador não publica');
+select lives_ok($$select salvar_versao_conteudo_demonstrativo('inicio.chamada','secao','pt-BR','Conteúdo de teste','{"texto":"Texto público sintético criado para validar o CMS."}'::jsonb)$$,'Validador salva rascunho em seção existente');
+select throws_ok($$select salvar_versao_conteudo_demonstrativo('inicio.teste','secao','pt-BR','Conteúdo de teste','{"texto":"Texto público sintético que não deve criar outra seção."}'::jsonb)$$,'Por enquanto, o CMS permite editar somente as seções existentes.','CMS não permite criar nova seção');
+select lives_ok($$select enviar_versao_conteudo_validacao_demonstrativa((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.chamada' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Validador envia versão para validação');
+select throws_ok($$select publicar_versao_conteudo_demonstrativo((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.chamada' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Somente Administrador pode publicar o Conteúdo Público.','Validador não publica');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','d1000000-0000-0000-0000-000000000001',true);
-select lives_ok($$select decidir_versao_conteudo_demonstrativa((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.teste' order by (versao->>'criada_em')::timestamptz desc limit 1),true,null)$$,'Administrador aprova versão do Validador');
-select is((select versao->>'estado_revisao' from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.teste' order by (versao->>'criada_em')::timestamptz desc limit 1),'aprovada','Decisão administrativa deixa a versão pronta para publicação');
-select lives_ok($$select publicar_versao_conteudo_demonstrativo((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.teste' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Administrador publica nova versão');
+select lives_ok($$select decidir_versao_conteudo_demonstrativa((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.chamada' order by (versao->>'criada_em')::timestamptz desc limit 1),true,null)$$,'Administrador aprova versão do Validador');
+select is((select versao->>'estado_revisao' from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.chamada' order by (versao->>'criada_em')::timestamptz desc limit 1),'aprovada','Decisão administrativa deixa a versão pronta para publicação');
+select lives_ok($$select publicar_versao_conteudo_demonstrativo((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.chamada' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Administrador publica nova versão');
 select ok(jsonb_array_length(listar_cms_demonstrativo()) >= 4,'Administrador recebe inventário e histórico do CMS');
 reset role;
 
-select is((select titulo from listar_conteudos_publicados('pt-BR') where chave='inicio.teste'),'Conteúdo de teste','Conteúdo recém-publicado fica disponível ao público');
+select is((select titulo from listar_conteudos_publicados('pt-BR') where chave='inicio.chamada'),'Conteúdo de teste','Conteúdo recém-publicado fica disponível ao público');
 select ok(exists(select 1 from auditoria where entidade='conteudo' and acao='publicar_versao'),'Publicação gera auditoria');
+select ok(exists(select 1 from storage.buckets where id='conteudo-publico' and public),'CMS possui bucket público próprio para mídia');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','d1000000-0000-0000-0000-000000000002',true);

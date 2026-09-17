@@ -603,6 +603,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
             aoMudarBusca={setBuscaTrabalho}
             placeholder={t('Pesquisar por protocolo, serviço, estado ou data')}
             total={solicitacoesVisiveis.length}
+            traduzir={t}
             ordenacao={{ valor: ordenacaoTrabalho, aoMudar: setOrdenacaoTrabalho, opcoes: [{ valor: 'recentes', rotulo: t('Mais novos primeiro') }, { valor: 'antigas', rotulo: t('Mais antigos primeiro') }, { valor: 'maior_valor', rotulo: t('Maior valor') }, { valor: 'servico', rotulo: t('Tipo de serviço') }] }}
             filtros={[
               {

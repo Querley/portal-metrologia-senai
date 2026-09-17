@@ -1,6 +1,6 @@
 # Registro de continuidade
 
-Atualizado em 15 de setembro de 2026.
+Atualizado em 17 de setembro de 2026.
 
 Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for interrompida por limite de uso, contexto, energia ou outro motivo. Antes de continuar um lote, conferir este registro, `docs/roadmap.md`, `docs/homologacao.md`, o estado da `main` e a execução mais recente do GitHub Actions.
 
@@ -85,3 +85,9 @@ Validado localmente: lint sem erros, 108 testes unitários e 26 E2E em Chromium 
 Auditoria corretiva implementada localmente: cobertura PT-BR/EN/DE de todos os textos estruturais, serviços, setores e conteúdo técnico dos seis equipamentos; acesso e recuperação localizados; notificações e validações do Cliente localizadas; quatro regiões da página inicial conectadas ao CMS; miniatura clicável com prévia do rascunho; fichas técnicas bloqueadas fora do escopo editorial. Migration nova: `202609150044_inicio_editavel_e_traducao_integral.sql`.
 
 Validação concluída: lint aprovado, 114 testes unitários aprovados, build aprovado e 26 E2E aprovados em Chromium desktop e Pixel 7. O GitHub Actions `35040382203` recriou o banco até `044` e aprovou 72 provas pgTAP. A migration está aplicada e reconciliada na homologação; o lint remoto não encontrou erros e preserva cinco avisos legados conhecidos. A fonte `2eb039d32a7d06e303515856ee1091631b365c3b` foi publicada como versão 44 no endereço oficial. Pendente apenas a homologação manual e a revisão linguística institucional; não repetir banco, testes ou publicação.
+
+## Ponto exato de retomada — lote 045
+
+Feedback visual de 16 de setembro implementado localmente: “Novidades no Centro”; filtros compartilhados traduzidos; etapas, materiais e legendas dinâmicas cobertos em inglês e alemão; formulário estrangeiro explica que CNPJ é cadastro brasileiro; CMS sem criação de seções, com miniatura principal, editor acima do inventário, fluxo compacto, upload por clique/arrastar e carrossel da estrutura administrável; lista de Clientes mais compacta. A migration `202609160045_cms_midia_e_secoes_fixas.sql` cria o bucket público de mídia com escrita restrita, bloqueia novas chaves editoriais e atualiza o título publicado nos três idiomas.
+
+Validação local concluída até aqui: lint aprovado, 115 testes unitários aprovados, build aprovado e 26 E2E aprovados em Chromium desktop e Pixel 7. Falta confirmar a migration e as 74 provas pgTAP no GitHub Actions, aplicar/reconciliar `045` na homologação e publicar. A exibição automática de propostas em USD/EUR e PDFs congelados por idioma não deve ser improvisada: depende da fonte e da política institucional de câmbio, pois as propostas atuais são emitidas e congeladas em BRL. O CNPJ continua obrigatório porque o requisito vigente atende empresas brasileiras; suporte a empresas estrangeiras requer nova regra de negócio.

@@ -8,7 +8,7 @@ describe('navegação pública', () => {
     expect(rotulos).toEqual([
       'Início',
       'Serviços',
-      'Acontece no Centro',
+      'Novidades no Centro',
       'Equipamentos',
       'Entrar',
       'Solicitar orçamento',

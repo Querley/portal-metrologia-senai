@@ -146,14 +146,14 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           </label>
           <label>
             {t('E-mail para o acesso Cliente')}
-            <input required name="email" type="email" autoComplete="email" maxLength={254} placeholder="nome@empresa.com.br" />
+            <input required name="email" type="email" autoComplete="email" maxLength={254} placeholder="name@company.com" />
           </label>
           <label>
             {t('Nome da empresa')}
             <input required name="empresa" autoComplete="organization" minLength={2} maxLength={180} />
           </label>
           <label>
-            CNPJ
+            {t('CNPJ (cadastro brasileiro)')}
             <input required name="cnpj" inputMode="numeric" autoComplete="off" minLength={18} maxLength={18} pattern="[0-9]{2}\.[0-9]{3}\.[0-9]{3}/[0-9]{4}-[0-9]{2}" title={t('Informe os 14 números do CNPJ no formato 00.000.000/0000-00.')} value={cnpj} onChange={(evento) => setCnpj(formatarCnpj(evento.target.value))} placeholder="00.000.000/0000-00" aria-invalid={cnpj.length === 18 && !cnpjValido(cnpj)} />
           </label>
           <label>
