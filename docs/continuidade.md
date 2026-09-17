@@ -6,12 +6,12 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 
 ## Último estado confirmado
 
-- fonte publicada: `2eb039d32a7d06e303515856ee1091631b365c3b`;
-- versão pública atual: 44, publicação concluída com sucesso;
+- fonte publicada: `aca0affd44728b8c371d688f4021a46a0e446ac5`;
+- versão pública atual: 46, publicação concluída com sucesso;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
-- migration mais recente: `202609150044_inicio_editavel_e_traducao_integral.sql`, aplicada e reconciliada na homologação;
-- GitHub Actions `35040382203`: verificação, E2E e banco/RLS concluídos com sucesso na fonte publicada;
-- último resultado confirmado: lint aprovado, 114 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `044` e aprovou 72 provas pgTAP;
+- migration mais recente na fonte: `202609160045_cms_midia_e_secoes_fixas.sql`; validada do zero no Actions, mas ainda pendente de aplicação e reconciliação na homologação porque o pooler remoto esgotou oito retentativas;
+- GitHub Actions `35240877511`: verificação, E2E e banco/RLS concluídos com sucesso para o lote funcional `045`;
+- último resultado confirmado: lint aprovado, 115 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `045` e aprovou 74 provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
 
 ## Lote concluído em 14 de setembro
@@ -90,4 +90,4 @@ Validação concluída: lint aprovado, 114 testes unitários aprovados, build ap
 
 Feedback visual de 16 de setembro implementado localmente: “Novidades no Centro”; filtros compartilhados traduzidos; etapas, materiais e legendas dinâmicas cobertos em inglês e alemão; formulário estrangeiro explica que CNPJ é cadastro brasileiro; CMS sem criação de seções, com miniatura principal, editor acima do inventário, fluxo compacto, upload por clique/arrastar e carrossel da estrutura administrável; lista de Clientes mais compacta. A migration `202609160045_cms_midia_e_secoes_fixas.sql` cria o bucket público de mídia com escrita restrita, bloqueia novas chaves editoriais e atualiza o título publicado nos três idiomas.
 
-Validação local concluída até aqui: lint aprovado, 115 testes unitários aprovados, build aprovado e 26 E2E aprovados em Chromium desktop e Pixel 7. Falta confirmar a migration e as 74 provas pgTAP no GitHub Actions, aplicar/reconciliar `045` na homologação e publicar. A exibição automática de propostas em USD/EUR e PDFs congelados por idioma não deve ser improvisada: depende da fonte e da política institucional de câmbio, pois as propostas atuais são emitidas e congeladas em BRL. O CNPJ continua obrigatório porque o requisito vigente atende empresas brasileiras; suporte a empresas estrangeiras requer nova regra de negócio.
+Validação concluída: lint aprovado, 115 testes unitários, build, 26 E2E em Chromium desktop e Pixel 7 e 74 provas pgTAP no Actions `35240877511`, incluindo recriação integral até `045`. A versão 46 foi publicada na fonte `aca0affd44728b8c371d688f4021a46a0e446ac5`, preservando o analytics PostHog existente no repositório de hospedagem. Pendente: aplicar e registrar `045` na homologação pelo SQL Editor ou após restabelecimento do pooler; até isso ocorrer, o upload do CMS não funciona no ambiente remoto. A exibição automática de propostas em USD/EUR e PDFs congelados por idioma não deve ser improvisada: depende da fonte e da política institucional de câmbio, pois as propostas atuais são emitidas e congeladas em BRL. O CNPJ continua obrigatório porque o requisito vigente atende empresas brasileiras; suporte a empresas estrangeiras requer nova regra de negócio. A coleta PostHog deve passar por revisão institucional de privacidade/consentimento antes da produção real.
