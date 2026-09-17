@@ -14,6 +14,7 @@ import { SeletorIdioma } from '../componentes/seletor-idioma';
 import { SecaoAcontecimentos } from '../componentes/secao-acontecimentos';
 import { useTraducaoPublica } from '../lib/traducao-publica';
 import { useConteudosPublicados } from '../componentes/conteudos-publicados';
+import { capturarEventoPostHog } from '../componentes/posthog-analytics';
 import './publico.css';
 
 const midiasLaboratorio = [
@@ -66,8 +67,8 @@ export default function Home() {
           <h1>{tituloHeroPrincipal}{tituloHeroDestaque && <><br /><em>{tituloHeroDestaque}</em></>}</h1>
           <p className="hero-texto">{hero?.corpo.texto ?? t('Serviços de metrologia avançada com propostas transparentes, acompanhamento digital e conhecimento acumulado a cada projeto.')}</p>
           <div className="hero-acoes">
-            <a className="botao" href="/solicitar">{t('Solicitar orçamento')} <span aria-hidden="true">→</span></a>
-            <a className="link-seta" href="#servicos">{t('Conhecer serviços')} <span aria-hidden="true">↘</span></a>
+            <a className="botao" href="/solicitar" onClick={() => capturarEventoPostHog('orcamento_iniciado', { local: 'hero' })}>{t('Solicitar orçamento')} <span aria-hidden="true">→</span></a>
+            <a className="link-seta" href="#servicos" onClick={() => capturarEventoPostHog('servicos_visualizados', { local: 'hero' })}>{t('Conhecer serviços')} <span aria-hidden="true">↘</span></a>
           </div>
           <div className="selos" aria-label="Diferenciais">
             <span><b>6</b> {t('equipamentos disponíveis')}</span><span><b>3</b> {t('idiomas disponíveis')}</span><span><b>100%</b> {t('acompanhamento digital')}</span>
@@ -93,7 +94,7 @@ export default function Home() {
       <SecaoAcontecimentos />
 
       <section className="chamada" id="solicitar">
-        <p className="sobrelinha"><span /> {t('COMECE AGORA')}</p><h2>{chamada?.titulo ?? t('Tem um desafio de medição?')}</h2><p>{chamada?.corpo.texto ?? t('Conte o que você precisa. Nossa equipe analisa os dados e prepara uma proposta sob medida.')}</p><a className="botao" href="/solicitar">{t('Solicitar orçamento')} <span aria-hidden="true">→</span></a>
+        <p className="sobrelinha"><span /> {t('COMECE AGORA')}</p><h2>{chamada?.titulo ?? t('Tem um desafio de medição?')}</h2><p>{chamada?.corpo.texto ?? t('Conte o que você precisa. Nossa equipe analisa os dados e prepara uma proposta sob medida.')}</p><a className="botao" href="/solicitar" onClick={() => capturarEventoPostHog('orcamento_iniciado', { local: 'chamada_final' })}>{t('Solicitar orçamento')} <span aria-hidden="true">→</span></a>
       </section>
       <div id="contato"><ContatoEmail /></div>
       <RodapePublico />
