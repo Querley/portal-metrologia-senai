@@ -9,7 +9,7 @@ Este arquivo é o ponto de retomada do desenvolvimento quando uma execução for
 - fonte publicada: `aca0affd44728b8c371d688f4021a46a0e446ac5`;
 - versão pública atual: 46, publicação concluída com sucesso;
 - endereço público: `https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site`;
-- migration `202609160045_cms_midia_e_secoes_fixas.sql` confirmada na homologação pelo SQL Editor; migration mais recente na fonte: `202609210046_carrosseis_editoriais.sql`, ainda sujeita à validação do Actions e aplicação remota;
+- migrations até `202609210046_carrosseis_editoriais.sql` confirmadas na homologação; a `046` foi validada do zero no Actions e sua leitura remota confirmou quatro setores e três novidades com mídia em PT-BR, inglês e alemão;
 - GitHub Actions `35240877511`: verificação, E2E e banco/RLS concluídos com sucesso para o lote funcional `045`;
 - último resultado confirmado: lint aprovado, 115 testes unitários aprovados, build aprovado e 26 testes E2E aprovados em desktop e Pixel 7; o GitHub também recriou o banco do zero, reaplicou as migrations até `045` e aprovou 74 provas pgTAP;
 - `docs/atividade-aula-07.md` é um arquivo local do mantenedor, não versionado e não deve ser alterado ou incluído em commits sem pedido explícito.
@@ -95,3 +95,5 @@ Validação concluída: lint aprovado, 115 testes unitários, build, 26 E2E em C
 ## Ponto exato de retomada — lote 046
 
 Feedback do relatório de testes incorporado: PDFs e imagens protegidos passam a abrir em um visualizador interno com opção secundária de download; progresso de etapa usa controle arrastável e só persiste após “Salvar progresso”; formulário alemão recebeu serviços, exemplo de e-mail e orientação de data localizados; singular de resultados foi coberto; Conhecimento ganhou comparação estimado/realizado em barras e filtro explícito de serviços sem lição; ações de Clientes no perfil administrativo não extrapolam o contêiner. O CMS passa a editar carrosséis com legenda e texto alternativo para os quatro setores e para cada item de “Novidades no Centro”, preservando versões e proporção visual. A migration `202609210046_carrosseis_editoriais.sql` cria a seção `inicio.setores`, publica sementes nos três idiomas, acrescenta mídia às novidades sem reescrever versões anteriores e valida a estrutura editorial no banco. PostHog removido da aplicação. O arquivo pessoal `docs/atividade-aula-07.md` continua fora do Git.
+
+Concluído em 21 de setembro: commit `98b9c55`, Actions `35666547303` totalmente verde, 117 testes unitários, 28 E2E em Chromium desktop/Pixel 7, build e provas de banco/RLS aprovados. A fonte foi publicada no Sites como versão 47. A `046` foi executada pelo SQL Editor com sucesso e conferida pela API remota: cada idioma retorna quatro setores, quatro mídias setoriais e três novidades com mídia.
