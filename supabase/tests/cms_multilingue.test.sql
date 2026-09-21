@@ -1,12 +1,15 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(23);
 
-select is((select count(*) from listar_conteudos_publicados('pt-BR'))::integer,8,'CMS entrega cabeçalhos, acontecimentos e quatro seções editáveis da página inicial em português');
+select is((select count(*) from listar_conteudos_publicados('pt-BR'))::integer,9,'CMS entrega cabeçalhos, acontecimentos, setores e quatro seções editáveis da página inicial em português');
 select is((select idioma from listar_conteudos_publicados('de') where chave='catalogo.cabecalho'),'de','CMS entrega a publicação alemã solicitada');
 select is((select titulo from listar_conteudos_publicados('en') where chave='solicitar.cabecalho'),'Request an analysis without creating an account','CMS entrega o título inglês publicado');
 select is((select titulo from listar_conteudos_publicados('de') where chave='inicio.hero'),'Präzision zum Messen. Intelligenz zur Weiterentwicklung.','CMS entrega a página inicial em alemão');
+select is((select titulo from listar_conteudos_publicados('de') where chave='inicio.setores'),'Lösungen nach Branchen','CMS entrega a seção alemã de setores');
+select is((select jsonb_array_length(corpo->'setores') from listar_conteudos_publicados('pt-BR') where chave='inicio.setores'),4,'CMS publica os quatro setores');
+select ok(not exists(select 1 from listar_conteudos_publicados('pt-BR') publicado cross join lateral jsonb_array_elements(publicado.corpo->'setores') setor where publicado.chave='inicio.setores' and jsonb_array_length(setor->'midias')=0),'Todo setor publicado possui mídia');
 select is((select count(*) from conteudos where chave like 'equipamentos.%')::integer,0,'Páginas técnicas de equipamentos permanecem fora do CMS');
 
 delete from publicacoes_conteudo where conteudo_id=(select id from conteudos where chave='privacidade.cabecalho') and idioma='de';
@@ -36,6 +39,7 @@ select lives_ok($$select decidir_versao_conteudo_demonstrativa((select (versao->
 select is((select versao->>'estado_revisao' from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.chamada' order by (versao->>'criada_em')::timestamptz desc limit 1),'aprovada','Decisão administrativa deixa a versão pronta para publicação');
 select lives_ok($$select publicar_versao_conteudo_demonstrativo((select (versao->>'id')::uuid from jsonb_array_elements(listar_cms_demonstrativo()) conteudo cross join lateral jsonb_array_elements(conteudo->'versoes') versao where conteudo->>'chave'='inicio.chamada' order by (versao->>'criada_em')::timestamptz desc limit 1))$$,'Administrador publica nova versão');
 select ok(jsonb_array_length(listar_cms_demonstrativo()) >= 4,'Administrador recebe inventário e histórico do CMS');
+select throws_ok($$select salvar_versao_conteudo_demonstrativo('inicio.setores','setores','pt-BR','Setores incompletos','{"texto":"Conteúdo propositalmente inválido para o teste.","setores":[]}'::jsonb)$$,'A seção de setores deve conter exatamente os quatro setores editoriais.','Banco rejeita estrutura editorial incompleta');
 reset role;
 
 select is((select titulo from listar_conteudos_publicados('pt-BR') where chave='inicio.chamada'),'Conteúdo de teste','Conteúdo recém-publicado fica disponível ao público');

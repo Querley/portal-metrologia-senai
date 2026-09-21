@@ -12,7 +12,7 @@ import { useTraducaoPublica } from '../lib/traducao-publica';
 const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'application/octet-stream'];
 
 export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?: string }) {
-  const { t, tm } = useTraducaoPublica();
+  const { idioma, t, tm } = useTraducaoPublica();
   const cliente = obterClienteSupabase();
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [erro, setErro] = useState('');
@@ -146,7 +146,7 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           </label>
           <label>
             {t('E-mail para o acesso Cliente')}
-            <input required name="email" type="email" autoComplete="email" maxLength={254} placeholder="name@company.com" />
+            <input required name="email" type="email" autoComplete="email" maxLength={254} placeholder={t('nome@empresa.com.br')} />
           </label>
           <label>
             {t('Nome da empresa')}
@@ -236,7 +236,8 @@ export function FormularioSolicitacao({ servicoInicial = '' }: { servicoInicial?
           </label>
           <label>
             {t('Prazo desejado para o serviço')}
-            <input required name="prazo" type="date" min={new Date().toISOString().slice(0, 10)} />
+            <input required name="prazo" type="date" lang={idioma === 'en' ? 'en-US' : idioma === 'de' ? 'de-DE' : 'pt-BR'} min={new Date().toISOString().slice(0, 10)} title={t('Formato da data: dd/mm/aaaa')} />
+            <small className="ajuda-formato-data">{t('Formato da data: dd/mm/aaaa')}</small>
           </label>
           <label className="campo-largo">
             {t('Descreva o desafio')}

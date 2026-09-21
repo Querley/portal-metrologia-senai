@@ -14,6 +14,8 @@ export type ConteudoPublicado = {
     midia_tipo?: 'imagem' | 'video';
     midia_alt?: string;
     midias?: Array<{ src: string; tipo: 'imagem' | 'video'; alt: string; legenda: string }>;
+    setores?: Array<{ slug: string; midias: Array<{ src: string; tipo: 'imagem' | 'video'; alt: string; legenda: string }> }>;
+    itens?: Array<{ tipo: 'recente' | 'agora' | 'proximo'; data: string; titulo: string; resumo: string; midias?: Array<{ src: string; tipo: 'imagem' | 'video'; alt: string; legenda: string }> }>;
   };
   usou_fallback: boolean;
 };

@@ -146,4 +146,6 @@ Próxima ampliação do conhecimento: importação validada e segregada de hist�
 - [x] substituir URL manual por upload protegido de mídia, impedir novas seções e permitir administrar o carrossel da estrutura por idioma;
 - [x] traduzir filtros compartilhados, etapas, materiais e legendas dinâmicas da experiência Cliente;
 - [ ] definir fonte, periodicidade e responsabilidade pela cotação congelada antes de exibir USD/EUR ou emitir PDFs localizados;
+- [x] incorporar o feedback de homologação do lote 046: visualizador protegido de PDF/imagem, progresso arrastável com salvamento explícito, ajustes alemães, singular de resultados, Conhecimento visual e carrosséis editoriais por setor e novidade;
+- [x] remover integralmente o PostHog, usado somente em atividade acadêmica;
 - [ ] decidir se a homologação aceitará empresas estrangeiras sem CNPJ; até essa decisão, preservar o cadastro brasileiro obrigatório;

@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Activity, BookOpenCheck, CheckCircle2, Gauge, RefreshCw, Save, ShieldCheck, Sparkles } from 'lucide-react';
+import { Activity, BookOpenCheck, BookX, CheckCircle2, Gauge, RefreshCw, Save, ShieldCheck, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import { correspondeBusca, formatosDataParaBusca } from '../lib/busca-e-filtros';
@@ -23,12 +23,16 @@ type InteligenciaOperacional = {
 
 function Metrica({ titulo, estimado, realizado, desvio, assertivo, moeda = false }: { titulo: string; estimado: number | string | null; realizado: number | string | null; desvio: number | string | null; assertivo: boolean | null; moeda?: boolean }) {
   const formatar = (valor: number | string | null) => (valor === null ? '—' : moeda ? formatarDinheiro(valor) : formatarHoras(valor));
+  const estimadoNumero = estimado === null ? 0 : Number(estimado);
+  const realizadoNumero = realizado === null ? 0 : Number(realizado);
+  const maximo = Math.max(estimadoNumero, realizadoNumero, 0.01);
   return (
     <div className="metrica-comparada">
       <small>{titulo}</small>
-      <strong>
-        {formatar(estimado)} → {formatar(realizado)}
-      </strong>
+      <div className="barras-metrica-comparada" aria-label={`${titulo}: estimado ${formatar(estimado)}, realizado ${formatar(realizado)}`}>
+        <span><b>Estimado</b><i><em style={{ width: `${Math.max(estimadoNumero > 0 ? 7 : 0, estimadoNumero / maximo * 100)}%` }} /></i><strong>{formatar(estimado)}</strong></span>
+        <span><b>Realizado</b><i><em style={{ width: `${Math.max(realizadoNumero > 0 ? 7 : 0, realizadoNumero / maximo * 100)}%` }} /></i><strong>{formatar(realizado)}</strong></span>
+      </div>
       <span className={assertivo === false ? 'fora-faixa' : 'dentro-faixa'}>
         {formatarDesvio(desvio)}
         {assertivo === null ? '' : assertivo ? ' · dentro de ±15%' : ' · fora de ±15%'}
@@ -82,12 +86,13 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
   }, [carregar]);
 
   const formalizadas = indicadores.filter((item) => item.licao_estado === 'formalizada').length;
+  const semLicao = indicadores.filter((item) => !item.licao_estado).length;
   const assertivas = indicadores.filter((item) => item.esforco_assertivo === true).length;
   const percentualAssertivo = indicadores.length ? Math.round((assertivas / indicadores.length) * 100) : 0;
   const servicos = useMemo(() => [...new Map(indicadores.map((item) => [item.servico_id, item.servico_slug])).entries()], [indicadores]);
   const indicadoresVisiveis = useMemo(() => indicadores.filter((item) => correspondeBusca(busca, item.solicitacao_codigo, item.empresa_nome, item.servico_slug, item.licao_resumo, item.licao_assuntos, formatosDataParaBusca(item.concluida_em)) && (filtroLicao === 'todos' || (filtroLicao === 'sem_licao' ? !item.licao_estado : item.licao_estado === filtroLicao)) && (filtroAssertividade === 'todos' || (filtroAssertividade === 'assertivo' ? item.esforco_assertivo === true : item.esforco_assertivo === false))).sort((a,b) => ordenacao === 'antigas' ? +new Date(a.concluida_em) - +new Date(b.concluida_em) : ordenacao === 'desvio' ? Math.abs(Number(b.desvio_esforco || 0)) - Math.abs(Number(a.desvio_esforco || 0)) : ordenacao === 'empresa' ? a.empresa_nome.localeCompare(b.empresa_nome, 'pt-BR') : +new Date(b.concluida_em) - +new Date(a.concluida_em)), [busca, filtroAssertividade, filtroLicao, indicadores, ordenacao]);
 
-  function abrirIndicadores(filtro: 'formalizada' | 'em_validacao' | 'assertivo' | 'todos') {
+  function abrirIndicadores(filtro: 'formalizada' | 'em_validacao' | 'sem_licao' | 'assertivo' | 'todos') {
     if (filtro === 'assertivo') {
       setFiltroAssertividade('assertivo');
       setFiltroLicao('todos');
@@ -195,6 +200,14 @@ export function ConhecimentoPersistente({ cliente, perfil, filtroInicial = '' }:
           <small>Execuções comparadas</small>
           <strong>{indicadores.length}</strong>
           <p>somente concluídas e demonstrativas</p>
+        </button>
+        <button type="button" onClick={() => abrirIndicadores('sem_licao')}>
+          <span className="icone-kpi ouro">
+            <BookX />
+          </span>
+          <small>Serviços sem lição</small>
+          <strong>{semLicao}</strong>
+          <p>filtrar casos que ainda precisam de aprendizado</p>
         </button>
       </section>
       <section className="bloco guia-conhecimento">

@@ -7,7 +7,7 @@
 2. Permitir solicitação personalizada quando a necessidade não estiver classificada no catálogo, sem obrigar o cliente a escolher uma categoria incorreta.
 3. Manter conteúdo estruturado com rascunho, prévia, publicação, arquivo, histórico e restauração.
 4. Permitir cadastro verificado, vínculo aprovado com empresa e múltiplos contatos convidados.
-5. Receber respostas configuráveis e até cinco arquivos por solicitação: PDF/imagem até 10 MB; CAD até 50 MB; armazenamento privado e somente download.
+5. Receber respostas configuráveis e até cinco arquivos por solicitação: PDF/imagem até 10 MB; CAD até 50 MB; armazenamento privado, visualização interna de PDF/imagem e download explícito.
 6. Criar propostas com vários itens, versões e PDF imutável; aceitar/recusar a versão inteira e solicitar revisão.
 7. Registrar aceite autenticado da pré-proposta com pessoa, empresa, versão do texto e data; em produção, capturar também o endereço de rede por endpoint protegido e juridicamente aprovado.
 8. Registrar execução, fechamento, realizado, causas, retrabalho, mudança de escopo e lição.
@@ -68,13 +68,13 @@ Devem falhar com segurança: exclusão de dado real por reset, acesso entre empr
 - Enquanto o papel de Consulta não possuir um módulo útil aprovado, a administração oferece somente Técnico, Validador e Administrador.
 - Cargo ou função profissional do Cliente é texto cadastral editável e não concede permissão. Papel externo e perfil interno permanecem mutuamente exclusivos.
 - Trabalho não concluído pode retornar a uma etapa anterior com motivo de 10 a 1.000 caracteres; etapas posteriores são reiniciadas e a operação é auditada. Fechamento em validação deve ser resolvido antes do retorno.
-- A barra da etapa permite atualização direta por clique, preservando sequência, autorização e estados coerentes de progresso.
+- A barra da etapa permite selecionar o progresso por clique ou arraste; a alteração só é persistida após “Salvar progresso”, preservando sequência, autorização e estados coerentes.
 - Campos usam restrições compatíveis com o dado esperado e apresentam motivo legível quando a validação do navegador falha; o servidor e o banco continuam como autoridade.
 
 ## Revisão editorial de 15 de setembro de 2026
 
 - A área interna permanece em português; área pública e área do Cliente reagem a PT-BR, inglês e alemão na mesma rota e conservam a preferência.
 - Validador e Administrador podem criar rascunhos editoriais. Toda versão precisa ser enviada; somente Administrador aprova, devolve com justificativa e publica.
-- Imagens e vídeos da página inicial podem variar por idioma. URLs aceitas são caminhos públicos do portal ou HTTPS; fichas descritivas de equipamento não pertencem ao escopo editável do CMS.
+- Imagens e vídeos da página inicial podem variar por idioma. URLs aceitas são caminhos públicos do portal ou HTTPS; os quatro setores e cada novidade admitem carrossel próprio com proporção estável, legenda e descrição acessível obrigatórias; fichas descritivas de equipamento não pertencem ao escopo editável do CMS.
 - A página inicial exibe acontecimentos passados, atuais e futuros definidos pelo fluxo editorial.
 - Uma versão de pré-proposta aparece uma única vez na fila, mesmo quando usa vários equipamentos; cada uso ocupa sua própria linha nas colunas de equipamento, horas e custo congelado.

@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Activity, Ban, BriefcaseBusiness, Check, CheckCircle2, Circle, Clock3, Download, FileText, LogOut, MessageSquareText, Paperclip, Pencil, Plus, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Activity, Ban, BriefcaseBusiness, Check, CheckCircle2, Circle, Clock3, Download, Eye, FileText, LogOut, MessageSquareText, Paperclip, Pencil, Plus, RefreshCw, Save, Send, ShieldCheck, UserRound, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { AnexoSolicitacaoCliente } from '../lib/anexos-solicitacao';
 import { correspondeBusca, formatosDataParaBusca } from '../lib/busca-e-filtros';
@@ -17,6 +17,7 @@ import { caminhoAnexoMensagem, validarAnexosMensagem, type AnexoMensagem } from 
 import { tipoMimeArmazenado } from '../lib/anexos-solicitacao';
 import { SeletorIdioma } from './seletor-idioma';
 import { useTraducaoPublica } from '../lib/traducao-publica';
+import { documentoPodeSerVisualizado, VisualizadorDocumento, type DocumentoVisualizavel } from './visualizador-documento';
 
 type Propriedades = {
   cliente?: SupabaseClient;
@@ -73,6 +74,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
   const [baixandoAnexoId, setBaixandoAnexoId] = useState('');
   const [arquivosMensagem, setArquivosMensagem] = useState<File[]>([]);
   const [naoLidas, setNaoLidas] = useState<Record<string, number>>({});
+  const [documento, setDocumento] = useState<DocumentoVisualizavel | null>(null);
   const hidratado = useSyncExternalStore(
     () => () => undefined,
     () => true,
@@ -242,7 +244,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setErro('');
     const { data, error } = await cliente.storage.from('solicitacoes').download(anexo.caminho_storage);
     if (error || !data) setErro(t('Não foi possível baixar este anexo protegido.'));
-    else {
+    else if (documentoPodeSerVisualizado(anexo.tipo_mime, anexo.nome_original)) {
+      const url = URL.createObjectURL(data);
+      setDocumento({ url, nome: anexo.nome_original, tipo: anexo.tipo_mime });
+    } else {
       const url = URL.createObjectURL(data);
       const ancora = document.createElement('a');
       ancora.href = url;
@@ -316,7 +321,10 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
     setBaixandoAnexoId(anexo.id);
     const { data, error } = await cliente.storage.from('mensagens').download(anexo.caminho_storage);
     if (error || !data) setErro(t('Não foi possível baixar o anexo protegido.'));
-    else {
+    else if (documentoPodeSerVisualizado(anexo.tipo_mime, anexo.nome_original)) {
+      const url = URL.createObjectURL(data);
+      setDocumento({ url, nome: anexo.nome_original, tipo: anexo.tipo_mime });
+    } else {
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = url;
@@ -405,12 +413,9 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
         setBaixandoPdf(false);
         return;
       }
+      const nome = `pre-proposta-SOL-${String(selecionada.codigo).padStart(4, '0')}.pdf`;
       const url = URL.createObjectURL(data);
-      const ancora = document.createElement('a');
-      ancora.href = url;
-      ancora.download = `pre-proposta-SOL-${String(selecionada.codigo).padStart(4, '0')}.pdf`;
-      ancora.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      setDocumento({ url, nome, tipo: 'application/pdf' });
       setAviso(`${t('PDF verificado:')} ${referencia.hash_sha256.slice(0, 12)}…`);
     }
     setBaixandoPdf(false);
@@ -690,7 +695,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                   <span>{selecionada.valor_pre_proposta === null ? t('Será exibida após análise e publicação pela equipe.') : selecionada.prazo_pagamento_dias ? `${t('Pagamento desejado:')} ${selecionada.prazo_pagamento_dias} ${t('dias')}` : t('Condição em análise')}</span>
                   {selecionada.valor_pre_proposta !== null && (
                     <button className="baixar-pdf-cliente" type="button" onClick={() => void baixarPdfPreProposta()} disabled={baixandoPdf}>
-                      <Download size={15} /> {baixandoPdf ? t('Baixando…') : t('Baixar PDF emitido')}
+                      <Eye size={15} /> {baixandoPdf ? t('Carregando…') : t('Visualizar PDF emitido')}
                     </button>
                   )}
                   {podeAceitarPreProposta(selecionada.proposta_estado) && (
@@ -781,7 +786,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
                           </small>
                         </span>
                         <button type="button" onClick={() => void baixarAnexo(anexo)} disabled={baixandoAnexoId === anexo.id}>
-                          <Download size={15} /> {baixandoAnexoId === anexo.id ? t('Baixando…') : t('Baixar')}
+                          {documentoPodeSerVisualizado(anexo.tipo_mime, anexo.nome_original) ? <Eye size={15} /> : <Download size={15} />} {baixandoAnexoId === anexo.id ? t('Carregando…') : documentoPodeSerVisualizado(anexo.tipo_mime, anexo.nome_original) ? t('Visualizar') : t('Baixar')}
                         </button>
                       </li>
                     ))}
@@ -873,6 +878,7 @@ export function PortalCliente({ cliente, contexto = contextoClienteDemonstracao,
       </div>
 
       {criandoSolicitacao && <NovaSolicitacaoCliente cliente={cliente} demonstracao={demonstracao} empresaNome={contexto.empresa_nome} aoFechar={() => setCriandoSolicitacao(false)} aoCriada={registrarNovaSolicitacao} />}
+      {documento && <VisualizadorDocumento documento={documento} aoFechar={() => { URL.revokeObjectURL(documento.url); setDocumento(null); }} />}
 
       {!aceitouPrivacidade && (
         <div className="fundo-modal-privacidade" role="presentation">

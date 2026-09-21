@@ -35,7 +35,7 @@ type Propriedades = {
 };
 
 export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaNome, aoFechar, aoCriada }: Propriedades) {
-  const { t, tm } = useTraducaoPublica();
+  const { idioma, t, tm } = useTraducaoPublica();
   const [necessidade, setNecessidade] = useState('');
   const [prazoPagamento, setPrazoPagamento] = useState('30');
   const [enviando, setEnviando] = useState(false);
@@ -285,7 +285,8 @@ export function NovaSolicitacaoCliente({ cliente, demonstracao = false, empresaN
             </label>
             <label>
                {t('Prazo desejado para o serviço')}
-              <input required name="prazo" type="date" min={new Date().toISOString().slice(0, 10)} />
+              <input required name="prazo" type="date" lang={idioma === 'en' ? 'en-US' : idioma === 'de' ? 'de-DE' : 'pt-BR'} min={new Date().toISOString().slice(0, 10)} title={t('Formato da data: dd/mm/aaaa')} />
+              <small className="ajuda-formato-data">{t('Formato da data: dd/mm/aaaa')}</small>
             </label>
             <label>
                {t('Prazo de pagamento desejado')}

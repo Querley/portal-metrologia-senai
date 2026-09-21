@@ -11,6 +11,7 @@ import { BarraBuscaFiltros } from './barra-busca-filtros';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { caminhoAnexoMensagem, validarAnexosMensagem, type AnexoMensagem } from '../lib/anexos-mensagem';
 import { tipoMimeArmazenado } from '../lib/anexos-solicitacao';
+import { documentoPodeSerVisualizado, VisualizadorDocumento, type DocumentoVisualizavel } from './visualizador-documento';
 
 function dataHora(valor: string): string {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(valor));
@@ -28,6 +29,7 @@ export function MensagensPersistentes({ cliente, perfil }: { cliente: SupabaseCl
   const [filtroConversa, setFiltroConversa] = useState('todos');
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [baixando, setBaixando] = useState('');
+  const [documento, setDocumento] = useState<DocumentoVisualizavel | null>(null);
 
   const carregar = useCallback(async () => {
     if (!podeAcessarConversas(perfil)) {
@@ -118,7 +120,7 @@ export function MensagensPersistentes({ cliente, perfil }: { cliente: SupabaseCl
     setBaixando(anexo.id);
     const { data, error } = await cliente.storage.from('mensagens').download(anexo.caminho_storage);
     if (error || !data) setErro('Não foi possível baixar o anexo protegido.');
-    else { const url=URL.createObjectURL(data); const link=document.createElement('a'); link.href=url; link.download=anexo.nome_original; link.click(); window.setTimeout(()=>URL.revokeObjectURL(url),0); }
+    else { const url=URL.createObjectURL(data); if (documentoPodeSerVisualizado(anexo.tipo_mime, anexo.nome_original)) setDocumento({ url, nome: anexo.nome_original, tipo: anexo.tipo_mime }); else { const link=document.createElement('a'); link.href=url; link.download=anexo.nome_original; link.click(); window.setTimeout(()=>URL.revokeObjectURL(url),0); } }
     setBaixando('');
   }
 
@@ -140,5 +142,6 @@ export function MensagensPersistentes({ cliente, perfil }: { cliente: SupabaseCl
       <aside><h2>Conversas</h2><BarraBuscaFiltros busca={busca} aoMudarBusca={setBusca} placeholder="Empresa, protocolo ou mensagem" total={conversasVisiveis.length} filtros={[{ id: 'mensagens-conversa', rotulo: 'Mensagens', valor: filtroConversa, aoMudar: setFiltroConversa, opcoes: [{ valor: 'todos', rotulo: 'Todas' }, { valor: 'nao_lidas', rotulo: 'Não lidas' }, { valor: 'com_mensagens', rotulo: 'Com mensagens' }, { valor: 'sem_mensagens', rotulo: 'Sem mensagens' }] }]} />{conversasVisiveis.map((conversa) => <button className={conversa.solicitacao_id === selecionada?.solicitacao_id ? 'ativo' : ''} type="button" key={conversa.solicitacao_id} onClick={() => setSelecionadaId(conversa.solicitacao_id)}><span>{iniciaisEmpresa(conversa.empresa)}</span><div><strong>{conversa.empresa}</strong><small>DEM-SOL-{String(conversa.codigo).padStart(4, '0')} · {conversa.contato_nome}</small></div>{Boolean(conversa.nao_lidas) && <b>{conversa.nao_lidas}</b>}</button>)}{conversasVisiveis.length === 0 && <p className="sem-resultados-filtro">Nenhuma conversa encontrada.</p>}</aside>
       {selecionada && <div className="conversa"><header><div><strong>{selecionada.empresa}</strong><small>DEM-SOL-{String(selecionada.codigo).padStart(4, '0')} · {rotuloNecessidadeCliente(selecionada.necessidade)}</small></div><span className="estado estado-formalizada">Cliente ativado</span></header><div className="baloes">{selecionada.mensagens.length === 0 && <div className="conversa-vazia"><MessageSquareText size={22} /><strong>Conversa iniciada</strong><p>Envie a primeira mensagem para este Cliente.</p></div>}{selecionada.mensagens.map((mensagem) => <p className={mensagem.autor_tipo === 'equipe' ? 'enviada' : 'recebida'} key={mensagem.id}>{mensagem.conteudo}{mensagem.anexos?.map((anexo) => <button type="button" className="anexo-mensagem" key={anexo.id} disabled={baixando===anexo.id} onClick={() => void baixarAnexo(anexo)}><FileText size={14}/>{anexo.nome_original}<Download size={13}/></button>)}<small>{mensagem.autor_nome} · {dataHora(mensagem.criada_em)}</small></p>)}</div><form onSubmit={enviar}><label className="sr-only" htmlFor={`mensagem-interna-${selecionada.solicitacao_id}`}>Mensagem para o Cliente</label><input id={`mensagem-interna-${selecionada.solicitacao_id}`} required maxLength={5000} value={mensagemNova} onChange={(evento) => setMensagemNova(evento.target.value)} placeholder="Escreva uma mensagem para o Cliente" /><label className="anexar-mensagem"><Paperclip size={16}/><span>Anexar</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.step,.stp,.iges,.igs,.stl,.obj,.dxf,.dwg" onChange={(e) => selecionarArquivos(e.target.files)}/></label><button type="submit" disabled={enviando || !mensagemNova.trim()}><Send size={15} /> {enviando ? 'Enviando…' : 'Enviar'}</button></form>{arquivos.length>0 && <div className="arquivos-mensagem-selecionados">{arquivos.map((arquivo,i)=><span key={`${arquivo.name}-${i}`}>{arquivo.name}<button type="button" aria-label={`Remover ${arquivo.name}`} onClick={()=>setArquivos((atuais)=>atuais.filter((_,indice)=>indice!==i))}><X size={12}/></button></span>)}</div>}</div>}
     </section>}
+    {documento && <VisualizadorDocumento documento={documento} aoFechar={() => { URL.revokeObjectURL(documento.url); setDocumento(null); }} />}
   </div>;
 }

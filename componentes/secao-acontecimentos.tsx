@@ -6,8 +6,10 @@ import { useEffect, useState } from 'react';
 import { EVENTO_IDIOMA_PUBLICO, type IdiomaPublico } from '../lib/idioma-publico';
 import { useIdiomaPublico } from '../lib/traducao-publica';
 import { obterClienteSupabase } from '../lib/supabase/cliente';
+import { CarrosselMidia } from './carrossel-midia';
+import type { MidiaEquipamento } from '../lib/equipamentos';
 
-type Item = { tipo: 'recente' | 'agora' | 'proximo'; data: string; titulo: string; resumo: string };
+type Item = { tipo: 'recente' | 'agora' | 'proximo'; data: string; titulo: string; resumo: string; midias?: MidiaEquipamento[] };
 type Conteudo = { titulo: string; texto: string; itens: Item[]; midia_url?: string; midia_tipo?: 'imagem' | 'video'; midia_alt?: string };
 type Publicado = { chave: string; titulo: string; corpo: { texto?: string; itens?: Item[]; midia_url?: string; midia_tipo?: 'imagem' | 'video'; midia_alt?: string } };
 
@@ -36,5 +38,5 @@ export function SecaoAcontecimentos() {
   }, [idioma]);
   const src = midiaSegura(conteudo.midia_url);
   const Icones = { recente: History, agora: CircleDot, proximo: CalendarDays };
-  return <section className="acontecimentos" id="acontecimentos"><div className="acontecimentos-intro"><p className="sobrelinha sobrelinha-clara"><span /> NEWSROOM</p><h2>{conteudo.titulo}</h2><p>{conteudo.texto}</p>{src && <div className="acontecimentos-midia">{conteudo.midia_tipo === 'video' ? <video src={src} controls muted /> : <Image src={src} alt={conteudo.midia_alt || conteudo.titulo} width={720} height={400} unoptimized />}</div>}</div><ol>{conteudo.itens.map((item, indice) => { const Icone = Icones[item.tipo] ?? CircleDot; return <li key={`${item.tipo}-${item.titulo}-${indice}`} data-tipo={item.tipo}><Icone /><span>{item.data}</span><h3>{item.titulo}</h3><p>{item.resumo}</p></li>; })}</ol></section>;
+  return <section className="acontecimentos" id="acontecimentos"><div className="acontecimentos-intro"><p className="sobrelinha sobrelinha-clara"><span /> NEWSROOM</p><h2>{conteudo.titulo}</h2><p>{conteudo.texto}</p>{src && <div className="acontecimentos-midia">{conteudo.midia_tipo === 'video' ? <video src={src} controls muted /> : <Image src={src} alt={conteudo.midia_alt || conteudo.titulo} width={720} height={400} unoptimized />}</div>}</div><ol>{conteudo.itens.map((item, indice) => { const Icone = Icones[item.tipo] ?? CircleDot; const midias = (item.midias ?? []).filter((midia) => midia.src && (midia.src.startsWith('/') || /^https:\/\//i.test(midia.src))); return <li key={`${item.tipo}-${item.titulo}-${indice}`} data-tipo={item.tipo}><Icone /><span>{item.data}</span><h3>{item.titulo}</h3><p>{item.resumo}</p>{midias.length > 0 && <CarrosselMidia midias={midias} rotulo={item.titulo} />}</li>; })}</ol></section>;
 }

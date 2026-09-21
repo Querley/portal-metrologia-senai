@@ -68,6 +68,21 @@ test('idioma público pode ser alternado em desktop e mobile', async ({ page }) 
   await expect(page.locator('.portal-cliente')).toHaveAttribute('data-hidratado', 'sim');
   await expect(page.getByRole('heading', { name: 'Alle Aufträge Ihres Unternehmens an einem Ort.' })).toBeVisible();
   await expect(page.getByText('Wie möchten Sie entscheiden?')).toBeVisible();
+  await expect(page.getByText('1 Ergebnis', { exact: true })).toBeVisible();
+  await page.goto('/solicitar?lang=de');
+  await expect(page.getByRole('option', { name: 'Maßprüfung und dimensionale Inspektion' })).toHaveCount(1);
+  await expect(page.getByLabel('Gewünschter Fertigstellungstermin')).toHaveAttribute('lang', 'de-DE');
+  await expect(page.getByText('Datumsformat: TT.MM.JJJJ')).toBeVisible();
+  await expect(page.getByLabel('E-Mail für den Kundenzugang')).toHaveAttribute('placeholder', 'name@unternehmen.de');
+});
+
+test('setores públicos exibem mídia com proporção estável', async ({ page }) => {
+  await page.goto('/');
+  const painel = page.locator('.painel-setor');
+  await expect(painel).toBeVisible();
+  await expect(painel.locator('.carrossel-palco img, .carrossel-palco video')).toHaveCount(1);
+  const proporcao = await painel.locator('.carrossel-palco').evaluate((elemento) => getComputedStyle(elemento).aspectRatio);
+  expect(proporcao).not.toBe('auto');
 });
 
 test('formulário explica claramente uma entrada inválida', async ({ page }) => {

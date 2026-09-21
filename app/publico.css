@@ -39,9 +39,7 @@
 .abas-setores button:hover,.abas-setores button[aria-selected='true'] { color:var(--azul-escuro); background:#e9f6fa; border-color:#55b8d1; box-shadow:inset 0 -3px var(--ciano); }
 .abas-setores button svg { flex:none; color:var(--azul); }
 .painel-setor { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); min-height:560px; margin-top:12px; overflow:hidden; background:#f5f9fa; border:1px solid var(--borda); }
-.midia-setor { position:relative; min-height:560px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#061f30; }
-.midia-setor img,.midia-setor video { width:100%; height:100%; object-fit:contain; }
-.midia-setor > span { position:absolute; left:16px; bottom:16px; max-width:calc(100% - 32px); padding:10px 12px; color:white; background:rgba(4,35,52,.86); font-size:12px; }
+.midia-setor { position:relative; min-height:0; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#061f30; }.midia-setor .carrossel { width:100%; height:auto; }.midia-setor .carrossel-palco { height:auto; min-height:0; aspect-ratio:16/9; border:0; background:#061f30; }.midia-setor .carrossel-palco img,.midia-setor .carrossel-palco video { width:100%; height:100%; padding:0; object-fit:contain; }.midia-setor .carrossel-miniaturas { position:absolute; right:16px; bottom:74px; left:16px; z-index:3; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); max-height:120px; overflow:auto; }.midia-setor .carrossel-miniaturas button { background:rgba(4,35,52,.88); border-color:rgba(255,255,255,.28); color:#e7f5fa; }
 .conteudo-setor { padding:42px; }
 .conteudo-setor h3 { margin:16px 0 12px; color:var(--azul-escuro); font-size:clamp(24px,2.6vw,36px); line-height:1.2; }
 .conteudo-setor > p:not(.sobrelinha) { color:var(--muted); font-size:14px; line-height:1.65; }
@@ -135,6 +133,7 @@
 .grade-form label { color:#476677; font-size:13px; font-weight:750; line-height:1.35; }
 .grade-form input,.grade-form select,.grade-form textarea { width:100%; margin-top:9px; padding:14px 15px; border:1px solid #b8ccd5; background:white; color:#173548; font:inherit; font-size:15px; }
 .grade-form input,.grade-form select { min-height:50px; }
+.ajuda-formato-data { display:block; margin-top:7px; color:#6b818c; font-size:11px; font-weight:600; }
 .campo-largo { grid-column:1/-1; }
 .area-arquivo { min-height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:24px; color:#2e667f; background:#f6fafb; border:1px dashed #8db7c8; text-align:center; cursor:pointer; font-size:15px; }
 .area-arquivo span { color:#718893; font-size:12px; }

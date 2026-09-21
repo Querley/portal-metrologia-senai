@@ -162,9 +162,7 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
     setProcessandoId('');
   }
 
-  function atualizarPelaBarra(evento: React.MouseEvent<HTMLButtonElement>, etapaId: string) {
-    const limites = evento.currentTarget.getBoundingClientRect();
-    const percentual = Math.max(0, Math.min(100, Math.round(((evento.clientX - limites.left) / limites.width) * 100)));
+  function salvarProgressoEtapa(etapaId: string, percentual: number) {
     const estado: EstadoEtapaExecucao = percentual === 0 ? 'a_fazer' : percentual === 100 ? 'concluida' : 'em_andamento';
     void atualizarEtapa(etapaId, estado, percentual);
   }
@@ -448,16 +446,22 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
                         )}
                       </header>
                       {etapa.descricao && <p>{etapa.descricao}</p>}
-                      <button
-                        type="button"
-                        className="barra-progresso barra-progresso-editavel"
-                        disabled={processandoId === etapa.id || !ordemLiberada || possuiEtapaPosteriorIniciada}
-                        onClick={(evento) => atualizarPelaBarra(evento, etapa.id)}
-                        aria-label={`Definir diretamente o progresso de ${etapa.titulo}. Atual: ${etapa.progresso}%`}
-                        title={possuiEtapaPosteriorIniciada ? 'Use “Retornar para esta etapa” para preservar a rastreabilidade.' : 'Clique na posição correspondente à porcentagem desejada.'}
-                      >
-                        <i style={{ width: `${etapa.progresso}%` }} />
-                      </button>
+                      <div className="controle-progresso-arrastavel">
+                        <input
+                          id={`barra-progresso-${etapa.id}`}
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={progressoEditado}
+                          disabled={processandoId === etapa.id || !ordemLiberada || possuiEtapaPosteriorIniciada || selecionada.estado === 'concluido'}
+                          onChange={(evento) => setProgressos((atuais) => ({ ...atuais, [etapa.id]: Number(evento.target.value) }))}
+                          aria-label={`Ajustar o progresso de ${etapa.titulo}. Valor selecionado: ${progressoEditado}%`}
+                          title={possuiEtapaPosteriorIniciada ? 'Use “Retornar para esta etapa” para preservar a rastreabilidade.' : 'Arraste o marcador e clique em Salvar para confirmar.'}
+                          style={{ '--progresso-etapa': `${progressoEditado}%` } as React.CSSProperties}
+                        />
+                        <output htmlFor={`barra-progresso-${etapa.id}`}>{progressoEditado}%</output>
+                      </div>
                       {selecionada.estado !== 'concluido' && (
                         <div className="acoes-etapa-operacional">
                           {etapa.estado === 'a_fazer' && (
@@ -485,13 +489,15 @@ export function ExecucoesPersistentes({ cliente, perfil, filtroEstadoInicial = '
                                 />
                                 <span>%</span>
                               </label>
-                              <button type="button" disabled={processandoId === etapa.id} onClick={() => void atualizarEtapa(etapa.id, 'em_andamento', progressoEditado)}>
-                                <Save size={14} /> Salvar
-                              </button>
                               <button className="concluir" type="button" disabled={processandoId === etapa.id} onClick={() => void atualizarEtapa(etapa.id, 'concluida', 100)}>
                                 <CheckCircle2 size={14} /> Concluir
                               </button>
                             </>
+                          )}
+                          {etapa.estado !== 'concluida' && (
+                            <button type="button" disabled={processandoId === etapa.id || !ordemLiberada || possuiEtapaPosteriorIniciada || progressoEditado === etapa.progresso} onClick={() => salvarProgressoEtapa(etapa.id, progressoEditado)}>
+                              <Save size={14} /> Salvar progresso
+                            </button>
                           )}
                           {possuiEtapaPosteriorIniciada && (
                             <button className="retornar-etapa" type="button" onClick={() => { setRetornoAberto(etapa.id); setMotivoRetorno(''); }}>

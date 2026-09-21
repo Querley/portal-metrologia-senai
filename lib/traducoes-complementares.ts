@@ -1,6 +1,7 @@
 export type TrioTraducao = readonly [portugues: string, ingles: string, alemao: string];
 
 export const traducoesComplementares = [
+  ['Carregando…', 'Loading…', 'Wird geladen…'],
   ['Navegação principal', 'Main navigation', 'Hauptnavigation'],
   ['Abrir menu', 'Open menu', 'Menü öffnen'],
   ['Navegação em telas pequenas', 'Mobile navigation', 'Mobile Navigation'],
@@ -282,6 +283,8 @@ export const traducoesComplementares = [
   ['Ordenar', 'Sort', 'Sortieren'],
   ['resultado', 'result', 'Ergebnis'],
   ['resultados', 'results', 'Ergebnisse'],
+  ['Visualizar', 'Preview', 'Anzeigen'],
+  ['Visualizar PDF emitido', 'Preview issued PDF', 'Ausgestelltes PDF anzeigen'],
   ['Limpar', 'Clear', 'Zurücksetzen'],
   ['CNPJ (cadastro brasileiro)', 'CNPJ (Brazilian company registration)', 'CNPJ (brasilianische Unternehmensnummer)'],
   ['ZEISS PRISMO no Centro', 'ZEISS PRISMO at the Center', 'ZEISS PRISMO im Zentrum'],

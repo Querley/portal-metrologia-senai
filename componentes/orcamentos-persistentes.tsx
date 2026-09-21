@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Ban, Calculator, CheckCircle2, ChevronDown, ChevronUp, CornerUpLeft, Download, FileCheck2, FileText, FileUp, Pencil, PlayCircle, Plus, Printer, RefreshCw, Save, Send, ShieldCheck, Sparkles, Trash2, UploadCloud, X } from 'lucide-react';
+import { Ban, Calculator, CheckCircle2, ChevronDown, ChevronUp, CornerUpLeft, FileCheck2, FileText, FileUp, Pencil, PlayCircle, Plus, Printer, RefreshCw, Save, Send, ShieldCheck, Sparkles, Trash2, UploadCloud, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatarDinheiro } from '../lib/calculos';
 import { correspondeBusca, formatosDataParaBusca } from '../lib/busca-e-filtros';
@@ -18,6 +18,7 @@ import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { AnexosSolicitacaoInternos } from './anexos-solicitacao-internos';
 import { tituloDescritivoTrabalho } from '../lib/titulos-trabalho';
 import { agruparLinhasOrcamento, type UsoEquipamentoOrcamento } from '../lib/agrupar-orcamentos';
+import { VisualizadorDocumento, type DocumentoVisualizavel } from './visualizador-documento';
 
 type Servico = { id: string; slug: string; ativo: boolean };
 type Equipamento = { id: string; codigo: string; nome: string; ativo: boolean };
@@ -137,6 +138,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
   const [justificativa, setJustificativa] = useState('');
   const [versaoEmEdicao, setVersaoEmEdicao] = useState('');
   const [previsualizando, setPrevisualizando] = useState<Orcamento | null>(null);
+  const [documento, setDocumento] = useState<DocumentoVisualizavel | null>(null);
   const [servicoId, setServicoId] = useState(solicitacaoInicial?.servico_id ?? '');
   const [equipamentoId, setEquipamentoId] = useState('');
   const [equipamentosAdicionais, setEquipamentosAdicionais] = useState<Array<{ equipamento_id: string; horas: string }>>([]);
@@ -406,15 +408,6 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
     setProcessandoId('');
   }
 
-  function baixarBlob(blob: Blob, nome: string) {
-    const url = URL.createObjectURL(blob);
-    const ancora = document.createElement('a');
-    ancora.href = url;
-    ancora.download = nome;
-    ancora.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
-  }
-
   async function gerarPdfFinal(orcamento: Orcamento) {
     if (!podePublicarOrcamento(perfil) || orcamento.estado !== 'aprovada') return;
     setGerandoPdfId(orcamento.versao_id);
@@ -473,8 +466,8 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
     setMensagem('');
     const caminho = `demonstracao/${orcamento.versao_id}.pdf`;
     const { data, error } = await cliente.storage.from('pre-propostas').download(caminho);
-    if (error || !data) setMensagem('Não foi possível baixar o PDF privado desta pré-proposta.');
-    else baixarBlob(data, `pre-proposta-${orcamento.cliente_vinculado ? `DEM-SOL-${String(orcamento.solicitacao_codigo).padStart(4, '0')}` : orcamento.versao_id.slice(0, 8)}.pdf`);
+    if (error || !data) setMensagem('Não foi possível abrir o PDF privado desta pré-proposta.');
+    else setDocumento({ url: URL.createObjectURL(data), nome: `pre-proposta-${orcamento.cliente_vinculado ? `DEM-SOL-${String(orcamento.solicitacao_codigo).padStart(4, '0')}` : orcamento.versao_id.slice(0, 8)}.pdf`, tipo: 'application/pdf' });
     setProcessandoId('');
   }
 
@@ -976,7 +969,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
                             )}
                             {orcamento.publicacao_pronta && (
                               <button className="acao-orcamento" type="button" disabled={processandoId === orcamento.versao_id} onClick={() => void baixarPdfInterno(orcamento)}>
-                                <Download size={14} /> Baixar PDF
+                                <FileText size={14} /> Visualizar PDF
                               </button>
                             )}
                             {orcamento.pode_publicar && podePublicarOrcamento(perfil) && orcamento.publicacao_pronta && (
@@ -1082,6 +1075,7 @@ export function OrcamentosPersistentes({ cliente, perfil, solicitacaoInicial, fi
           </section>
         </div>
       )}
+      {documento && <VisualizadorDocumento documento={documento} aoFechar={() => { URL.revokeObjectURL(documento.url); setDocumento(null); }} />}
     </div>
   );
 }
