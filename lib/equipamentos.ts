@@ -79,7 +79,7 @@ export const equipamentosPublicos: EquipamentoPublico[] = [
     imagemPrincipal: '/imagens/recorte-zeiss-prismo-v2.png',
     midias: [
       { tipo: 'imagem', src: '/imagens/recorte-zeiss-prismo-v2.png', alt: 'Máquina de medição por coordenadas ZEISS PRISMO em fundo branco', legenda: 'Equipamento em fundo branco' },
-      { tipo: 'imagem', src: '/imagens/laboratorio-prismo.jpeg', alt: 'ZEISS PRISMO instalada no Centro', legenda: 'Equipamento instalado no Centro' },
+      { tipo: 'video', src: '/videos/zeiss-prismo-operacao-real.mp4', alt: 'Vídeo da ZEISS PRISMO em operação', legenda: 'Equipamento em operação', poster: '/imagens/laboratorio-prismo.jpeg' },
     ],
     aplicacoes: ['Componentes automotivos e de precisão', 'Medição de engrenagens e superfícies complexas', 'Validação de protótipos e ferramentais', 'Inspeções com tolerâncias rigorosas'],
     capacidades: ['Configuração instalada: PRISMO VAST 09/24/07', 'Medição de alta precisão para peças grandes e complexas', 'LineScan para captura de superfícies em nuvens de pontos', 'Escalas de vitrocerâmica Robax com resolução informada de 200 nm'],
@@ -144,7 +144,7 @@ export const equipamentosPublicos: EquipamentoPublico[] = [
     imagemPrincipal: '/imagens/recorte-zeiss-t-scan-hawk-2-v3.png',
     midias: [
       { tipo: 'imagem', src: '/imagens/recorte-zeiss-t-scan-hawk-2-v3.png', alt: 'Scanner portátil ZEISS T-SCAN hawk 2 completo em fundo branco', legenda: 'Equipamento em fundo branco' },
-      { tipo: 'imagem', src: '/imagens/laboratorio-t-scan-hawk-2-close-up.jpeg', alt: 'Close-up do ZEISS T-SCAN hawk 2 no Centro', legenda: 'Equipamento instalado no Centro' },
+      { tipo: 'video', src: '/videos/zeiss-t-scan-hawk-2-operacao-real.mp4', alt: 'Vídeo do ZEISS T-SCAN hawk 2 em operação', legenda: 'Equipamento em operação', poster: '/imagens/laboratorio-t-scan-hawk-2-close-up.jpeg' },
     ],
     aplicacoes: ['Engenharia reversa de peças e estruturas', 'Inspeção no local', 'Manutenção, reparo e revisão', 'Digitalização de geometrias grandes ou de difícil acesso'],
     capacidades: ['Scanner laser azul de classe 2', 'Operação manual com aproximadamente 1 kg', 'Modo satélite para objetos maiores', 'Captura de detalhes e cavidades profundas'],

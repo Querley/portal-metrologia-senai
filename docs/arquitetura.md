@@ -77,4 +77,8 @@ A migration `202609150043_revisao_cms_e_acontecimentos.sql` acrescenta uma máqu
 
 A migration `202609150044_inicio_editavel_e_traducao_integral.sql` semeia, em PT-BR/EN/DE, quatro zonas editáveis da página inicial. O editor apresenta uma miniatura clicável da página e prévia imediata do rascunho, mas o site público continua lendo apenas versões aprovadas e publicadas. Uma restrição de banco impede chaves `equipamentos.*` no CMS: as fichas técnicas permanecem versionadas no código e recebem tradução pelo catálogo testado, não por edição editorial. Testes unitários percorrem todos os textos de equipamentos, serviços e setores e falham se inglês ou alemão estiver ausente.
 
+## Mídias reais e novidades — migration 047
+
+A migration `202609220047_midias_reais_e_novidades.sql` cria novas versões aprovadas e atualiza os ponteiros publicados de `inicio.setores` e `inicio.acontecimentos` em PT-BR, inglês e alemão. Os arquivos ficam versionados como ativos públicos do site, enquanto o CMS continua sendo a fonte editorial e mantém o histórico imutável das versões anteriores. O acontecimento futuro sobre a acreditação INMETRO é publicado sem mídia até que a equipe forneça uma imagem autorizada; nenhuma imagem fictícia é usada como substituta.
+
 A consolidação multiequipamento ocorre depois da RPC e antes de pesquisa, contagem e renderização: `versao_id` é a identidade da linha comercial e os usos são uma coleção interna. Isso corrige duplicidade visual sem alterar preço, estado ou persistência.

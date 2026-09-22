@@ -19,7 +19,7 @@ const textosEquipamentos = equipamentosPublicos.flatMap((item) => [
 ]);
 
 const textosServicos = servicosOficiais.flatMap((item) => [item.titulo, item.resumo]);
-const textosSetores = setoresIndustria.flatMap((item) => [item.titulo, item.resumo, item.exemplos, item.midia.alt, item.midia.legenda]);
+const textosSetores = setoresIndustria.flatMap((item) => [item.titulo, item.resumo, item.exemplos, ...item.midias.flatMap((midia) => [midia.alt, midia.legenda])]);
 
 describe('cobertura integral das traduções públicas', () => {
   it.each(['en', 'de'] as const)('traduz todo o conteúdo técnico para %s', (idioma) => {

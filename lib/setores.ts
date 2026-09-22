@@ -1,3 +1,4 @@
+import type { MidiaEquipamento } from './equipamentos';
 import type { ServicoOficial } from './servicos';
 
 export type SetorIndustria = {
@@ -6,13 +7,7 @@ export type SetorIndustria = {
   resumo: string;
   exemplos: string;
   servicos: ServicoOficial['slug'][];
-  midia: {
-    tipo: 'imagem' | 'video';
-    src: string;
-    poster?: string;
-    alt: string;
-    legenda: string;
-  };
+  midias: MidiaEquipamento[];
 };
 
 export const setoresIndustria: SetorIndustria[] = [
@@ -33,13 +28,11 @@ export const setoresIndustria: SetorIndustria[] = [
       'arvore-equipamentos-pecas-criticas',
       'almoxarifado-virtual-biblioteca-digital',
     ],
-    midia: {
-      tipo: 'video',
-      src: '/videos/zeiss-duramax-operacao.mp4',
-      poster: '/imagens/laboratorio-duramax.jpeg',
-      alt: 'Operação metrológica no laboratório',
-      legenda: 'Medição dimensional no acervo autorizado do laboratório',
-    },
+    midias: [
+      { tipo: 'video', src: '/videos/setor-industria-medicao-bomba-tomate.mp4', alt: 'Medição dos cilindros internos de uma bomba de extrato de tomate', legenda: 'Verificação dimensional dos cilindros internos de uma bomba industrial' },
+      { tipo: 'imagem', src: '/imagens/setor-industria-bombas-tomate-componentes.jpeg', alt: 'Componentes desmontados de bombas de extrato de tomate organizados para inspeção', legenda: 'Componentes de bombas industriais preparados para medição' },
+      { tipo: 'imagem', src: '/imagens/setor-industria-bombas-tomate-conjunto.jpeg', alt: 'Conjunto de bombas de extrato de tomate após o trabalho dimensional', legenda: 'Conjunto industrial atendido pelo Centro de Excelência em Metrologia' },
+    ],
   },
   {
     slug: 'automotivo-mobilidade',
@@ -56,13 +49,12 @@ export const setoresIndustria: SetorIndustria[] = [
       'tomografia-industrial',
       'analise-falhas-quebras-anomalias',
     ],
-    midia: {
-      tipo: 'video',
-      src: '/videos/zeiss-atos-q-operacao.mp4',
-      poster: '/imagens/laboratorio-atos-q.jpeg',
-      alt: 'Digitalização óptica no laboratório',
-      legenda: 'Digitalização óptica 3D no acervo autorizado do laboratório',
-    },
+    midias: [
+      { tipo: 'video', src: '/videos/setor-automotivo-borboleta-scan-cad.mp4', alt: 'Digitalização de uma borboleta de admissão para reconstrução CAD', legenda: 'Da peça física ao CAD em uma aplicação automotiva' },
+      { tipo: 'imagem', src: '/imagens/setor-automotivo-veiculo.png', alt: 'Automóvel clássico que recebeu o conjunto de admissão analisado', legenda: 'Aplicação automotiva do projeto de engenharia reversa' },
+      { tipo: 'imagem', src: '/imagens/setor-automotivo-borboleta-instalada.png', alt: 'Borboleta de admissão instalada no motor do automóvel', legenda: 'Componente de admissão instalado no veículo' },
+      { tipo: 'imagem', src: '/imagens/setor-automotivo-borboleta-admissao.png', alt: 'Borboleta de admissão automotiva isolada em fundo branco', legenda: 'Geometria da borboleta de admissão usada no projeto' },
+    ],
   },
   {
     slug: 'aeronautico',
@@ -79,13 +71,10 @@ export const setoresIndustria: SetorIndustria[] = [
       'tomografia-industrial',
       'analise-falhas-quebras-anomalias',
     ],
-    midia: {
-      tipo: 'video',
-      src: '/videos/zeiss-bosello-max-operacao.mp4',
-      poster: '/imagens/laboratorio-bosello.jpeg',
-      alt: 'Tomografia industrial com o equipamento ZEISS BOSELLO MAX',
-      legenda: 'Tomografia industrial Bosello no acervo autorizado do laboratório',
-    },
+    midias: [
+      { tipo: 'video', src: '/videos/setor-aeronautico-peca-aviao.mp4', alt: 'Inspeção de uma peça aeronáutica no Centro', legenda: 'Metrologia aplicada a um componente aeronáutico' },
+      { tipo: 'video', src: '/videos/setor-aeronautico-aviao.mp4', alt: 'Aeronave relacionada à aplicação de metrologia', legenda: 'Contexto de aplicação no setor aeronáutico' },
+    ],
   },
   {
     slug: 'ferramentaria-produto',
@@ -101,11 +90,8 @@ export const setoresIndustria: SetorIndustria[] = [
       'mapa-desgaste',
       'almoxarifado-virtual-biblioteca-digital',
     ],
-    midia: {
-      tipo: 'imagem',
-      src: '/imagens/laboratorio-prismo-panoramica.jpeg',
-      alt: 'Máquina de medição por coordenadas no laboratório',
-      legenda: 'Estrutura de metrologia dimensional do laboratório',
-    },
+    midias: [
+      { tipo: 'video', src: '/videos/setor-ferramentaria-engenharia-reversa-engrenagem.mp4', alt: 'Engenharia reversa de uma engrenagem para ferramentaria', legenda: 'Reconstrução digital de engrenagem para desenvolvimento de produto' },
+    ],
   },
 ];

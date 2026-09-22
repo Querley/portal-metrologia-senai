@@ -47,7 +47,7 @@ export default function Home() {
   const midiaEstrutura = urlMidiaSegura(estrutura?.corpo.midia_url);
   const midiasCms = (estrutura?.corpo.midias ?? []).filter((item) => urlMidiaSegura(item.src));
   const galeriaBase = midiasCms.length ? midiasCms : midiasLaboratorio;
-  const galeriaEstrutura: MidiaEquipamento[] = midiaEstrutura ? [{ tipo: estrutura?.corpo.midia_tipo ?? 'imagem', src: midiaEstrutura, alt: estrutura?.corpo.midia_alt || estrutura?.titulo || t('Estrutura do Centro'), legenda: estrutura?.titulo || t('Estrutura do Centro') }, ...galeriaBase.filter((item) => item.src !== midiaEstrutura)] : galeriaBase;
+  const galeriaEstrutura: MidiaEquipamento[] = midiaEstrutura ? [{ tipo: estrutura?.corpo.midia_tipo ?? 'imagem', src: midiaEstrutura, alt: estrutura?.corpo.midia_alt || estrutura?.titulo || t('Estrutura do Centro'), legenda: t('ZEISS PRISMO no Centro') }, ...galeriaBase.filter((item) => item.src !== midiaEstrutura)] : galeriaBase;
   return (
     <main>
       <header className="topo">

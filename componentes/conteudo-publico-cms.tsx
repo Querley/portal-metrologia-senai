@@ -26,7 +26,7 @@ const itensIniciais: ItemAcontecimento[] = [
   { tipo: 'agora', data: '', titulo: '', resumo: '' },
   { tipo: 'proximo', data: '', titulo: '', resumo: '' },
 ];
-const setoresIniciais: SetorCms[] = setoresIndustria.map((setor) => ({ slug: setor.slug, midias: [{ src: setor.midia.src, tipo: setor.midia.tipo, alt: setor.midia.alt, legenda: setor.midia.legenda }] }));
+const setoresIniciais: SetorCms[] = setoresIndustria.map((setor) => ({ slug: setor.slug, midias: setor.midias.map((midia) => ({ src: midia.src, tipo: midia.tipo, alt: midia.alt, legenda: midia.legenda })) }));
 
 function urlMidiaSegura(url: string) {
   const limpa = url.trim();

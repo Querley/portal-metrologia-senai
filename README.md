@@ -60,3 +60,5 @@ As migrations `202609110037` a `202609110040` corrigem a troca administrativa de
 A migration `202609150043` formaliza o fluxo editorial Validador → Administrador e a seção localizada de acontecimentos. A interface agrupa pré-propostas multiequipamento, oferece edição administrativa completa em uma janela, gráficos operacionais e tradução reativa das áreas pública e Cliente; a área da equipe permanece em português.
 
 A migration `202609150044` conecta quatro regiões principais da página inicial ao CMS visual, preserva as fichas de equipamentos como conteúdo técnico imutável e completa a cobertura automatizada PT-BR/EN/DE do catálogo, equipamentos, solicitação, acesso e área do Cliente. Revisão linguística institucional continua sendo uma homologação humana separada da cobertura funcional.
+
+A migration `202609220047` publica, nos três idiomas, as mídias reais autorizadas dos setores e a seção de novidades com Congresso SINDAG, ExpoPeças, desenvolvimento do portal e o caminho para a acreditação INMETRO. As páginas da ZEISS PRISMO e do ZEISS T-SCAN hawk 2 passam a apresentar os vídeos reais de operação fornecidos pelo Centro.

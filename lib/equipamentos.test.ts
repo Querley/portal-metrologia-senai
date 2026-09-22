@@ -20,15 +20,16 @@ describe('catálogo público de equipamentos', () => {
   });
 
   it('não substitui mídias pendentes por material ilustrativo', () => {
-    for (const equipamento of equipamentosPublicos) {
-      expect(equipamento.midias[1].legenda).toBe('Equipamento instalado no Centro');
-    }
     const comVideo = equipamentosPublicos.filter(({ midias }) => midias.some(({ tipo }) => tipo === 'video'));
     expect(comVideo.map(({ slug }) => slug).sort()).toEqual([
       'zeiss-atos-q',
       'zeiss-bosello-max-80',
       'zeiss-duramax',
       'zeiss-o-inspect',
+      'zeiss-prismo',
+      'zeiss-t-scan-hawk-2',
     ]);
+    expect(encontrarEquipamento('zeiss-prismo')?.midias[1].src).toBe('/videos/zeiss-prismo-operacao-real.mp4');
+    expect(encontrarEquipamento('zeiss-t-scan-hawk-2')?.midias[1].src).toBe('/videos/zeiss-t-scan-hawk-2-operacao-real.mp4');
   });
 });

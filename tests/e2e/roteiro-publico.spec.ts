@@ -47,6 +47,24 @@ test('solicitação aceita necessidade fora do catálogo', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Abrir Gmail' })).toHaveAttribute('href', /mail\.google\.com/);
 });
 
+test('PRISMO e T-SCAN exibem os novos vídeos reais de operação', async ({ page }) => {
+  for (const [slug, arquivo] of [
+    ['zeiss-prismo', 'zeiss-prismo-operacao-real.mp4'],
+    ['zeiss-t-scan-hawk-2', 'zeiss-t-scan-hawk-2-operacao-real.mp4'],
+  ] as const) {
+    await page.goto(`/equipamentos/${slug}`);
+    await expect(page.locator('.carrossel')).toHaveAttribute('data-hidratado', 'sim');
+    await page.getByRole('tab', { name: '2 Equipamento em operação' }).click();
+    await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento em operação', { timeout: 15_000 });
+    await expect(page.locator('.carrossel-palco video')).toBeVisible();
+    await expect(page.locator('.carrossel-palco video')).toHaveAttribute('aria-label', /em operação/);
+    const resposta = await page.request.get(`/videos/${arquivo}`);
+    expect(resposta.ok()).toBe(true);
+    expect(Number(resposta.headers()['content-length'] ?? 0)).toBeGreaterThan(1_000_000);
+    await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento em operação');
+  }
+});
+
 test('idioma público pode ser alternado em desktop e mobile', async ({ page }) => {
   await page.goto('/catalogo');
   const mobile = (page.viewportSize()?.width ?? 1000) <= 980;

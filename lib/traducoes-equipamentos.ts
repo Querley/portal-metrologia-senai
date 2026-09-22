@@ -143,6 +143,7 @@ export const traducoesEquipamentos = [
   ['Vídeo da ZEISS O-INSPECT em operação', 'Video of the ZEISS O-INSPECT in operation', 'Video der ZEISS O-INSPECT im Betrieb'],
   ['Máquina de medição por coordenadas ZEISS PRISMO em fundo branco', 'ZEISS PRISMO coordinate measuring machine on a white background', 'Koordinatenmessgerät ZEISS PRISMO vor weißem Hintergrund'],
   ['ZEISS PRISMO instalada no Centro', 'ZEISS PRISMO installed at the Center', 'ZEISS PRISMO im Zentrum'],
+  ['Vídeo da ZEISS PRISMO em operação', 'Video of the ZEISS PRISMO in operation', 'Video der ZEISS PRISMO im Betrieb'],
   ['Sistema de raios X ZEISS BOSELLO MAX 80-150 completo em fundo branco', 'Complete ZEISS BOSELLO MAX 80-150 X-ray system on a white background', 'Vollständiges Röntgensystem ZEISS BOSELLO MAX 80-150 vor weißem Hintergrund'],
   ['ZEISS BOSELLO MAX instalada no Centro', 'ZEISS BOSELLO MAX installed at the Center', 'ZEISS BOSELLO MAX im Zentrum'],
   ['Vídeo da ZEISS BOSELLO MAX em operação', 'Video of the ZEISS BOSELLO MAX in operation', 'Video der ZEISS BOSELLO MAX im Betrieb'],
@@ -151,4 +152,5 @@ export const traducoesEquipamentos = [
   ['Vídeo do ZEISS ATOS Q em operação', 'Video of the ZEISS ATOS Q in operation', 'Video des ZEISS ATOS Q im Betrieb'],
   ['Scanner portátil ZEISS T-SCAN hawk 2 completo em fundo branco', 'Complete ZEISS T-SCAN hawk 2 portable scanner on a white background', 'Vollständiger tragbarer Scanner ZEISS T-SCAN hawk 2 vor weißem Hintergrund'],
   ['Close-up do ZEISS T-SCAN hawk 2 no Centro', 'Close-up of the ZEISS T-SCAN hawk 2 at the Center', 'Nahaufnahme des ZEISS T-SCAN hawk 2 im Zentrum'],
+  ['Vídeo do ZEISS T-SCAN hawk 2 em operação', 'Video of the ZEISS T-SCAN hawk 2 in operation', 'Video des ZEISS T-SCAN hawk 2 im Betrieb'],
 ] as const satisfies readonly TrioTraducao[];
