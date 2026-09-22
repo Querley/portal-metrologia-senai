@@ -60,6 +60,8 @@ test('idioma público pode ser alternado em desktop e mobile', async ({ page }) 
   await seletor.selectOption('de');
   await expect(page).toHaveURL(/\/catalogo\?lang=de/);
   await expect(mobile ? page.locator('.menu-movel .seletor-idioma select') : page.locator('.acoes-cabecalho-publico .seletor-idioma select')).toHaveValue('de');
+  await expect(page.getByRole('heading', { name: 'Dienstleistungen und Ausrüstung' })).toBeVisible();
+  await expect(page.getByText('Entdecken Sie die im Zentrum verfügbaren Technologien und finden Sie den passenden Weg für Ihre Messaufgabe.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Angebot anfordern' }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Drei Technologiebereiche tragen dieses Portfolio.' })).toBeVisible();
   await page.goto('/equipamentos/zeiss-duramax?lang=de');
@@ -123,7 +125,8 @@ test('painel interno calcula orçamento no cenário isolado de E2E', async ({ pa
 test('área interna oferece autenticação e recuperação sem atalhos antigos', async ({ page }) => {
   await page.goto('/portal');
   await expect(page.getByText('Acesso protegido')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Entrar no Portal de Metrologia|Integração de homologação pendente/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Entrar no Portal de Metrologia' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Integração de homologação pendente' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /demonstração/i })).toHaveCount(0);
   await page.getByRole('button', { name: 'Esqueci minha senha' }).click();
   await expect(page.getByRole('heading', { name: 'Recuperar senha' })).toBeVisible();
