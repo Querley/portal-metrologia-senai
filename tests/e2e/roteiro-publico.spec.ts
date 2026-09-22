@@ -30,7 +30,7 @@ test('catálogo apresenta o parque atual e abre a página detalhada', async ({ p
   await expect(page.locator('.carrossel-legenda strong')).toHaveText('Equipamento instalado no Centro');
   await page.getByRole('button', { name: 'Próxima mídia' }).click();
   const video = page.locator('.carrossel-palco video');
-  await expect(video).toHaveAttribute('preload', 'auto');
+  await expect(video).toHaveAttribute('preload', 'metadata');
   await expect(video).toHaveAttribute('data-busca-pronta', 'sim');
   await expect(video).toHaveJSProperty('autoplay', true);
   await expect(video).toHaveJSProperty('loop', true);
@@ -96,13 +96,21 @@ test('idioma público pode ser alternado em desktop e mobile', async ({ page }) 
   await expect(page.getByLabel('E-Mail für den Kundenzugang')).toHaveAttribute('placeholder', 'name@unternehmen.de');
 });
 
-test('setores públicos exibem mídia com proporção estável', async ({ page }) => {
+test('setores públicos exibem mídia estável sem controles sobre a imagem', async ({ page }) => {
   await page.goto('/');
   const painel = page.locator('.painel-setor');
   await expect(painel).toBeVisible();
   await expect(painel.locator('.carrossel-palco img, .carrossel-palco video')).toHaveCount(1);
   const proporcao = await painel.locator('.carrossel-palco').evaluate((elemento) => getComputedStyle(elemento).aspectRatio);
   expect(proporcao).not.toBe('auto');
+  const posicoes = await painel.locator('.carrossel').evaluate((elemento) => {
+    const palco = elemento.querySelector('.carrossel-palco')!.getBoundingClientRect();
+    const faixa = elemento.querySelector('.carrossel-faixa')!.getBoundingClientRect();
+    const seletores = elemento.querySelector('.carrossel-miniaturas')!.getBoundingClientRect();
+    return { fimPalco: palco.bottom, inicioFaixa: faixa.top, fimFaixa: faixa.bottom, inicioSeletores: seletores.top };
+  });
+  expect(posicoes.inicioFaixa).toBeGreaterThanOrEqual(posicoes.fimPalco - 1);
+  expect(posicoes.inicioSeletores).toBeGreaterThanOrEqual(posicoes.fimFaixa - 1);
 });
 
 test('formulário explica claramente uma entrada inválida', async ({ page }) => {
