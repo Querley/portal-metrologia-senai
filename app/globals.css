@@ -29,3 +29,9 @@ footer { min-height:120px; padding:35px 6vw; display:flex; align-items:center; g
 .contato-email-compacto { width:100%; margin:38px 0 0; padding:32px; border:1px solid var(--borda); background:#eef6f8; }
 .contato-email-compacto h2 { font-size:clamp(24px,3vw,34px); }
  .validacao-global { display:contents; }
+.notificacao-flutuante { position:fixed; top:22px; right:22px; z-index:3000; display:grid; grid-template-columns:auto minmax(220px,390px) auto; align-items:center; gap:12px; padding:15px 16px; color:#17465a; background:#eef8fc; border:1px solid #83bfd2; border-left:5px solid var(--azul); box-shadow:0 16px 42px rgba(5,38,55,.24); font-size:13px; line-height:1.45; }
+.notificacao-flutuante p { margin:0; font-weight:700; }
+.notificacao-flutuante > button { width:34px; height:34px; display:grid; place-items:center; color:inherit; background:transparent; border:0; cursor:pointer; }
+.notificacao-flutuante.notificacao-sucesso { color:#124632; background:#ecf9f2; border-color:#79bf9b; border-left-color:#198754; }
+.notificacao-flutuante.notificacao-erro { color:#701f27; background:#fff0f1; border-color:#e4a4aa; border-left-color:#b4232f; }
+@media (max-width:650px) { .notificacao-flutuante { top:12px; left:12px; right:12px; grid-template-columns:auto 1fr auto; } }

@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Copy, ExternalLink, Mail } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { NotificacaoFlutuante } from './notificacao-flutuante';
 import { useTraducaoPublica } from '../lib/traducao-publica';
 
@@ -9,6 +9,7 @@ export const EMAIL_CONTATO = 'cem.senaizeiss@fieg.com.br';
 
 export function ContatoEmail({ compacto = false, contexto }: { compacto?: boolean; contexto?: string } = {}) {
   const { t } = useTraducaoPublica();
+  const hidratado = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const [copiado, setCopiado] = useState(false);
   const [mensagem, setMensagem] = useState('');
 
@@ -36,5 +37,5 @@ export function ContatoEmail({ compacto = false, contexto }: { compacto?: boolea
   const mailto = `mailto:${EMAIL_CONTATO}?subject=${encodeURIComponent(assunto)}`;
   const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CONTATO)}&su=${encodeURIComponent(assunto)}`;
 
-  return <section className={`contato-email${compacto ? ' contato-email-compacto' : ''}`} aria-label={t('Contato por e-mail')}><NotificacaoFlutuante mensagem={mensagem} tipo="informacao" aoFechar={() => setMensagem('')} /><div><p className="sobrelinha"><span /> {t('Outro canal').toUpperCase()}</p><h2>{t('Também é possível enviar por e-mail')}</h2><p>{t('Se preferir, descreva sua necessidade e envie os arquivos diretamente à equipe. Mensagens por e-mail não geram protocolo automaticamente; o laboratório fará a triagem e orientará o próximo passo.')}</p></div><div className="acoes-email"><strong>{EMAIL_CONTATO}</strong><div><a className="botao" href={mailto}><Mail size={17} /> {t('Abrir aplicativo')}</a><a className="botao-secundario-email" href={gmail} target="_blank" rel="noreferrer"><ExternalLink size={17} /> {t('Abrir Gmail')}</a><button type="button" onClick={() => void copiar()}>{copiado ? <Check size={17} /> : <Copy size={17} />}{copiado ? t('Copiado') : t('Copiar')}</button></div></div></section>;
+  return <section className={`contato-email${compacto ? ' contato-email-compacto' : ''}`} aria-label={t('Contato por e-mail')} data-hidratado={hidratado ? 'sim' : 'nao'}><NotificacaoFlutuante mensagem={mensagem} tipo="informacao" aoFechar={() => setMensagem('')} /><div><p className="sobrelinha"><span /> {t('Outro canal').toUpperCase()}</p><h2>{t('Também é possível enviar por e-mail')}</h2><p>{t('Se preferir, descreva sua necessidade e envie os arquivos diretamente à equipe. Mensagens por e-mail não geram protocolo automaticamente; o laboratório fará a triagem e orientará o próximo passo.')}</p></div><div className="acoes-email"><strong>{EMAIL_CONTATO}</strong><div><a className="botao" href={mailto}><Mail size={17} /> {t('Abrir aplicativo')}</a><a className="botao-secundario-email" href={gmail} target="_blank" rel="noreferrer"><ExternalLink size={17} /> {t('Abrir Gmail')}</a><button type="button" onClick={() => void copiar()}>{copiado ? <Check size={17} /> : <Copy size={17} />}{copiado ? t('Copiado') : t('Copiar')}</button></div></div></section>;
 }

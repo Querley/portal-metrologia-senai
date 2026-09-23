@@ -10,7 +10,7 @@ test('visitante navega da página inicial ao catálogo e à solicitação', asyn
   await expect(page.getByRole('heading', { name: 'Solicite uma análise sem criar uma conta' })).toBeVisible();
   await expect(page.getByText('Homologação persistente.')).toBeVisible();
   await expect(page.getByLabel('Tipo de necessidade')).toHaveValue('digitalizacao-modelo-3d');
-  await expect(page.locator('.navegacao-simples')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('.navegacao-simples')).toHaveCSS('background-color', 'rgba(255, 255, 255, 0.95)');
   await expect(page.locator('.cabecalho-publico-conteudo')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   const larguraFormulario = (await page.locator('.pagina-form').boundingBox())?.width ?? 0;
   expect(larguraFormulario).toBeGreaterThan((page.viewportSize()?.width ?? 400) > 700 ? 800 : 340);
@@ -111,6 +111,59 @@ test('setores públicos exibem mídia estável sem controles sobre a imagem', as
   });
   expect(posicoes.inicioFaixa).toBeGreaterThanOrEqual(posicoes.fimPalco - 1);
   expect(posicoes.inicioSeletores).toBeGreaterThanOrEqual(posicoes.fimFaixa - 1);
+  const dimensoes = await painel.locator('.midia-setor').evaluate((elemento) => {
+    const midia = elemento.getBoundingClientRect();
+    const carrossel = elemento.querySelector('.carrossel')!.getBoundingClientRect();
+    return { fimMidia: midia.bottom, fimCarrossel: carrossel.bottom };
+  });
+  expect(Math.abs(dimensoes.fimMidia - dimensoes.fimCarrossel)).toBeLessThanOrEqual(1);
+});
+
+test('cabeçalho secundário mantém navegação em uma linha e usa menu antes de comprimir', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 820 });
+  await page.goto('/catalogo');
+  const cabecalho = page.locator('.navegacao-simples');
+  await expect(cabecalho).toHaveCSS('height', '76px');
+  await expect(cabecalho.getByRole('navigation', { name: 'Navegação principal' })).toBeVisible();
+  const alturas = await cabecalho.locator('nav > a').evaluateAll((itens) => itens.map((item) => item.getBoundingClientRect().height));
+  expect(Math.max(...alturas)).toBeLessThan(30);
+
+  await page.setViewportSize({ width: 1100, height: 820 });
+  await expect(cabecalho.getByRole('navigation', { name: 'Navegação principal' })).toBeHidden();
+  await expect(cabecalho.locator('.menu-movel')).toBeVisible();
+});
+
+test('cópia do e-mail exibe confirmação flutuante no canto superior direito', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/');
+  await expect(page.locator('.contato-email')).toHaveAttribute('data-hidratado', 'sim');
+  await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => undefined } }));
+  await page.getByRole('button', { name: 'Copiar' }).click();
+  const aviso = page.getByRole('status');
+  await expect(aviso).toContainText('Endereço copiado');
+  await expect(aviso).toHaveCSS('position', 'fixed');
+  const caixa = await aviso.boundingBox();
+  if ((page.viewportSize()?.width ?? 1000) > 650) expect(caixa?.x ?? 0).toBeGreaterThan((page.viewportSize()?.width ?? 1000) / 2);
+  else expect(caixa?.width ?? 0).toBeGreaterThan((page.viewportSize()?.width ?? 400) - 40);
+  expect(caixa?.y ?? 100).toBeLessThan(50);
+});
+
+test('página de privacidade explica proteção, direitos e referências oficiais nos três idiomas', async ({ page }) => {
+  await page.goto('/privacidade');
+  await expect(page.getByRole('heading', { name: 'Privacidade e segurança', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Como protegemos as informações' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Seus direitos' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Lei Geral de Proteção/ })).toHaveAttribute('href', /planalto\.gov\.br/);
+  const mobile = (page.viewportSize()?.width ?? 1000) <= 1180;
+  if (mobile) await page.getByRole('button', { name: 'Abrir menu' }).click();
+  let seletor = mobile ? page.locator('.menu-movel .seletor-idioma select') : page.locator('.acoes-cabecalho-publico .seletor-idioma select');
+  await seletor.selectOption('en');
+  await expect(page.getByRole('heading', { name: 'Privacy and security', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your rights' })).toBeVisible();
+  seletor = mobile ? page.locator('.menu-movel .seletor-idioma select') : page.locator('.acoes-cabecalho-publico .seletor-idioma select');
+  await seletor.selectOption('de');
+  await expect(page.getByRole('heading', { name: 'Datenschutz und Sicherheit', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ihre Rechte' })).toBeVisible();
 });
 
 test('formulário explica claramente uma entrada inválida', async ({ page }) => {
