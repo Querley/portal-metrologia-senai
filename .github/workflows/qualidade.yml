@@ -52,6 +52,19 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase start
+      - name: Iniciar Supabase local com tolerância ao registro de imagens
+        shell: bash
+        run: |
+          for tentativa in 1 2 3; do
+            if supabase start; then
+              exit 0
+            fi
+            if [ "$tentativa" -lt 3 ]; then
+              echo "Falha transitória ao iniciar o Supabase; nova tentativa em 45 segundos."
+              supabase stop --no-backup || true
+              sleep 45
+            fi
+          done
+          exit 1
       - run: supabase db reset
       - run: supabase test db
