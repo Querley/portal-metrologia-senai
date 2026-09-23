@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           for tentativa in 1 2 3; do
-            if supabase start; then
+            if supabase db start; then
               exit 0
             fi
             if [ "$tentativa" -lt 3 ]; then
