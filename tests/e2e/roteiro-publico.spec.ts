@@ -153,6 +153,11 @@ test('página de privacidade explica proteção, direitos e referências oficiai
   await expect(page.getByRole('heading', { name: 'Privacidade e segurança', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Como protegemos as informações' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Seus direitos' })).toBeVisible();
+  await expect(page.locator('.privacidade-resumo, .privacidade-alerta')).toHaveCount(0);
+  await expect(page.locator('.privacidade-bloco ul').first()).toHaveCSS('list-style-type', 'disc');
+  const area = await page.locator('.privacidade').boundingBox();
+  const largura = page.viewportSize()?.width ?? 0;
+  expect(Math.abs((area?.x ?? 0) - (largura - ((area?.x ?? 0) + (area?.width ?? 0))))).toBeLessThan(2);
   await expect(page.getByRole('link', { name: /Lei Geral de Proteção/ })).toHaveAttribute('href', /planalto\.gov\.br/);
   const mobile = (page.viewportSize()?.width ?? 1000) <= 1180;
   if (mobile) await page.getByRole('button', { name: 'Abrir menu' }).click();

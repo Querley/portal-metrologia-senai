@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Bot, Database, Eye, FileCheck2, LockKeyhole, Scale, ShieldCheck, UserRoundCheck } from 'lucide-react';
+import { Bot, Database, Eye, FileCheck2, LockKeyhole, Scale, ShieldCheck, UserRoundCheck } from 'lucide-react';
 import { CabecalhoPublico } from '../../componentes/cabecalho-publico';
 import { ContatoEmail } from '../../componentes/contato-email';
 import { RodapePublico } from '../../componentes/rodape-publico';
@@ -11,15 +11,13 @@ const conteudos = {
   'pt-BR': {
     titulo: 'Privacidade e segurança',
     subtitulo: 'Entenda como o portal trata dados pessoais, protege informações e apoia um relacionamento transparente durante os serviços de metrologia.',
-    atualizado: 'Última atualização: 23 de setembro de 2026', versao: 'Aviso de privacidade — versão 1.0',
-    alerta: 'Este portal está em homologação. Utilize somente informações autorizadas pela sua empresa e não envie segredos industriais, desenhos confidenciais ou dados pessoais desnecessários.',
     compromissos: [
       ['Finalidade e necessidade', 'Coletamos somente os dados adequados e necessários para receber sua solicitação, preparar propostas, executar o serviço e manter a comunicação.'],
       ['Transparência e controle', 'Explicamos como os dados são utilizados e oferecemos canais para consulta, correção e exercício dos direitos previstos na LGPD.'],
       ['Segurança desde a concepção', 'O acesso é protegido por autenticação, perfis de permissão e separação dos registros de cada empresa.'],
     ],
     dados: { titulo: 'Quais dados podem ser tratados', itens: ['Dados de contato e da empresa, como nome, e-mail, telefone, função e CNPJ.', 'Informações da solicitação, proposta e execução do serviço.', 'Mensagens e arquivos técnicos enviados pelo cliente.', 'Dados necessários para autenticação, controle de acesso e rastreabilidade.'] },
-    finalidades: { titulo: 'Para que utilizamos os dados', texto: 'O tratamento está ligado ao atendimento solicitado e às obrigações aplicáveis. As principais finalidades são:', itens: ['identificar o solicitante e a empresa atendida;', 'analisar a necessidade e elaborar propostas;', 'planejar, executar, validar e documentar o serviço;', 'permitir acompanhamento, troca de mensagens e entrega de documentos;', 'preservar segurança, rastreabilidade e cumprimento de obrigações legais.'] },
+    finalidades: { titulo: 'Para que utilizamos os dados', texto: 'O tratamento está ligado ao atendimento solicitado e às obrigações aplicáveis. As principais finalidades são:', itens: ['Identificar o solicitante e a empresa atendida;', 'Analisar a necessidade e elaborar propostas;', 'Planejar, executar, validar e documentar o serviço;', 'Permitir acompanhamento, troca de mensagens e entrega de documentos;', 'Preservar segurança, rastreabilidade e cumprimento de obrigações legais.'] },
     protecao: { titulo: 'Como protegemos as informações', texto: 'O portal adota camadas de proteção proporcionais ao contexto do serviço, incluindo controle por função, isolamento por empresa, arquivos privados e verificação de integridade de documentos. A segurança é acompanhada por testes e revisão contínua. Nenhum sistema elimina todos os riscos; por isso, também mantemos processos de prevenção, avaliação e resposta.' },
     compartilhamento: { titulo: 'Compartilhamento e conservação', texto: 'Os dados podem ser tratados por fornecedores tecnológicos indispensáveis à operação do portal, sempre dentro da finalidade do serviço e dos controles aplicáveis. Não comercializamos dados pessoais. As informações são conservadas pelo período necessário ao atendimento, à rastreabilidade e às obrigações legais ou institucionais. Pedidos de exclusão são avaliados considerando essas obrigações.' },
     ia: { titulo: 'Inteligência artificial e decisões', texto: 'Recursos de IA podem apoiar explicações e análises, mas não substituem a avaliação profissional nem aprovam ou recusam serviços de forma autônoma. Antes de qualquer integração, o portal é estruturado para remover identificadores, clientes, contatos, preços, margens e anexos. Recomendações permanecem sujeitas à revisão humana.' },
@@ -30,11 +28,9 @@ const conteudos = {
   },
   en: {
     titulo: 'Privacy and security', subtitulo: 'Learn how the portal processes personal data, protects information and supports a transparent relationship throughout metrology services.',
-    atualizado: 'Last updated: September 23, 2026', versao: 'Privacy notice — version 1.0',
-    alerta: 'This portal is in a validation environment. Use only information authorized by your company and do not submit trade secrets, confidential drawings or unnecessary personal data.',
     compromissos: [['Purpose and necessity', 'We collect only data that is suitable and necessary to receive your request, prepare proposals, perform the service and communicate with you.'], ['Transparency and control', 'We explain how data is used and provide channels for access, correction and the exercise of rights under Brazilian data protection law.'], ['Security by design', 'Access is protected by authentication, permission profiles and separation of each company’s records.']],
     dados: { titulo: 'Data that may be processed', itens: ['Contact and company data, such as name, email, phone, role and Brazilian company registration number.', 'Request, proposal and service execution information.', 'Messages and technical files submitted by the customer.', 'Data required for authentication, access control and traceability.'] },
-    finalidades: { titulo: 'Why we use data', texto: 'Processing is connected to the requested service and applicable obligations. Main purposes include:', itens: ['identifying the requester and the customer company;', 'reviewing the need and preparing proposals;', 'planning, performing, validating and documenting the service;', 'enabling tracking, messages and document delivery;', 'preserving security, traceability and legal compliance.'] },
+    finalidades: { titulo: 'Why we use data', texto: 'Processing is connected to the requested service and applicable obligations. Main purposes include:', itens: ['Identifying the requester and the customer company;', 'Reviewing the need and preparing proposals;', 'Planning, performing, validating and documenting the service;', 'Enabling tracking, messages and document delivery;', 'Preserving security, traceability and legal compliance.'] },
     protecao: { titulo: 'How information is protected', texto: 'The portal uses protection layers proportionate to the service context, including role-based access, company isolation, private files and document integrity checks. Security is supported by testing and continuous review. No system eliminates every risk, so prevention, assessment and response processes are also maintained.' },
     compartilhamento: { titulo: 'Sharing and retention', texto: 'Data may be processed by technology providers that are necessary to operate the portal, within the service purpose and applicable controls. We do not sell personal data. Information is retained as needed for service, traceability and legal or institutional duties. Deletion requests are assessed against those duties.' },
     ia: { titulo: 'Artificial intelligence and decisions', texto: 'AI features may support explanations and analysis, but they do not replace professional review or autonomously approve or reject services. Before any integration, the portal is designed to remove identifiers, customers, contacts, prices, margins and attachments. Recommendations remain subject to human review.' },
@@ -45,8 +41,6 @@ const conteudos = {
   },
   de: {
     titulo: 'Datenschutz und Sicherheit', subtitulo: 'Erfahren Sie, wie das Portal personenbezogene Daten verarbeitet, Informationen schützt und eine transparente Zusammenarbeit während messtechnischer Dienstleistungen unterstützt.',
-    atualizado: 'Letzte Aktualisierung: 23. September 2026', versao: 'Datenschutzhinweis — Version 1.0',
-    alerta: 'Dieses Portal befindet sich in einer Validierungsumgebung. Verwenden Sie nur von Ihrem Unternehmen freigegebene Informationen und übermitteln Sie keine Geschäftsgeheimnisse, vertraulichen Zeichnungen oder unnötigen personenbezogenen Daten.',
     compromissos: [['Zweck und Erforderlichkeit', 'Wir erheben nur Daten, die für Ihre Anfrage, die Angebotserstellung, die Leistungserbringung und die Kommunikation erforderlich sind.'], ['Transparenz und Kontrolle', 'Wir erläutern die Datennutzung und bieten Kanäle für Auskunft, Berichtigung und die Ausübung der Rechte nach brasilianischem Datenschutzrecht.'], ['Datenschutz durch Technikgestaltung', 'Der Zugang wird durch Authentifizierung, Berechtigungsprofile und die Trennung der Unternehmensdaten geschützt.']],
     dados: { titulo: 'Welche Daten verarbeitet werden können', itens: ['Kontakt- und Unternehmensdaten wie Name, E-Mail, Telefon, Funktion und brasilianische Unternehmensnummer.', 'Informationen zu Anfrage, Angebot und Leistungserbringung.', 'Nachrichten und technische Dateien des Kunden.', 'Für Authentifizierung, Zugriffskontrolle und Nachvollziehbarkeit erforderliche Daten.'] },
     finalidades: { titulo: 'Wofür wir Daten verwenden', texto: 'Die Verarbeitung steht mit der angeforderten Leistung und den geltenden Pflichten in Verbindung. Hauptzwecke sind:', itens: ['Identifikation des Anfragenden und des Kundenunternehmens;', 'Prüfung des Bedarfs und Erstellung von Angeboten;', 'Planung, Durchführung, Validierung und Dokumentation der Leistung;', 'Statusverfolgung, Nachrichten und Dokumentenbereitstellung;', 'Sicherheit, Nachvollziehbarkeit und Erfüllung gesetzlicher Pflichten.'] },
@@ -68,8 +62,6 @@ export default function Privacidade() {
   return <main>
     <CabecalhoPublico titulo={conteudo.titulo} texto={conteudo.subtitulo} />
     <article className="conteudo-publico privacidade">
-      <div className="privacidade-resumo"><p><strong>{conteudo.atualizado}</strong></p><p>{conteudo.versao}</p></div>
-      <div className="privacidade-alerta"><AlertTriangle size={22} aria-hidden="true" /><p>{conteudo.alerta}</p></div>
       <section className="privacidade-compromissos" aria-label={conteudo.titulo}>{conteudo.compromissos.map(([titulo, texto], indice) => { const Icone = iconesCompromissos[indice] ?? ShieldCheck; return <article key={titulo}><Icone size={30} aria-hidden="true" /><h2>{titulo}</h2><p>{texto}</p></article>; })}</section>
       <div className="privacidade-grade">
         <section className="privacidade-bloco"><h2><Database size={24} aria-hidden="true" />{conteudo.dados.titulo}</h2><ul>{conteudo.dados.itens.map((item) => <li key={item}>{item}</li>)}</ul></section>
