@@ -20,9 +20,9 @@ O ambiente contém somente dados fictícios preparados para avaliação. Não en
 
 | Nome | Empresa | E-mail | Senha |
 | --- | --- | --- | --- |
-| Camila Ferreira | Metalforte | `camila.ferreira@metalforte.test` | `BobRoss1995` |
-| Bruno Almeida | Aerotech | `bruno.almeida@aerotech.test` | `BobRoss1995` |
-| Larissa Campos | Precision | `larissa.campos@precision.test` | `BobRoss1995` |
+| Camila Ferreira | Metalforte | `camila.ferreira@metalforte.test` | `camila.ferreira` |
+| Bruno Almeida | Aerotech | `bruno.almeida@aerotech.test` | `bruno.almeida` |
+| Larissa Campos | Precision | `larissa.campos@precision.test` | `larissa.campos` |
 
 As credenciais são exclusivas da homologação e estão publicadas intencionalmente para permitir a avaliação. A aplicação final deve usar contas individuais e senhas privadas.
 
