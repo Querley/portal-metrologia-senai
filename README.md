@@ -1,14 +1,161 @@
 # Portal de Metrologia SENAI
 
-Plataforma web para solicitar, orçar e acompanhar serviços de metrologia, comparar estimativas com resultados e transformar lições validadas em recomendações para novos orçamentos.
+Plataforma web para solicitação, orçamento, execução e acompanhamento de serviços de metrologia. O sistema conecta clientes e equipe do laboratório, mantém o histórico técnico dos trabalhos e transforma resultados concluídos em lições aprendidas e recomendações estatísticas auditáveis.
 
-## Estado atual
+## Acesso à homologação
 
-O repositório contém uma experiência pública responsiva, portal autenticado, contratos e cálculos do domínio, migrations Supabase, massa controlada de homologação e documentação de produto. A homologação usa autenticação e persistência reais no Supabase, com gestão administrativa de contas, RLS, custos-hora versionados e pré-propostas persistentes; produção continua separada e ainda não foi provisionada.
+**Portal publicado:** [portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site](https://portal-metrologia-senai.querleyjuniorodrigue.chatgpt.site/)
 
-O recorte de 28 de agosto–2 de setembro acrescenta descoberta por setores, solicitação sem login, dados mínimos da pré-proposta, VLibras e uma área do Cliente com perfil externo, etapas e mensagens bidirecionais persistentes. O documento emitido pelo laboratório é uma pré-proposta; a proposta oficial é criada no Nectar, sem integração com este portal. As migrations `202608280013` até `202609020033` estão aplicadas e registradas na homologação; a `021` acrescenta o aceite autenticado do Cliente e a confirmação do início somente pelo Administrador, a `022` cria etapas versionadas, a `023` separa o fechamento da aprovação final, a `024` liberou provisoriamente as execuções demonstrativas aos três perfis operacionais, `025`/`026` implementam e corrigem o ciclo persistente de lições, indicadores e recomendação estatística, a `027` persiste e exige justificativa de estimativa fora de Q1–Q3, a `028` encerra o acesso provisório com atribuição formal de Técnico pelo Administrador, `029`/`030` eliminam alertas estáticos sem alterar as APIs, a `031` permite vários trabalhos simultâneos na mesma empresa, a `032` protege anexos do Cliente e recupera PDFs órfãos sem violar a imutabilidade, e a `033` registra a recusa motivada do Cliente e libera uma nova pré-proposta sem apagar o histórico. O fluxo público aceita uma caixa de e-mail válida, mantém o registro operacional na origem demonstrativa, gera protocolo, vincula a solicitação ao mesmo e-mail autenticado, abre um canal protegido e permite que a equipe crie o orçamento no mesmo atendimento, sem duplicar a solicitação. O Administrador gera o PDF privado da versão aprovada, congela seu SHA-256 e o Cliente baixa o documento emitido com autorização por vínculo e verificação local de integridade.
+O ambiente contém somente dados fictícios preparados para avaliação. Não envie informações pessoais, arquivos industriais ou dados confidenciais reais.
 
-## Executar
+### Contas da equipe
+
+| Perfil | Nome | E-mail | Senha |
+| --- | --- | --- | --- |
+| Administrador | Matheus Silva | `matheus.silva.demo@fieg.com.br` | `matheus.silva.demo` |
+| Validador | Sebastião | `sebastiao.demo@fieg.com.br` | `sebastiao.demo` |
+| Técnico | João Rodrigues | `joao.rodrigues.demo@fieg.com.br` | `joao.rodrigues.demo` |
+
+### Contas de clientes
+
+| Nome | Empresa | E-mail | Senha |
+| --- | --- | --- | --- |
+| Camila Ferreira | Metalforte | `camila.ferreira@metalforte.test` | `BobRoss1995` |
+| Bruno Almeida | Aerotech | `bruno.almeida@aerotech.test` | `BobRoss1995` |
+| Larissa Campos | Precision | `larissa.campos@precision.test` | `BobRoss1995` |
+
+As credenciais são exclusivas da homologação e estão publicadas intencionalmente para permitir a avaliação. A aplicação final deve usar contas individuais e senhas privadas.
+
+## O que pode ser avaliado
+
+- Site público responsivo em português, inglês e alemão;
+- Catálogo de serviços, equipamentos, setores atendidos e novidades;
+- Solicitação pública de serviço, validação de campos e anexos privados;
+- Login, logout, recuperação de senha e sessões independentes por aba;
+- Área do Cliente com vários trabalhos simultâneos, propostas, execução, mensagens e documentos;
+- Criação, revisão, publicação, aceite e recusa motivada de pré-propostas;
+- Pré-propostas com vários equipamentos e PDF privado com verificação de integridade;
+- Atribuição de Técnico, etapas ordenadas, progresso, retrabalho e retorno justificado de fase;
+- Fechamento pelo Técnico e aprovação ou devolução por Validador/Administrador;
+- Lições aprendidas, comparação estimado versus realizado e recomendação estatística;
+- Gestão administrativa de usuários, clientes, funções, bloqueios e custos-hora;
+- CMS trilíngue com fluxo de revisão e publicação;
+- Busca, filtros, ordenação, indicadores navegáveis e notificações;
+- Controle de acesso por perfil, RLS no banco e segregação entre dados reais e demonstrativos.
+
+## Guia rápido de uso
+
+### Visitante
+
+1. Abra a página inicial e alterne entre **PT-BR**, **EN** e **DE**.
+2. Consulte **Serviços**, **Novidades no Centro** e **Equipamentos**.
+3. Clique em **Solicitar orçamento** para registrar uma necessidade sem login.
+4. Preencha somente dados fictícios. O protocolo exibido confirma o envio.
+
+### Cliente
+
+1. Clique em **Entrar** e use uma das contas de cliente.
+2. Na visão geral, clique nos indicadores para filtrar os trabalhos.
+3. Abra um trabalho para consultar solicitação, proposta, etapas, mensagens e anexos.
+4. Uma proposta publicada pode ser aceita ou recusada com justificativa.
+5. Use **Nova solicitação** para criar outro trabalho para a mesma empresa.
+
+### Técnico
+
+1. Entre como João Rodrigues.
+2. Em **Execução**, abra um trabalho atribuído ao Técnico.
+3. Atualize o progresso respeitando a ordem das etapas.
+4. Registre ocorrências, retrabalho e horas realizadas.
+5. Envie o fechamento para aprovação. Valores comerciais não devem aparecer para esse perfil.
+
+### Validador
+
+1. Entre como Sebastião.
+2. Revise pré-propostas encaminhadas pela equipe.
+3. Em **Execução**, aprove ou devolva um fechamento com justificativa.
+4. Em **Conhecimento**, formalize lições e consulte indicadores operacionais.
+5. Em **Conteúdo público**, crie ou revise conteúdo editorial; a publicação final continua sob controle administrativo.
+
+### Administrador
+
+1. Entre como Matheus Silva.
+2. Em **Solicitações**, selecione uma solicitação e inicie uma pré-proposta vinculada.
+3. Em **Orçamentos**, revise, gere o PDF e publique a versão para o Cliente.
+4. Em **Execução**, atribua o Técnico, inicie o trabalho e acompanhe o fluxo completo.
+5. Em **Meu perfil**, consulte indicadores, cadastre usuários, altere funções e administre clientes.
+6. Em **Custos-hora**, consulte o histórico e registre uma nova vigência.
+7. Em **Conteúdo público**, aprove e publique versões nos três idiomas.
+
+## Fluxo principal
+
+```text
+Solicitação
+   → triagem e pré-proposta vinculada
+   → revisão interna
+   → publicação do PDF
+   → aceite ou recusa do Cliente
+   → atribuição e início pelo Administrador
+   → execução ordenada pelo Técnico
+   → fechamento técnico
+   → aprovação final
+   → lição aprendida formalizada
+   → recomendação para trabalhos futuros
+```
+
+O documento gerado no portal é uma **pré-proposta**. A proposta comercial oficial permanece no processo institucional externo do SENAI.
+
+## Regras importantes
+
+- Somente o **Administrador** publica pré-propostas, inicia execuções, gerencia funções e altera custos-hora.
+- O **Técnico** opera apenas trabalhos atribuídos e não recebe valores comerciais.
+- **Validador** e **Administrador** aprovam ou devolvem fechamentos e formalizam lições.
+- O **Cliente** acessa somente empresas e trabalhos aos quais está vinculado.
+- Etapas devem respeitar a ordem; retornos exigem justificativa e permanecem auditados.
+- Uma lição somente participa das recomendações depois de formalizada.
+- A recomendação usa casos concluídos do mesmo serviço e não mistura dados de origens diferentes.
+- Dados reais e demonstrativos possuem segregação obrigatória em consultas, indicadores e exportações.
+
+## Área de Conhecimento
+
+A página compara esforço, duração e custo estimados com os valores realizados. **Esforço** representa horas efetivamente consumidas pela equipe e pelos equipamentos; **duração** representa o tempo corrido entre o início e a conclusão.
+
+Após a conclusão, o Técnico registra uma lição. Validador ou Administrador formaliza essa lição, tornando o caso elegível para a recomendação. O cálculo usa mediana, quartis e fator de correção:
+
+- **0 casos:** sem base elegível;
+- **1 a 4 casos:** referência individual, confiança baixa;
+- **5 a 14 casos:** mediana e faixa Q1–Q3, confiança média;
+- **15 ou mais casos:** faixa consolidada e confiança alta.
+
+Os valores são determinísticos. O assistente textual não calcula preços, quartis ou recomendações e recebe somente conteúdo previamente sanitizado.
+
+## Tecnologias
+
+| Camada | Tecnologias |
+| --- | --- |
+| Interface | Next.js 16, React 19, TypeScript 5 e CSS responsivo |
+| Validação e cálculos | Zod e Decimal.js |
+| Ícones e acessibilidade | Lucide React, navegação por teclado, foco visível e VLibras |
+| Backend | Supabase PostgreSQL, Auth, Storage, Realtime, RPCs e Edge Functions |
+| Segurança | Row Level Security, funções protegidas, trilha de auditoria e documentos privados com SHA-256 |
+| Testes | Vitest, Playwright e pgTAP |
+| Qualidade | ESLint, TypeScript e GitHub Actions |
+| Hospedagem | Sites sobre runtime compatível com Cloudflare Workers |
+
+## Arquitetura e segurança
+
+A interface nunca é a única barreira de permissão. Transições sensíveis acontecem no servidor, as políticas RLS restringem leitura e escrita e ações administrativas geram auditoria. Anexos e PDFs ficam em buckets privados e são liberados por vínculo e perfil.
+
+Valores financeiros usam aritmética decimal. Custos vigentes são versionados e congelados na proposta publicada. Lições formalizadas são imutáveis: correções criam uma nova revisão.
+
+Detalhes adicionais estão em:
+
+- [Arquitetura](docs/arquitetura.md)
+- [Domínio e regras de negócio](docs/dominio.md)
+- [Requisitos](docs/requisitos.md)
+- [Visão e escopo](docs/visao-e-escopo.md)
+- [Roteiro de demonstração](docs/roteiro-demonstracao.md)
+
+## Execução local
 
 Requer Node.js 22.13 ou superior.
 
@@ -17,48 +164,47 @@ npm install
 npm run dev
 ```
 
-Copie `.env.example` para `.env.local` apenas quando houver ambientes Supabase e chaves aprovadas. Nunca versione o arquivo preenchido.
+Copie `.env.example` para `.env.local` e preencha somente as configurações públicas de um projeto Supabase autorizado. Nunca versione o arquivo preenchido.
 
-O acesso interno não permite autocadastro público. O Administrador convida Clientes e membros da equipe pelo painel, define o papel inicial e a pessoa cria a senha por um link seguro; sem URL e chave anônima configuradas, a área informa que a integração está indisponível.
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
 
-O estado aplicado da homologação e o próximo recorte vertical estão registrados em [docs/homologacao.md](docs/homologacao.md). Credenciais locais e de hospedagem nunca são versionadas.
+O banco completo é construído pelas migrations em `supabase/migrations`. A pasta `supabase/tests` contém as provas de regras e permissões executadas contra uma instância local isolada.
 
-## Verificar
+## Verificação
+
+```bash
+npm run lint
+npm run test
+npm run test:e2e
+npm run build
+```
+
+Ou execute lint, testes unitários e build em sequência:
 
 ```bash
 npm run verificar
 ```
 
-## Estrutura
+O workflow em `.github/workflows/qualidade.yml` também executa as verificações automatizadas e os testes de banco.
 
-- `app/`: páginas públicas, portal e área interna.
-- `componentes/`: componentes acessíveis e módulos de experiência.
-- `lib/`: contratos, cálculos e dados demonstrativos.
-- `supabase/`: esquema, RLS, funções e massa de demonstração.
-- `docs/`: produto, domínio, arquitetura, roteiro e decisões.
-- `fontes/`: catálogo versionável; originais locais ignorados.
-- `public/imagens/`: cópias publicáveis da marca e do acervo fotográfico autorizado.
+## Estrutura do repositório
 
-## Segurança
+- `app/`: páginas públicas e rotas do portal;
+- `componentes/`: módulos de interface e fluxos autenticados;
+- `lib/`: contratos, cálculos, validações e regras de domínio;
+- `supabase/migrations/`: evolução versionada do banco;
+- `supabase/functions/`: funções administrativas e operações protegidas;
+- `supabase/tests/`: testes de RLS e regras de persistência;
+- `tests/e2e/`: cenários automatizados em desktop e mobile;
+- `docs/`: requisitos, arquitetura, domínio e material de avaliação;
+- `public/`: imagens e vídeos autorizados usados no portal.
 
-A aplicação foi desenhada para negar acesso por padrão. Dados reais e demonstrativos usam origens obrigatórias e não podem aparecer juntos. Os documentos-fonte e a planilha de custos permanecem locais e fora do Git.
+## Limites desta versão
 
-Consulte [docs/roadmap.md](docs/roadmap.md) para o plano até a entrega e [docs/roteiro-demonstracao.md](docs/roteiro-demonstracao.md) para validar a versão.
-
-## Revisão de 7 de setembro de 2026
-
-A migration `202609070034` reforça validações, ordem das etapas, vínculo obrigatório de pré-proposta, múltiplos equipamentos, entrega estimada e administração auditada de funções. A interface acrescenta alertas destacados, formulários recolhíveis, atalhos filtrados, pesquisa por data e histórico administrativo de custos.
-
-## Revisão de 8 de setembro de 2026
-
-A migration `202609080035` separa definitivamente cargo empresarial de permissão interna, repara contas Cliente classificadas por engano como equipe, permite troca auditada de e-mail sintético e cria o retorno justificado de um trabalho não finalizado para etapa anterior. A Visão Geral autenticada passa a usar somente registros persistidos autorizados, com indicadores navegáveis.
-
-A migration `202609090036` reforça a invariável de que fechamento aprovado significa execução concluída e limita a gestão administrativa atual aos papéis úteis de Técnico, Validador e Administrador. O portal inicia a etapa de gestão de contas com recuperação segura de senha pelo Supabase, corrige a criação multiequipamento, uniformiza notificações flutuantes e acrescenta indicadores filtráveis nas filas internas.
-
-As migrations `202609110037` a `202609110040` corrigem a troca administrativa de função, aceitam caixas de e-mail válidas na homologação sem remover a segregação de origem, liberam anexos das solicitações à equipe, acrescentam bloqueio efetivo e auditado, painel de clientes/equipe, inteligência operacional, anexos em mensagens e contadores de leitura. O login não expõe mais atalhos para páginas públicas antigas de demonstração.
-
-A migration `202609150043` formaliza o fluxo editorial Validador → Administrador e a seção localizada de acontecimentos. A interface agrupa pré-propostas multiequipamento, oferece edição administrativa completa em uma janela, gráficos operacionais e tradução reativa das áreas pública e Cliente; a área da equipe permanece em português.
-
-A migration `202609150044` conecta quatro regiões principais da página inicial ao CMS visual, preserva as fichas de equipamentos como conteúdo técnico imutável e completa a cobertura automatizada PT-BR/EN/DE do catálogo, equipamentos, solicitação, acesso e área do Cliente. Revisão linguística institucional continua sendo uma homologação humana separada da cobertura funcional.
-
-A migration `202609220047` publica, nos três idiomas, as mídias reais autorizadas dos setores e a seção de novidades com Congresso SINDAG, ExpoPeças, desenvolvimento do portal e o caminho para a acreditação INMETRO. As páginas da ZEISS PRISMO e do ZEISS T-SCAN hawk 2 passam a apresentar os vídeos reais de operação fornecidos pelo Centro.
+- A URL publicada é um ambiente de homologação, não produção.
+- Integrações institucionais com Nectar e provedores corporativos de câmbio ainda não fazem parte desta versão.
+- A revisão jurídica e linguística institucional deve ocorrer antes do uso com dados reais.
+- O conteúdo técnico das páginas de equipamentos é mantido no código; o CMS atua nas regiões editoriais previstas da página pública.

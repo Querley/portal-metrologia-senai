@@ -58,7 +58,7 @@ A migration `202609020032` foi aplicada e registrada em 2 de setembro. Ela permi
 
 ## Retomada por outro chat
 
-1. Ler `AGENTS.md`, `README.md` e a documentação obrigatória indicada pelo mantenedor.
+1. Ler `README.md` e a documentação de requisitos, domínio e arquitetura.
 2. Confirmar `main` limpa e sincronizada.
 3. Tratar `supabase/migrations/` como fonte canônica do banco; nunca editar manualmente uma migration já aplicada.
 4. Manter `.env.local`, credenciais do CLI e metadados de vínculo fora do Git.
