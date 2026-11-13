@@ -20,6 +20,7 @@ import { OrcamentosPersistentes } from './orcamentos-persistentes';
 import { SolicitacoesPersistentes } from './solicitacoes-persistentes';
 import { VisaoGeralPersistente } from './visao-geral-persistente';
 import { ConteudoPublicoCms } from './conteudo-publico-cms';
+import { ChatbotLaboratorioInterno } from './chatbot-laboratorio-interno';
 
 const menuBase = [
   { id: 'visao', rotulo: 'Visão geral', icone: LayoutDashboard },
@@ -28,6 +29,7 @@ const menuBase = [
   { id: 'servicos', rotulo: 'Execução', icone: Activity },
   { id: 'conhecimento', rotulo: 'Conhecimento', icone: BookOpenCheck },
   { id: 'mensagens', rotulo: 'Mensagens', icone: MessageSquareText },
+  { id: 'chatbot', rotulo: 'Chatbot IA', icone: Bot },
   { id: 'conteudo', rotulo: 'Conteúdo público', icone: FileCheck2 },
 ];
 
@@ -246,6 +248,7 @@ export function PortalDemonstracao({ nomeUsuario = 'Usuário Demo', perfilUsuari
         {secao === 'servicos' && (clienteSupabase && perfilInterno ? <ExecucoesPersistentes key={`servicos-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroEstadoInicial={filtroNavegacao} /> : <ExecucaoDemonstrativa />)}
         {secao === 'conhecimento' && (clienteSupabase && perfilInterno ? <ConhecimentoPersistente key={`conhecimento-${revisaoNavegacao}`} cliente={clienteSupabase} perfil={perfilInterno} filtroInicial={filtroNavegacao} /> : <Conhecimento recomendacao={recomendacao} />)}
         {secao === 'mensagens' && (mensagensPersistentesDisponiveis && clienteSupabase && perfilInterno ? <MensagensPersistentes cliente={clienteSupabase} perfil={perfilInterno} /> : <Mensagens />)}
+        {secao === 'chatbot' && <ChatbotLaboratorioInterno cliente={clienteSupabase} perfil={perfilInterno} />}
         {secao === 'conteudo' && clienteSupabase && (perfilInterno === 'administrador' || perfilInterno === 'validador') && <ConteudoPublicoCms cliente={clienteSupabase} perfil={perfilInterno} />}
         {secao === 'custos' && clienteSupabase && perfilInterno && <CustosEquipamento cliente={clienteSupabase} perfil={perfilInterno} />}
       </main>
