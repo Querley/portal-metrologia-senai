@@ -132,7 +132,9 @@ Os valores são determinísticos. O assistente textual não calcula preços, qua
 
 | Camada | Tecnologias |
 | --- | --- |
-| Interface | Next.js 16, React 19, TypeScript 5 e CSS responsivo |
+| Interface Web | Next.js 16, React 19, TypeScript 5 e CSS responsivo |
+| Aplicativo Mobile | React Native 0.79, Expo SDK 53, TypeScript 5 (`mobile/`) compartilhando `lib/` |
+| Assistentes de IA | Chatbot Público (Visitante) + Chatbot Interno do Laboratório + Assistente Sanitizado (`lib/chatbot-metrologia.ts` + Gemini 2.5 Flash opcional) |
 | Validação e cálculos | Zod e Decimal.js |
 | Ícones e acessibilidade | Lucide React, navegação por teclado, foco visível e VLibras |
 | Backend | Supabase PostgreSQL, Auth, Storage, Realtime, RPCs e Edge Functions |
@@ -140,6 +142,34 @@ Os valores são determinísticos. O assistente textual não calcula preços, qua
 | Testes | Vitest, Playwright e pgTAP |
 | Qualidade | ESLint, TypeScript e GitHub Actions |
 | Hospedagem | Sites sobre runtime compatível com Cloudflare Workers |
+
+## Aplicativo Mobile (React Native / Expo) e Chatbots de IA
+
+O repositório inclui o aplicativo mobile nativo em `mobile/`, construído em **React Native (Expo)** e integrado diretamente ao mesmo backend Supabase e ao núcleo compartilhado `lib/`:
+
+1. **Área Pública (Visitante — PT-BR, EN, DE):**
+   - Vitrine do laboratório, Novidades/Eventos, Catálogo dos 10 serviços e 6 máquinas ZEISS, Formulário público de solicitação de orçamento e **Chatbot Público do Laboratório**.
+   - **Chatbot Público (Externo):** exclusivo da área pública; responde dúvidas sobre o Centro de Excelência em Metrologia SENAI / ZEISS, eventos/novidades (Congresso SINDAG, ExpoPeças 2026, Acreditação INMETRO), equipamentos, serviços e setores.
+2. **Área Autenticada do Cliente (Sem Chatbot):**
+   - Acompanhamento de múltiplos trabalhos por empresa, aceite ou recusa justificada de pré-proposta, linha do tempo de etapas de execução, abertura de nova solicitação e mensagens diretas com a equipe humana do laboratório (sem chatbot na área interna do cliente).
+3. **Portal Operacional Interno do Laboratório (Técnico, Validador e Administrador):**
+   - Visão Geral (KPIs), Solicitações & Anexos (PDFs/CADs), Calculadora de Orçamentos (`Decimal.js` + recomendação estatística `Q1–Q3`), Execução & Registro de Problemas/Retrabalho, Conhecimento & Lições Aprendidas, Mensagens com Clientes, **Assistente Sanitizado (LGPD)** (mantido intacto) e o novo **Chatbot Interno do Laboratório**.
+   - **Chatbot Interno do Laboratório:** permite que membros do laboratório digitem ou toquem no **nome de um serviço** (ou protocolo/empresa/tema) e recebam imediatamente o dossiê completo com o que os clientes pediram, arquivos e PDFs anexados, instruções técnicas das etapas, problemas/retrabalhos ocorridos, mensagens de clientes e lições aprendidas (respeitando o ocultamento de preços comerciais para o perfil `tecnico`).
+
+### Como executar o App Mobile (React Native / Expo)
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Você pode abrir no **Expo Go** (Android/iOS), emulador Android (`npm run android`) ou navegador (`npm run web`). As variáveis públicas do Supabase (`EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`) ficam em `mobile/.env` (não versionado). Para validar a tipagem do app mobile:
+
+```bash
+cd mobile
+npm run typecheck
+```
 
 ## Arquitetura e segurança
 

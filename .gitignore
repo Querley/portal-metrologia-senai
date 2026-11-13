@@ -47,3 +47,10 @@ next-env.d.ts
 /work/
 /supabase/.temp/
 /supabase/.branches/
+
+# mobile (React Native / Expo)
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
+/mobile/web-build/
+!/mobile/.env.example

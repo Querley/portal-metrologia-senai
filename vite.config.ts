@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { sites } from '@openai/sites-vite-plugin';
 import tailwindcss from '@tailwindcss/postcss';
 import vinext from 'vinext';
@@ -42,6 +43,15 @@ export default defineConfig(async () => {
   const { cloudflare } = await import('@cloudflare/vite-plugin');
 
   return {
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+      alias: {
+        '@lib': path.resolve(process.cwd(), 'lib'),
+        'react-native': path.resolve(process.cwd(), 'lib/react-native-web-shim.tsx'),
+        'react-native-url-polyfill/auto': path.resolve(process.cwd(), 'lib/react-native-web-shim.tsx'),
+        expo: path.resolve(process.cwd(), 'lib/react-native-web-shim.tsx'),
+      },
+    },
     css: { postcss: { plugins: [tailwindcss()] } },
     server: {
       watch: {
