@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Portal de Metrologia SENAI",
+    "slug": "portal-metrologia-senai-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#07304a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "br.senai.metrologia.portal",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "br.senai.metrologia.portal",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#07304a"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
