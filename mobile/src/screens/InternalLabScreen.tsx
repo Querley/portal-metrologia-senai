@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Linking,
   Modal,
   ScrollView,
   StyleSheet,
@@ -187,30 +188,62 @@ export function InternalLabScreen({
     }
   }
 
-  function alternarEtapaExecucao(execucaoId: string, ordemEtapa: number) {
+  async function alternarEtapaExecucao(execucaoId: string, ordemEtapa: number) {
+    const execAlvo = contexto.execucoes.find((e) => e.execucao_id === execucaoId);
+    const etapaAlvo = execAlvo?.etapas.find((et) => et.ordem === ordemEtapa);
+    if (!etapaAlvo) return;
+
+    const proximoEstado: EstadoEtapaExecucao =
+      etapaAlvo.estado === 'a_fazer'
+        ? 'em_andamento'
+        : etapaAlvo.estado === 'em_andamento'
+          ? 'concluida'
+          : 'a_fazer';
+    const proximoProgresso =
+      proximoEstado === 'concluida' ? 100 : proximoEstado === 'em_andamento' ? 50 : 0;
+
     setContexto((atual) => ({
       ...atual,
       execucoes: atual.execucoes.map((exec) => {
         if (exec.execucao_id !== execucaoId) return exec;
-        const novasEtapas = exec.etapas.map((etapa) => {
-          if (etapa.ordem !== ordemEtapa) return etapa;
-          const proximoEstado: EstadoEtapaExecucao =
-            etapa.estado === 'a_fazer'
-              ? 'em_andamento'
-              : etapa.estado === 'em_andamento'
-                ? 'concluida'
-                : 'a_fazer';
-          const proximoProgresso =
-            proximoEstado === 'concluida' ? 100 : proximoEstado === 'em_andamento' ? 50 : 0;
-          return { ...etapa, estado: proximoEstado, progresso: proximoProgresso };
-        });
-        return { ...exec, etapas: novasEtapas };
+        return {
+          ...exec,
+          etapas: exec.etapas.map((etapa) =>
+            etapa.ordem === ordemEtapa
+              ? { ...etapa, estado: proximoEstado, progresso: proximoProgresso }
+              : etapa,
+          ),
+        };
       }),
     }));
-    setAvisoOperacional('Progresso da etapa técnica atualizado na bancada.');
+
+    const supabase = obterSupabaseMobile();
+    if (supabase && etapaAlvo.id) {
+      const { error } = await supabase.rpc('atualizar_etapa_execucao_demonstrativa', {
+        etapa: etapaAlvo.id,
+        novo_estado: proximoEstado,
+        novo_progresso: proximoProgresso,
+      });
+      if (!error) {
+        await recarregarContexto(perfil);
+        setAvisoOperacional('Progresso da etapa salvo no banco e visível para o cliente.');
+        return;
+      }
+      setAvisoOperacional(
+        error.code === '42501'
+          ? 'Seu perfil não tem permissão para alterar esta etapa no banco.'
+          : `Etapa atualizada na tela (banco: ${error.message}).`,
+      );
+      return;
+    }
+    setAvisoOperacional('Progresso da etapa técnica atualizado na bancada (modo local).');
   }
 
-  function registrarProblemaExecucao(execucaoId: string) {
+  async function registrarProblemaExecucao(execucaoId: string) {
+    const execAlvo = contexto.execucoes.find((e) => e.execucao_id === execucaoId);
+    const motivo =
+      'Retrabalho registrado no aplicativo móvel: necessidade de estabilização térmica complementar e nova verificação dimensional.';
+
     setContexto((atual) => ({
       ...atual,
       execucoes: atual.execucoes.map((exec) => {
@@ -219,22 +252,54 @@ export function InternalLabScreen({
           ...exec,
           retrabalho: true,
           causa_principal: exec.causa_principal ?? MOTIVOS_RETRABALHO[0],
-          fechamento_observacoes:
-            exec.fechamento_observacoes ||
-            'Retrabalho registrado na bancada móvel: necessidade de estabilização térmica complementar e limpeza de superfície antes da nova varredura.',
+          fechamento_observacoes: exec.fechamento_observacoes || motivo,
         };
       }),
     }));
+
+    const supabase = obterSupabaseMobile();
+    const etapaRetorno =
+      execAlvo?.etapas.find((et) => et.estado === 'em_andamento') ?? execAlvo?.etapas[0];
+    if (supabase && etapaRetorno?.id) {
+      const { error } = await supabase.rpc('retornar_execucao_etapa_demonstrativa', {
+        execucao: execucaoId,
+        etapa_destino: etapaRetorno.id,
+        motivo,
+      });
+      if (!error) {
+        await recarregarContexto(perfil);
+        setAvisoOperacional(
+          'Ocorrência / retrabalho registrado no Supabase e sincronizado com o Chatbot Interno.',
+        );
+        return;
+      }
+    }
     setAvisoOperacional(
       'Ocorrência / retrabalho registrado na execução e sincronizado com o Chatbot Interno.',
     );
   }
 
-  function enviarMensagemInternaParaCliente() {
+  async function enviarMensagemInternaParaCliente() {
     const texto = textoNovaMensagemInterna.trim();
     if (!texto) return;
     const idAlvo = conversaSelecionadaId || contexto.conversas[0]?.solicitacao_id;
     if (!idAlvo) return;
+
+    const supabase = obterSupabaseMobile();
+    if (supabase) {
+      const { error } = await supabase.rpc('enviar_mensagem_interna_demonstrativa', {
+        solicitacao: idAlvo,
+        conteudo: texto,
+      });
+      if (!error) {
+        setTextoNovaMensagemInterna('');
+        await recarregarContexto(perfil);
+        setAvisoOperacional('Mensagem enviada e salva no protocolo do cliente.');
+        return;
+      }
+      setAvisoOperacional(`Erro ao enviar ao Supabase: ${error.message}`);
+      return;
+    }
 
     setContexto((atual) => ({
       ...atual,
@@ -257,7 +322,50 @@ export function InternalLabScreen({
       }),
     }));
     setTextoNovaMensagemInterna('');
-    setAvisoOperacional('Mensagem técnica registrada na conversa do protocolo.');
+    setAvisoOperacional('Mensagem técnica registrada na conversa do protocolo (modo local).');
+  }
+
+  async function aprovarOuPublicarOrcamento(orc: ContextoOperacionalLaboratorio['orcamentos'][number]) {
+    const supabase = obterSupabaseMobile();
+    if (!supabase) {
+      setAvisoOperacional(
+        `Versão V${orc.numero} do protocolo #${orc.solicitacao_codigo} marcada como aprovada (modo local).`,
+      );
+      return;
+    }
+    const rpcNome =
+      orc.estado === 'aprovado' ? 'publicar_orcamento_demonstrativo' : 'aprovar_orcamento_demonstrativo';
+    const { error } = await supabase.rpc(rpcNome, { versao: orc.versao_id });
+    if (error) {
+      setAvisoOperacional(
+        error.code === '42501'
+          ? 'Seu perfil não tem autorização para aprovar/publicar esta versão.'
+          : `Não foi possível concluir no Supabase: ${error.message}`,
+      );
+      return;
+    }
+    await recarregarContexto(perfil);
+    setAvisoOperacional(
+      `Versão V${orc.numero} do protocolo #${orc.solicitacao_codigo} atualizada no Supabase!`,
+    );
+  }
+
+  async function abrirAnexoStorage(bucket: 'solicitacoes' | 'mensagens', caminho: string, nome: string) {
+    if (!caminho) {
+      setAvisoOperacional(`Anexo "${nome}" disponível apenas em demonstração local.`);
+      return;
+    }
+    const supabase = obterSupabaseMobile();
+    if (!supabase) {
+      setAvisoOperacional(`Conecte-se ao Supabase para baixar "${nome}".`);
+      return;
+    }
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(caminho, 300);
+    if (error || !data?.signedUrl) {
+      setAvisoOperacional(`Não foi possível abrir "${nome}": ${error?.message ?? 'erro no Storage'}.`);
+      return;
+    }
+    await Linking.openURL(data.signedUrl);
   }
 
   const conversaAtiva =
@@ -604,12 +712,22 @@ export function InternalLabScreen({
                     <Text style={styles.textoVazio}>Nenhum arquivo anexado até o momento.</Text>
                   ) : (
                     anexos.map((arq) => (
-                      <View key={arq.id} style={styles.itemAnexo}>
-                        <Text style={styles.itemAnexoNome}>📄 {arq.nome_original}</Text>
+                      <TouchableOpacity
+                        key={arq.id}
+                        style={styles.itemAnexo}
+                        onPress={() =>
+                          void abrirAnexoStorage(
+                            'solicitacoes',
+                            arq.caminho_storage ?? '',
+                            arq.nome_original,
+                          )
+                        }
+                      >
+                        <Text style={styles.itemAnexoNome}>📄 {arq.nome_original} (abrir)</Text>
                         <Text style={styles.itemAnexoMeta}>
                           {arq.tipo_mime} • {(arq.tamanho_bytes / 1024).toFixed(0)} KB
                         </Text>
-                      </View>
+                      </TouchableOpacity>
                     ))
                   )}
 
@@ -831,13 +949,11 @@ export function InternalLabScreen({
                     <View style={[estilosComuns.linha, { marginTop: 8 }]}>
                       <TouchableOpacity
                         style={estilosComuns.botaoPrimario}
-                        onPress={() =>
-                          setAvisoOperacional(
-                            `Versão V${orc.numero} do protocolo #${orc.solicitacao_codigo} aprovada e liberada para o portal do cliente.`,
-                          )
-                        }
+                        onPress={() => void aprovarOuPublicarOrcamento(orc)}
                       >
-                        <Text style={estilosComuns.textoBotaoPrimario}>Aprovar e Publicar</Text>
+                        <Text style={estilosComuns.textoBotaoPrimario}>
+                          {orc.estado === 'aprovado' ? 'Publicar para Cliente' : 'Aprovar Pré-proposta'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   ) : null}
@@ -1084,9 +1200,18 @@ export function InternalLabScreen({
                       {m.anexos && m.anexos.length > 0 ? (
                         <View style={styles.fontesContainer}>
                           {m.anexos.map((an) => (
-                            <Text key={an.id} style={styles.fonteTag}>
-                              📎 {an.nome_original}
-                            </Text>
+                            <TouchableOpacity
+                              key={an.id}
+                              onPress={() =>
+                                void abrirAnexoStorage(
+                                  'mensagens',
+                                  an.caminho_storage ?? '',
+                                  an.nome_original,
+                                )
+                              }
+                            >
+                              <Text style={styles.fonteTag}>📎 {an.nome_original}</Text>
+                            </TouchableOpacity>
                           ))}
                         </View>
                       ) : null}

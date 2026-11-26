@@ -468,6 +468,17 @@ export const StyleSheet = {
   },
 };
 
+export const Linking = {
+  async canOpenURL(url: string): Promise<boolean> {
+    return Boolean(url);
+  },
+  async openURL(url: string): Promise<void> {
+    if (typeof window !== 'undefined' && url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  },
+};
+
 export function registerRootComponent(componente: unknown): void {
   void componente;
 }

@@ -82,6 +82,11 @@ declare module 'react-native' {
   export const StyleSheet: {
     create<T extends Record<string, Record<string, unknown>>>(styles: T): T;
   };
+
+  export const Linking: {
+    canOpenURL(url: string): Promise<boolean>;
+    openURL(url: string): Promise<void>;
+  };
 }
 
 declare module 'expo' {
