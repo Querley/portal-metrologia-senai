@@ -1030,9 +1030,9 @@ export async function carregarContextoOperacionalLaboratorio(
       cliente.rpc('listar_execucoes_demonstrativas'),
       cliente.rpc('listar_conversas_demonstrativas'),
       cliente.rpc('listar_indicadores_execucoes_demonstrativas'),
-      cliente.rpc('listar_dados_pre_proposta_demonstrativos'),
-      cliente.rpc('listar_recusas_pre_proposta_demonstrativas'),
-      cliente.rpc('listar_entregas_pre_proposta_demonstrativas'),
+      cliente.rpc('listar_dados_pre_propostas_demonstrativas'),
+      cliente.rpc('listar_recusas_pre_propostas_demonstrativas'),
+      cliente.rpc('listar_entregas_pre_propostas_demonstrativas'),
     ]);
 
     const solicitacoes = (Array.isArray(resSolicitacoes.data) ? resSolicitacoes.data : []) as SolicitacaoParaPreProposta[];

@@ -23,14 +23,22 @@ import {
 } from '@lib/chatbot-metrologia';
 import { formatarDesvio, formatarHoras } from '@lib/conhecimento-persistente';
 import type { PerfilInterno } from '@lib/contratos';
+import {
+  normalizarCustoHora,
+  ORIGEM_CUSTOS_HOMOLOGACAO,
+  podeConsultarCustos,
+  podeVersionarCustos,
+} from '@lib/custos-equipamento';
 import { equipamentosPublicos } from '@lib/equipamentos';
 import {
   calcularProgressoExecucao,
+  normalizarAtualizacaoEtapa,
   type EstadoEtapaExecucao,
 } from '@lib/execucoes-persistentes';
 import {
   calcularPreviaOrcamento,
   podeAprovarOrcamento,
+  podePublicarOrcamento,
 } from '@lib/orcamentos-persistentes';
 import { quartis } from '@lib/recomendacao';
 import { sanitizarParaIa } from '@lib/seguranca-ia';
@@ -43,10 +51,26 @@ type AbaInterna =
   | 'visao-geral'
   | 'solicitacoes'
   | 'orcamentos'
+  | 'custos'
   | 'execucao'
   | 'conhecimento'
   | 'mensagens'
   | 'chatbot-ia';
+
+type EquipamentoDb = {
+  id: string;
+  codigo: string;
+  nome: string;
+  ativo: boolean;
+};
+
+type CustoEquipamentoDb = {
+  id: string;
+  equipamento_id: string;
+  custo_hora: string | number;
+  vigente_desde: string;
+  vigente_ate: string | null;
+};
 
 const HISTORICO_AMOSTRAS_RECOMENDACAO = [4, 5, 6, 6, 7, 8, 9, 10, 12];
 
@@ -73,12 +97,27 @@ export function InternalLabScreen({
   const [servicoCalcSlug, setServicoCalcSlug] = useState<string>(servicosOficiais[0].slug);
   const [maquinaCalcSlug, setMaquinaCalcSlug] = useState<string>(equipamentosPublicos[0].slug);
   const [horasEstimadas, setHorasEstimadas] = useState('8');
-  const [custoHoraBase, setCustoHoraBase] = useState('230');
   const [margemPercentual, setMargemPercentual] = useState('18');
   const [custosExtras, setCustosExtras] = useState('0');
   const [justificativaTecnica, setJustificativaTecnica] = useState(
     'Inspeção dimensional completa em sala climatizada 20 ± 0,5 °C com emissão de laudo GD&T.',
   );
+
+  // Custos por equipamento (automático na calculadora + gestão para Validador/Adm)
+  const [equipamentosDb, setEquipamentosDb] = useState<EquipamentoDb[]>([]);
+  const [custosDb, setCustosDb] = useState<CustoEquipamentoDb[]>([]);
+  const [equipamentoCustoId, setEquipamentoCustoId] = useState('');
+  const [novoCustoHoraInput, setNovoCustoHoraInput] = useState('');
+  const [referenciaCustoInput, setReferenciaCustoInput] = useState('');
+
+  // Filtros rápidos, colapsáveis e percentual exato de etapas
+  const [buscaSolicitacao, setBuscaSolicitacao] = useState('');
+  const [buscaOrcamento, setBuscaOrcamento] = useState('');
+  const [filtroOrcamento, setFiltroOrcamento] = useState<'todos' | 'em_validacao' | 'aprovado'>('todos');
+  const [buscaExecucao, setBuscaExecucao] = useState('');
+  const [filtroExecucao, setFiltroExecucao] = useState<'todos' | 'retrabalho'>('todos');
+  const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
+  const [percentualEtapaInput, setPercentualEtapaInput] = useState<Record<string, string>>({});
 
   // Estado de Mensagens Internas
   const [conversaSelecionadaId, setConversaSelecionadaId] = useState<string>('');
@@ -112,6 +151,24 @@ export function InternalLabScreen({
         if (!conversaSelecionadaId && novoContexto.conversas[0]) {
           setConversaSelecionadaId(novoContexto.conversas[0].solicitacao_id);
         }
+        if (supabase && podeConsultarCustos(perfilAlvo)) {
+          const [resEq, resCustos] = await Promise.all([
+            supabase.from('equipamentos').select('id,codigo,nome,ativo').order('nome'),
+            supabase
+              .from('custos_equipamento')
+              .select('id,equipamento_id,custo_hora,vigente_desde,vigente_ate')
+              .eq('origem', ORIGEM_CUSTOS_HOMOLOGACAO)
+              .order('vigente_desde', { ascending: false }),
+          ]);
+          if (!resEq.error && Array.isArray(resEq.data)) {
+            const listaEq = resEq.data as EquipamentoDb[];
+            setEquipamentosDb(listaEq);
+            setEquipamentoCustoId((atual) => atual || listaEq.find((e) => e.ativo)?.id || '');
+          }
+          if (!resCustos.error && Array.isArray(resCustos.data)) {
+            setCustosDb(resCustos.data as CustoEquipamentoDb[]);
+          }
+        }
       } finally {
         setCarregandoDados(false);
       }
@@ -123,8 +180,35 @@ export function InternalLabScreen({
     void recarregarContexto(perfil);
   }, [perfil, recarregarContexto]);
 
-  const exibeCustos = perfil !== 'tecnico';
+  const exibeCustos = podeConsultarCustos(perfil);
   const podeAprovar = podeAprovarOrcamento(perfil);
+  const podePublicar = podePublicarOrcamento(perfil);
+
+  const custosVigentesPorEquipamento = useMemo(() => {
+    const mapa = new Map<string, CustoEquipamentoDb>();
+    for (const c of custosDb) {
+      if (c.vigente_ate === null && !mapa.has(c.equipamento_id)) {
+        mapa.set(c.equipamento_id, c);
+      }
+    }
+    return mapa;
+  }, [custosDb]);
+
+  const custoHoraBase = useMemo(() => {
+    const eqInfo = equipamentosPublicos.find((e) => e.slug === maquinaCalcSlug);
+    const eqDb = equipamentosDb.find(
+      (e) =>
+        e.nome.toLowerCase().includes((eqInfo?.nome ?? '').toLowerCase()) ||
+        (eqInfo?.nome ?? '').toLowerCase().includes(e.nome.toLowerCase()),
+    );
+    const custoVigente = eqDb ? custosVigentesPorEquipamento.get(eqDb.id) : undefined;
+    if (custoVigente) return String(custoVigente.custo_hora);
+    return '230';
+  }, [maquinaCalcSlug, equipamentosDb, custosVigentesPorEquipamento]);
+
+  function alternarExpandido(chave: string) {
+    setExpandidos((atual) => ({ ...atual, [chave]: !atual[chave] }));
+  }
 
   const resultadoCalculo = useMemo(() => {
     const previa = calcularPreviaOrcamento(
@@ -188,7 +272,11 @@ export function InternalLabScreen({
     }
   }
 
-  async function alternarEtapaExecucao(execucaoId: string, ordemEtapa: number) {
+  async function definirProgressoEtapa(
+    execucaoId: string,
+    ordemEtapa: number,
+    percentualBruto: number,
+  ) {
     const execAlvo = contexto.execucoes.find((e) => e.execucao_id === execucaoId);
     const etapaAlvo = execAlvo?.etapas.find((et) => et.ordem === ordemEtapa);
     if (!execAlvo || !etapaAlvo) return;
@@ -201,43 +289,44 @@ export function InternalLabScreen({
       return;
     }
 
+    const percentual = Math.max(0, Math.min(100, Math.round(percentualBruto)));
+    const estadoDesejado: EstadoEtapaExecucao =
+      percentual === 0 ? 'a_fazer' : percentual === 100 ? 'concluida' : 'em_andamento';
+
     const posteriorIniciada = execAlvo.etapas.some(
       (et) => et.ordem > ordemEtapa && et.estado !== 'a_fazer',
     );
-    if (etapaAlvo.estado === 'concluida' && posteriorIniciada) {
+    if (estadoDesejado !== 'concluida' && posteriorIniciada) {
       setAvisoOperacional(
-        'Não é possível reiniciar esta etapa porque a fase seguinte já foi iniciada.',
+        'Não é possível reduzir esta etapa porque a fase seguinte já foi iniciada.',
       );
       return;
     }
 
-    const proximoEstado: EstadoEtapaExecucao =
-      etapaAlvo.estado === 'a_fazer'
-        ? 'em_andamento'
-        : etapaAlvo.estado === 'em_andamento'
-          ? 'concluida'
-          : 'a_fazer';
-    const proximoProgresso =
-      proximoEstado === 'concluida' ? 100 : proximoEstado === 'em_andamento' ? 50 : 0;
+    const normalizada = normalizarAtualizacaoEtapa(estadoDesejado, percentual);
+    if (!normalizada) {
+      setAvisoOperacional('Informe um percentual entre 0% e 100%.');
+      return;
+    }
 
     const supabase = obterSupabaseMobile();
     if (supabase && etapaAlvo.id) {
       try {
         const { error } = await supabase.rpc('atualizar_etapa_execucao_demonstrativa', {
           etapa: etapaAlvo.id,
-          novo_estado: proximoEstado,
-          novo_progresso: proximoProgresso,
+          novo_estado: normalizada.estado,
+          novo_progresso: normalizada.progresso,
         });
         if (!error) {
           await recarregarContexto(perfil);
-          setAvisoOperacional('Etapa atualizada no sistema.');
+          setAvisoOperacional(`Etapa ${ordemEtapa} atualizada para ${normalizada.progresso}%.`);
           return;
         }
         setAvisoOperacional(
           error.code === '42501'
             ? 'Seu perfil não tem permissão para alterar esta etapa.'
             : /failed to fetch|network/i.test(error.message)
-              ? 'Sem conexão com o Supabase (verifique se o projeto está ativo).'
+              ? 'Sem conexão com o Supabase.'
               : error.message,
         );
         return;
@@ -255,13 +344,69 @@ export function InternalLabScreen({
           ...exec,
           etapas: exec.etapas.map((etapa) =>
             etapa.ordem === ordemEtapa
-              ? { ...etapa, estado: proximoEstado, progresso: proximoProgresso }
+              ? { ...etapa, estado: normalizada.estado, progresso: normalizada.progresso }
               : etapa,
           ),
         };
       }),
     }));
-    setAvisoOperacional('Etapa atualizada.');
+    setAvisoOperacional(`Etapa ${ordemEtapa} atualizada para ${normalizada.progresso}%.`);
+  }
+
+  async function alternarEtapaExecucao(execucaoId: string, ordemEtapa: number) {
+    const execAlvo = contexto.execucoes.find((e) => e.execucao_id === execucaoId);
+    const etapaAlvo = execAlvo?.etapas.find((et) => et.ordem === ordemEtapa);
+    if (!etapaAlvo) return;
+    const proximoProgresso =
+      etapaAlvo.estado === 'a_fazer' ? 50 : etapaAlvo.estado === 'em_andamento' ? 100 : 0;
+    await definirProgressoEtapa(execucaoId, ordemEtapa, proximoProgresso);
+  }
+
+  async function salvarNovoCustoEquipamento() {
+    if (!podeVersionarCustos(perfil)) {
+      setAvisoOperacional('Apenas Validadores e Administradores podem alterar custos.');
+      return;
+    }
+    const custoNormalizado = normalizarCustoHora(novoCustoHoraInput);
+    if (!equipamentoCustoId || !custoNormalizado) {
+      setAvisoOperacional('Selecione o equipamento e informe um custo-hora válido.');
+      return;
+    }
+    const ref = referenciaCustoInput.trim() || 'Atualização pelo aplicativo móvel';
+    const supabase = obterSupabaseMobile();
+    if (!supabase) {
+      setAvisoOperacional('Conecte-se ao Supabase para versionar custos.');
+      return;
+    }
+    const atual = custosVigentesPorEquipamento.get(equipamentoCustoId);
+    const hoje = new Date().toISOString().slice(0, 10);
+    const vigencia = atual && atual.vigente_desde >= hoje
+      ? new Date(new Date(`${atual.vigente_desde}T00:00:00Z`).getTime() + 86_400_000)
+          .toISOString()
+          .slice(0, 10)
+      : hoje;
+    try {
+      const { error } = await supabase.rpc('versionar_custo_equipamento', {
+        equipamento: equipamentoCustoId,
+        novo_custo_hora: custoNormalizado,
+        nova_vigencia: vigencia,
+        fonte: ref,
+      });
+      if (error) {
+        setAvisoOperacional(
+          error.code === '42501'
+            ? 'Seu perfil não tem autorização para alterar custos.'
+            : `Não foi possível salvar: ${error.message}`,
+        );
+        return;
+      }
+      setNovoCustoHoraInput('');
+      setReferenciaCustoInput('');
+      await recarregarContexto(perfil);
+      setAvisoOperacional('Novo custo-hora salvo e aplicado automaticamente às cotações.');
+    } catch {
+      setAvisoOperacional('Sem conexão com o Supabase para atualizar o custo.');
+    }
   }
 
   async function registrarProblemaExecucao(execucaoId: string) {
@@ -456,7 +601,7 @@ export function InternalLabScreen({
         ativoId={aba}
         aoSelecionar={(novaAba) => {
           setAvisoOperacional('');
-          setAba(novaAba);
+          setAba(novaAba as AbaInterna);
         }}
         itens={[
           {
@@ -485,6 +630,16 @@ export function InternalLabScreen({
             rotuloCompleto: 'Orçamentos & Q1-Q3',
             badge: contexto.orcamentos.length,
           },
+          ...(exibeCustos
+            ? [
+                {
+                  id: 'custos',
+                  icone: '🏷️',
+                  rotuloCurto: 'Custos',
+                  rotuloCompleto: 'Custos por Máquina',
+                },
+              ]
+            : []),
           {
             id: 'execucao',
             icone: '⚙️',
@@ -648,39 +803,57 @@ export function InternalLabScreen({
         {aba === 'visao-geral' && (
           <View>
             <View style={estilosComuns.card}>
-              <Text style={estilosComuns.badge}>INDICADORES OPERACIONAIS EM TEMPO REAL</Text>
+              <Text style={estilosComuns.badge}>INDICADORES • TOQUE PARA FILTRAR</Text>
               <Text style={estilosComuns.tituloSecao}>Resumo do Laboratório</Text>
-              <Text style={estilosComuns.subtituloSecao}>
-                Visão consolidada de solicitações, pré-propostas, execuções na bancada e lições aprendidas.
-              </Text>
 
               <View style={styles.gradeKpis}>
-                <View style={styles.cardKpi}>
+                <TouchableOpacity
+                  style={styles.cardKpi}
+                  onPress={() => {
+                    setBuscaSolicitacao('');
+                    setAba('solicitacoes');
+                  }}
+                >
                   <Text style={styles.kpiValor}>{contexto.solicitacoes.length}</Text>
-                  <Text style={styles.kpiRotulo}>Solicitações ativas</Text>
-                </View>
-                <View style={styles.cardKpi}>
+                  <Text style={styles.kpiRotulo}>Solicitações →</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cardKpi}
+                  onPress={() => {
+                    setFiltroOrcamento('todos');
+                    setAba('orcamentos');
+                  }}
+                >
                   <Text style={styles.kpiValor}>{contexto.orcamentos.length}</Text>
-                  <Text style={styles.kpiRotulo}>Pré-propostas</Text>
-                </View>
-                <View style={styles.cardKpi}>
+                  <Text style={styles.kpiRotulo}>Pré-propostas →</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cardKpi}
+                  onPress={() => {
+                    setFiltroExecucao('todos');
+                    setAba('execucao');
+                  }}
+                >
                   <Text style={styles.kpiValor}>{contexto.execucoes.length}</Text>
-                  <Text style={styles.kpiRotulo}>Execuções técnicas</Text>
-                </View>
-                <View style={styles.cardKpi}>
+                  <Text style={styles.kpiRotulo}>Execuções →</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cardKpi}
+                  onPress={() => {
+                    setFiltroExecucao('retrabalho');
+                    setAba('execucao');
+                  }}
+                >
                   <Text style={styles.kpiValor}>
                     {contexto.execucoes.filter((e) => Boolean(e.retrabalho)).length}
                   </Text>
-                  <Text style={styles.kpiRotulo}>Com retrabalho / alerta</Text>
-                </View>
+                  <Text style={styles.kpiRotulo}>Retrabalhos →</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
             <View style={estilosComuns.card}>
-              <Text style={estilosComuns.tituloSecao}>Acesso Rápido por Serviço no Chatbot</Text>
-              <Text style={estilosComuns.subtituloSecao}>
-                Toque em qualquer serviço para abrir o Chatbot Interno já com o dossiê completo daquele serviço:
-              </Text>
+              <Text style={estilosComuns.tituloSecao}>Dossiê Rápido no Chatbot</Text>
               {servicosOficiais.map((srv) => (
                 <TouchableOpacity
                   key={srv.slug}
@@ -690,11 +863,8 @@ export function InternalLabScreen({
                     void enviarPerguntaChatbotInterno(srv.titulo);
                   }}
                 >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.itemListaTitulo}>{srv.titulo}</Text>
-                    <Text style={styles.itemListaSub}>{srv.resumo}</Text>
-                  </View>
-                  <Text style={styles.itemListaAcao}>Consultar IA →</Text>
+                  <Text style={[styles.itemListaTitulo, { flex: 1 }]}>{srv.titulo}</Text>
+                  <Text style={styles.itemListaAcao}>Abrir IA →</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -705,87 +875,108 @@ export function InternalLabScreen({
         {aba === 'solicitacoes' && (
           <View>
             <View style={estilosComuns.card}>
-              <Text style={estilosComuns.badge}>FILA DE ENTRADA E ARQUIVOS TÉCNICOS</Text>
               <Text style={estilosComuns.tituloSecao}>
-                Solicitações de Clientes ({contexto.solicitacoes.length})
+                Solicitações ({contexto.solicitacoes.length})
               </Text>
-              <Text style={estilosComuns.subtituloSecao}>
-                Veja o que cada cliente pediu, quantidades, desenhos PDF/CAD anexados e inicie a pré-proposta.
-              </Text>
+              <TextInput
+                style={[estilosComuns.input, { marginTop: 8 }]}
+                value={buscaSolicitacao}
+                onChangeText={setBuscaSolicitacao}
+                placeholder="Buscar por protocolo, empresa ou necessidade..."
+                placeholderTextColor={CORES.textoSuave}
+              />
             </View>
 
-            {contexto.solicitacoes.map((sol) => {
-              const chaveAnexo = sol.solicitacao_id ?? sol.id;
-              const anexos =
-                contexto.anexosPorSolicitacao[chaveAnexo] ??
-                contexto.anexosPorSolicitacao[sol.id] ??
-                [];
-              return (
-                <View key={sol.id} style={estilosComuns.card}>
-                  <View style={estilosComuns.linhaEntre}>
-                    <Text style={estilosComuns.badge}>PROTOCOLO #{sol.codigo}</Text>
-                    <Text style={styles.tagEstado}>{sol.estado}</Text>
-                  </View>
-                  <Text style={styles.cardTituloItem}>
-                    {sol.empresa} — {sol.necessidade}
-                  </Text>
-                  <Text style={styles.cardDetalhe}>
-                    Solicitante: {sol.nome} ({sol.email})
-                  </Text>
-                  <Text style={styles.cardDetalhe}>
-                    Quantidade: {sol.quantidade} pç(s) • Condição de pagamento: {sol.prazo_pagamento_dias} dias
-                  </Text>
-                  <View style={styles.caixaPedidoCliente}>
-                    <Text style={styles.caixaPedidoRotulo}>O que o cliente pediu:</Text>
-                    <Text style={styles.caixaPedidoTexto}>{sol.descricao}</Text>
-                  </View>
+            {contexto.solicitacoes
+              .filter((sol) => {
+                const q = buscaSolicitacao.trim().toLowerCase();
+                if (!q) return true;
+                return `${sol.codigo} ${sol.empresa} ${sol.necessidade} ${sol.nome}`
+                  .toLowerCase()
+                  .includes(q);
+              })
+              .map((sol) => {
+                const chaveAnexo = sol.solicitacao_id ?? sol.id;
+                const anexos =
+                  contexto.anexosPorSolicitacao[chaveAnexo] ??
+                  contexto.anexosPorSolicitacao[sol.id] ??
+                  [];
+                const aberto = Boolean(expandidos[`sol-${sol.id}`]);
+                return (
+                  <View key={sol.id} style={estilosComuns.card}>
+                    <View style={estilosComuns.linhaEntre}>
+                      <Text style={estilosComuns.badge}>#{sol.codigo}</Text>
+                      <Text style={styles.tagEstado}>{sol.estado}</Text>
+                    </View>
+                    <Text style={styles.cardTituloItem}>
+                      {sol.empresa} — {sol.necessidade}
+                    </Text>
+                    <Text style={styles.cardDetalhe}>
+                      {sol.quantidade} pç(s) • {anexos.length} anexo(s)
+                    </Text>
 
-                  <Text style={styles.subtituloBlocoInterno}>
-                    Arquivos e PDFs anexados ({anexos.length}):
-                  </Text>
-                  {anexos.length === 0 ? (
-                    <Text style={styles.textoVazio}>Nenhum arquivo anexado até o momento.</Text>
-                  ) : (
-                    anexos.map((arq) => (
-                      <TouchableOpacity
-                        key={arq.id}
-                        style={styles.itemAnexo}
-                        onPress={() =>
-                          void abrirAnexoStorage(
-                            'solicitacoes',
-                            arq.caminho_storage ?? '',
-                            arq.nome_original,
-                          )
-                        }
-                      >
-                        <Text style={styles.itemAnexoNome}>📄 {arq.nome_original} (abrir)</Text>
-                        <Text style={styles.itemAnexoMeta}>
-                          {arq.tipo_mime} • {(arq.tamanho_bytes / 1024).toFixed(0)} KB
+                    <TouchableOpacity
+                      style={{ marginTop: 6 }}
+                      onPress={() => alternarExpandido(`sol-${sol.id}`)}
+                    >
+                      <Text style={styles.itemListaAcao}>
+                        {aberto ? '▾ Ocultar detalhes e PDFs' : '▸ Ver detalhes e PDFs'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {aberto ? (
+                      <View style={{ marginTop: 8 }}>
+                        <Text style={styles.cardDetalhe}>
+                          Solicitante: {sol.nome} ({sol.email}) • Pagto: {sol.prazo_pagamento_dias}d
                         </Text>
-                      </TouchableOpacity>
-                    ))
-                  )}
+                        <View style={styles.caixaPedidoCliente}>
+                          <Text style={styles.caixaPedidoTexto}>{sol.descricao}</Text>
+                        </View>
+                        {anexos.length === 0 ? (
+                          <Text style={styles.textoVazio}>Sem arquivos anexados.</Text>
+                        ) : (
+                          anexos.map((arq) => (
+                            <TouchableOpacity
+                              key={arq.id}
+                              style={styles.itemAnexo}
+                              onPress={() =>
+                                void abrirAnexoStorage(
+                                  'solicitacoes',
+                                  arq.caminho_storage ?? '',
+                                  arq.nome_original,
+                                )
+                              }
+                            >
+                              <Text style={styles.itemAnexoNome}>📄 {arq.nome_original} (abrir)</Text>
+                              <Text style={styles.itemAnexoMeta}>
+                                {arq.tipo_mime} • {(arq.tamanho_bytes / 1024).toFixed(0)} KB
+                              </Text>
+                            </TouchableOpacity>
+                          ))
+                        )}
+                      </View>
+                    ) : null}
 
-                  <View style={[estilosComuns.linha, { marginTop: 12 }]}>
-                    <TouchableOpacity
-                      style={estilosComuns.botaoPrimario}
-                      onPress={() => setAba('orcamentos')}
-                    >
-                      <Text style={estilosComuns.textoBotaoPrimario}>Elaborar Pré-proposta</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={estilosComuns.botaoSecundario}
-                      onPress={() => {
-                        setAba('chatbot-ia');
-                        void enviarPerguntaChatbotInterno(`Protocolo #${sol.codigo}`);
-                      }}
-                    >
-                      <Text style={estilosComuns.textoBotaoSecundario}>Dossiê no Chatbot</Text>
-                    </TouchableOpacity>
+                    <View style={[estilosComuns.linha, { marginTop: 10 }]}>
+                      <TouchableOpacity
+                        style={estilosComuns.botaoPrimario}
+                        onPress={() => setAba('orcamentos')}
+                      >
+                        <Text style={estilosComuns.textoBotaoPrimario}>Pré-proposta</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={estilosComuns.botaoSecundario}
+                        onPress={() => {
+                          setAba('chatbot-ia');
+                          void enviarPerguntaChatbotInterno(`Protocolo #${sol.codigo}`);
+                        }}
+                      >
+                        <Text style={estilosComuns.textoBotaoSecundario}>Chatbot</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })}
           </View>
         )}
 
@@ -869,13 +1060,12 @@ export function InternalLabScreen({
                 </View>
                 {exibeCustos ? (
                   <View style={{ flex: 1 }}>
-                    <Text style={estilosComuns.rotuloCampo}>Custo/hora base (R$)</Text>
-                    <TextInput
-                      style={estilosComuns.input}
-                      keyboardType="numeric"
-                      value={custoHoraBase}
-                      onChangeText={setCustoHoraBase}
-                    />
+                    <Text style={estilosComuns.rotuloCampo}>Custo/hora vigente</Text>
+                    <View style={[estilosComuns.input, { justifyContent: 'center', backgroundColor: '#F1F5F9' }]}>
+                      <Text style={{ fontWeight: '800', color: CORES.azulEscuro }}>
+                        {formatarDinheiro(Number(custoHoraBase))}/h
+                      </Text>
+                    </View>
                   </View>
                 ) : null}
               </View>
@@ -943,9 +1133,47 @@ export function InternalLabScreen({
             {/* Lista de Pré-propostas registradas */}
             <View style={estilosComuns.card}>
               <Text style={estilosComuns.tituloSecao}>
-                Pré-propostas Registradas ({contexto.orcamentos.length})
+                Pré-propostas ({contexto.orcamentos.length})
               </Text>
-              {contexto.orcamentos.map((orc) => (
+              <TextInput
+                style={[estilosComuns.input, { marginTop: 8 }]}
+                value={buscaOrcamento}
+                onChangeText={setBuscaOrcamento}
+                placeholder="Buscar por protocolo, empresa ou descrição..."
+                placeholderTextColor={CORES.textoSuave}
+              />
+              <View style={[estilosComuns.linha, { marginVertical: 8 }]}>
+                {(['todos', 'em_validacao', 'aprovado'] as const).map((f) => (
+                  <TouchableOpacity
+                    key={f}
+                    style={[
+                      estilosComuns.chip,
+                      filtroOrcamento === f && estilosComuns.chipAtivo,
+                      { marginRight: 6 },
+                    ]}
+                    onPress={() => setFiltroOrcamento(f)}
+                  >
+                    <Text
+                      style={[
+                        estilosComuns.chipTexto,
+                        filtroOrcamento === f && estilosComuns.chipTextoAtivo,
+                      ]}
+                    >
+                      {f === 'todos' ? 'Todos' : f === 'em_validacao' ? 'Em validação' : 'Aprovados'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {contexto.orcamentos
+                .filter((orc) => {
+                  if (filtroOrcamento !== 'todos' && orc.estado !== filtroOrcamento) return false;
+                  const q = buscaOrcamento.trim().toLowerCase();
+                  if (!q) return true;
+                  return `${orc.solicitacao_codigo} ${orc.empresa_nome} ${orc.descricao}`
+                    .toLowerCase()
+                    .includes(q);
+                })
+                .map((orc) => (
                 <View key={orc.versao_id} style={styles.itemOrcamento}>
                   <View style={estilosComuns.linhaEntre}>
                     <Text style={estilosComuns.badge}>
@@ -977,10 +1205,11 @@ export function InternalLabScreen({
                   ) : null}
                   {orc.recusa_motivo ? (
                     <Text style={styles.alertaProblemaTexto}>
-                      ⚠️ Motivo de recusa do cliente: {orc.recusa_motivo}
+                      ⚠️ Motivo de recusa: {orc.recusa_motivo}
                     </Text>
                   ) : null}
-                  {podeAprovar ? (
+                  {((podeAprovar && orc.estado === 'em_validacao') ||
+                    (podePublicar && orc.estado === 'aprovado')) ? (
                     <View style={[estilosComuns.linha, { marginTop: 8 }]}>
                       <TouchableOpacity
                         style={estilosComuns.botaoPrimario}
@@ -998,115 +1227,267 @@ export function InternalLabScreen({
           </View>
         )}
 
+        {/* ABA: CUSTOS POR MÁQUINA (VALIDADOR E ADMINISTRADOR) */}
+        {aba === 'custos' && exibeCustos && (
+          <View>
+            <View style={estilosComuns.card}>
+              <Text style={estilosComuns.badge}>CUSTO-HORA VIGENTE</Text>
+              <Text style={estilosComuns.tituloSecao}>Custos por Equipamento</Text>
+
+              {equipamentosDb.map((eq) => {
+                const custo = custosVigentesPorEquipamento.get(eq.id);
+                const selecionado = equipamentoCustoId === eq.id;
+                return (
+                  <TouchableOpacity
+                    key={eq.id}
+                    style={[
+                      styles.itemOrcamento,
+                      selecionado && { borderColor: CORES.azulPrincipal, borderWidth: 2 },
+                    ]}
+                    onPress={() => setEquipamentoCustoId(eq.id)}
+                  >
+                    <View style={estilosComuns.linhaEntre}>
+                      <Text style={styles.cardTituloItem}>{eq.nome}</Text>
+                      <Text style={styles.precoDestaqueItem}>
+                        {custo ? `${formatarDinheiro(Number(custo.custo_hora))}/h` : 'Sem vigência'}
+                      </Text>
+                    </View>
+                    <Text style={styles.cardDetalhe}>
+                      Código: {eq.codigo} {custo ? `• Desde ${custo.vigente_desde}` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              <Text style={[estilosComuns.rotuloCampo, { marginTop: 12 }]}>
+                Novo custo-hora (R$)
+              </Text>
+              <TextInput
+                style={estilosComuns.input}
+                keyboardType="numeric"
+                value={novoCustoHoraInput}
+                onChangeText={setNovoCustoHoraInput}
+                placeholder="Ex: 245.00"
+              />
+              <Text style={[estilosComuns.rotuloCampo, { marginTop: 8 }]}>
+                Referência / justificativa
+              </Text>
+              <TextInput
+                style={estilosComuns.input}
+                value={referenciaCustoInput}
+                onChangeText={setReferenciaCustoInput}
+                placeholder="Ex: Reajuste anual de calibração"
+              />
+              <TouchableOpacity
+                style={[estilosComuns.botaoPrimario, { marginTop: 10 }]}
+                onPress={() => void salvarNovoCustoEquipamento()}
+              >
+                <Text style={estilosComuns.textoBotaoPrimario}>Salvar Nova Vigência</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* ABA 5: EXECUÇÃO TÉCNICA, INSTRUÇÕES E PROBLEMAS */}
         {aba === 'execucao' && (
           <View>
             <View style={estilosComuns.card}>
-              <Text style={estilosComuns.badge}>EXECUÇÕES TÉCNICAS</Text>
               <Text style={estilosComuns.tituloSecao}>
-                Execuções e Ocorrências ({contexto.execucoes.length})
+                Execuções ({contexto.execucoes.length})
               </Text>
+              <TextInput
+                style={[estilosComuns.input, { marginTop: 8 }]}
+                value={buscaExecucao}
+                onChangeText={setBuscaExecucao}
+                placeholder="Buscar por protocolo ou empresa..."
+                placeholderTextColor={CORES.textoSuave}
+              />
+              <View style={[estilosComuns.linha, { marginTop: 8 }]}>
+                {(['todos', 'retrabalho'] as const).map((f) => (
+                  <TouchableOpacity
+                    key={f}
+                    style={[
+                      estilosComuns.chip,
+                      filtroExecucao === f && estilosComuns.chipAtivo,
+                      { marginRight: 6 },
+                    ]}
+                    onPress={() => setFiltroExecucao(f)}
+                  >
+                    <Text
+                      style={[
+                        estilosComuns.chipTexto,
+                        filtroExecucao === f && estilosComuns.chipTextoAtivo,
+                      ]}
+                    >
+                      {f === 'todos' ? 'Todas' : 'Com retrabalho'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
-            {contexto.execucoes.map((exec) => {
-              const percentual = calcularProgressoExecucao(exec.etapas);
-              const instrucoes = ETAPAS_INSTRUCOES_POR_SERVICO[exec.servico_slug] ?? [];
-              const nomesMaquinas =
-                exec.equipamentos.map((e) => e.nome).join(', ') || 'Equipamento ZEISS';
-              return (
-                <View key={exec.execucao_id} style={estilosComuns.card}>
-                  <View style={estilosComuns.linhaEntre}>
-                    <Text style={estilosComuns.badge}>PROTOCOLO #{exec.solicitacao_codigo}</Text>
-                    <Text style={styles.tagEstado}>
-                      {exec.estado} • {percentual}%
-                    </Text>
-                  </View>
-                  <Text style={styles.cardTituloItem}>
-                    {exec.empresa_nome} — {exec.descricao}
-                  </Text>
-                  <Text style={styles.cardDetalhe}>
-                    Equipamento(s): {nomesMaquinas} • Responsável: {exec.responsavel_nome}
-                  </Text>
-
-                  {instrucoes.length > 0 ? (
-                    <View style={styles.caixaInstrucoes}>
-                      <Text style={styles.caixaPedidoRotulo}>
-                        Instruções operacionais padrão deste serviço:
+            {contexto.execucoes
+              .filter((exec) => {
+                if (filtroExecucao === 'retrabalho' && !exec.retrabalho) return false;
+                const q = buscaExecucao.trim().toLowerCase();
+                if (!q) return true;
+                return `${exec.solicitacao_codigo} ${exec.empresa_nome} ${exec.descricao}`
+                  .toLowerCase()
+                  .includes(q);
+              })
+              .map((exec) => {
+                const percentual = calcularProgressoExecucao(exec.etapas);
+                const instrucoes = ETAPAS_INSTRUCOES_POR_SERVICO[exec.servico_slug] ?? [];
+                const nomesMaquinas =
+                  exec.equipamentos.map((e) => e.nome).join(', ') || 'Equipamento ZEISS';
+                const detalhesAbertos = Boolean(expandidos[`exec-${exec.execucao_id}`]);
+                return (
+                  <View key={exec.execucao_id} style={estilosComuns.card}>
+                    <View style={estilosComuns.linhaEntre}>
+                      <Text style={estilosComuns.badge}>#{exec.solicitacao_codigo}</Text>
+                      <Text style={styles.tagEstado}>
+                        {exec.estado} • {percentual}%
                       </Text>
-                      {instrucoes.map((inst, idx) => (
-                        <Text key={inst} style={styles.instrucaoItem}>
-                          {idx + 1}. {inst}
-                        </Text>
-                      ))}
                     </View>
-                  ) : null}
-
-                  <Text style={styles.subtituloBlocoInterno}>
-                    Etapas da execução (toque para alternar estado):
-                  </Text>
-                  {exec.etapas.map((etapa) => (
-                    <TouchableOpacity
-                      key={etapa.ordem}
-                      style={styles.etapaLinha}
-                      onPress={() => alternarEtapaExecucao(exec.execucao_id, etapa.ordem)}
-                    >
-                      <Text style={styles.etapaIcone}>
-                        {etapa.estado === 'concluida'
-                          ? '✅'
-                          : etapa.estado === 'em_andamento'
-                            ? '🔄'
-                            : '⏳'}
-                      </Text>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.etapaNome}>
-                          {etapa.ordem}. {etapa.titulo} ({etapa.estado})
-                        </Text>
-                        <Text style={styles.etapaHoras}>
-                          Progresso: {etapa.progresso}% {etapa.descricao ? `• ${etapa.descricao}` : ''}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-
-                  {/* Problemas, retrabalho e observações */}
-                  <View style={styles.caixaProblemas}>
-                    <Text style={styles.caixaPedidoRotulo}>
-                      Registro de Problemas, Retrabalho e Encerramento:
+                    <Text style={styles.cardTituloItem}>
+                      {exec.empresa_nome} — {exec.descricao}
                     </Text>
                     <Text style={styles.cardDetalhe}>
-                      Retrabalho: {exec.retrabalho ? 'SIM' : 'NÃO'} • Mudança de escopo:{' '}
-                      {exec.mudanca_escopo ? 'SIM' : 'NÃO'}
+                      {nomesMaquinas} • {exec.responsavel_nome}
                     </Text>
-                    {exec.causa_principal ? (
-                      <Text style={styles.alertaProblemaTexto}>
-                        Causa raiz: {exec.causa_principal}
-                      </Text>
-                    ) : null}
-                    {exec.fechamento_observacoes ? (
-                      <Text style={styles.cardDetalhe}>
-                        Observações técnicas: {exec.fechamento_observacoes}
-                      </Text>
-                    ) : null}
-                    {exec.fechamento_aprendizado ? (
-                      <Text style={styles.licaoTexto}>
-                        💡 Lição aprendida: {exec.fechamento_aprendizado}
-                      </Text>
-                    ) : null}
-                  </View>
 
-                  <View style={[estilosComuns.linha, { marginTop: 10 }]}>
                     <TouchableOpacity
-                      style={estilosComuns.botaoSecundario}
-                      onPress={() => registrarProblemaExecucao(exec.execucao_id)}
+                      style={{ marginVertical: 6 }}
+                      onPress={() => alternarExpandido(`exec-${exec.execucao_id}`)}
                     >
-                      <Text style={estilosComuns.textoBotaoSecundario}>
-                        Registrar Ocorrência / Retrabalho
+                      <Text style={styles.itemListaAcao}>
+                        {detalhesAbertos
+                          ? '▾ Ocultar instruções e ocorrências'
+                          : '▸ Ver instruções e ocorrências'}
                       </Text>
                     </TouchableOpacity>
+
+                    {detalhesAbertos ? (
+                      <View style={{ marginBottom: 8 }}>
+                        {instrucoes.length > 0 ? (
+                          <View style={styles.caixaInstrucoes}>
+                            {instrucoes.map((inst, idx) => (
+                              <Text key={inst} style={styles.instrucaoItem}>
+                                {idx + 1}. {inst}
+                              </Text>
+                            ))}
+                          </View>
+                        ) : null}
+                        <View style={styles.caixaProblemas}>
+                          <Text style={styles.cardDetalhe}>
+                            Retrabalho: {exec.retrabalho ? 'SIM' : 'NÃO'} • Mudança escopo:{' '}
+                            {exec.mudanca_escopo ? 'SIM' : 'NÃO'}
+                          </Text>
+                          {exec.causa_principal ? (
+                            <Text style={styles.alertaProblemaTexto}>
+                              Causa: {exec.causa_principal}
+                            </Text>
+                          ) : null}
+                          {exec.fechamento_observacoes ? (
+                            <Text style={styles.cardDetalhe}>{exec.fechamento_observacoes}</Text>
+                          ) : null}
+                        </View>
+                      </View>
+                    ) : null}
+
+                    <Text style={styles.subtituloBlocoInterno}>
+                      Etapas (ordem sequencial):
+                    </Text>
+                    {exec.etapas.map((etapa) => {
+                      const chaveEtapa = `${exec.execucao_id}-${etapa.ordem}`;
+                      const valorDigitado =
+                        percentualEtapaInput[chaveEtapa] ?? String(etapa.progresso);
+                      return (
+                        <View key={etapa.ordem} style={[styles.etapaLinha, { flexDirection: 'column', alignItems: 'stretch' }]}>
+                          <TouchableOpacity
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                            onPress={() => void alternarEtapaExecucao(exec.execucao_id, etapa.ordem)}
+                          >
+                            <Text style={styles.etapaIcone}>
+                              {etapa.estado === 'concluida'
+                                ? '✅'
+                                : etapa.estado === 'em_andamento'
+                                  ? '🔄'
+                                  : '⏳'}
+                            </Text>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.etapaNome}>
+                                {etapa.ordem}. {etapa.titulo} ({etapa.progresso}%)
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                            {[0, 25, 50, 75, 100].map((pct) => (
+                              <TouchableOpacity
+                                key={pct}
+                                style={[
+                                  estilosComuns.chip,
+                                  etapa.progresso === pct && estilosComuns.chipAtivo,
+                                  { paddingHorizontal: 8, paddingVertical: 4, marginRight: 0 },
+                                ]}
+                                onPress={() =>
+                                  void definirProgressoEtapa(exec.execucao_id, etapa.ordem, pct)
+                                }
+                              >
+                                <Text
+                                  style={[
+                                    estilosComuns.chipTexto,
+                                    etapa.progresso === pct && estilosComuns.chipTextoAtivo,
+                                    { fontSize: 11 },
+                                  ]}
+                                >
+                                  {pct}%
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                            <TextInput
+                              style={[
+                                estilosComuns.input,
+                                { width: 56, paddingVertical: 4, marginTop: 0, marginBottom: 0, textAlign: 'center' },
+                              ]}
+                              keyboardType="numeric"
+                              value={valorDigitado}
+                              onChangeText={(txt) =>
+                                setPercentualEtapaInput((a) => ({ ...a, [chaveEtapa]: txt }))
+                              }
+                            />
+                            <TouchableOpacity
+                              style={[estilosComuns.botaoSecundario, { paddingVertical: 5, paddingHorizontal: 10 }]}
+                              onPress={() =>
+                                void definirProgressoEtapa(
+                                  exec.execucao_id,
+                                  etapa.ordem,
+                                  Number(valorDigitado) || 0,
+                                )
+                              }
+                            >
+                              <Text style={[estilosComuns.textoBotaoSecundario, { fontSize: 11 }]}>
+                                Aplicar %
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      );
+                    })}
+
+                    <View style={[estilosComuns.linha, { marginTop: 10 }]}>
+                      <TouchableOpacity
+                        style={estilosComuns.botaoSecundario}
+                        onPress={() => void registrarProblemaExecucao(exec.execucao_id)}
+                      >
+                        <Text style={estilosComuns.textoBotaoSecundario}>
+                          Registrar Ocorrência / Retrabalho
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })}
           </View>
         )}
 

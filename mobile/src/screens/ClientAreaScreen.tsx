@@ -69,17 +69,22 @@ export function ClientAreaScreen({
 
   const trabalhoAtivo = trabalhos.find((t) => t.id === selecionadoId) ?? trabalhos[0];
 
-  useEffect(() => {
+  const carregarMensagensCliente = useCallback(async (solicitacaoId: string) => {
     const supabase = obterSupabaseMobile();
-    if (!supabase || !trabalhoAtivo) return;
-    void supabase
-      .rpc('listar_mensagens_cliente_demonstrativas', { solicitacao: trabalhoAtivo.id })
-      .then(({ data, error }) => {
-        if (!error && Array.isArray(data)) {
-          setMensagens(data as MensagemCliente[]);
-        }
-      });
-  }, [trabalhoAtivo]);
+    if (!supabase || !solicitacaoId) return;
+    const { data, error } = await supabase.rpc('listar_mensagens_cliente', {
+      solicitacao: solicitacaoId,
+    });
+    if (!error && Array.isArray(data)) {
+      setMensagens(data as MensagemCliente[]);
+    }
+    void supabase.rpc('marcar_conversa_lida_demonstrativa', { solicitacao: solicitacaoId });
+  }, []);
+
+  useEffect(() => {
+    if (!trabalhoAtivo) return;
+    void carregarMensagensCliente(trabalhoAtivo.id);
+  }, [trabalhoAtivo, carregarMensagensCliente]);
 
   async function aceitarPreProposta() {
     if (!trabalhoAtivo) return;
@@ -138,23 +143,26 @@ export function ClientAreaScreen({
   async function enviarMensagemCliente() {
     const texto = novaMensagem.trim();
     if (!texto || !trabalhoAtivo) return;
+    setErro('');
     const supabase = obterSupabaseMobile();
-    if (supabase) {
-      await supabase.rpc('enviar_mensagem_cliente_demonstrativa', {
-        solicitacao: trabalhoAtivo.id,
-        conteudo: texto,
-      });
+    if (!supabase) {
+      setErro('Sem conexão com o Supabase.');
+      return;
     }
-    setMensagens((atuais) => [
-      ...atuais,
-      {
-        id: `msg-cli-${atuais.length + 1}`,
-        autor_proprio: true,
-        conteudo: texto,
-        criada_em: new Date().toISOString(),
-      },
-    ]);
+    const { error } = await supabase.rpc('enviar_mensagem_cliente', {
+      solicitacao: trabalhoAtivo.id,
+      conteudo: texto,
+    });
+    if (error) {
+      setErro(
+        /failed to fetch|network/i.test(error.message)
+          ? 'Sem conexão com o Supabase.'
+          : `Erro ao enviar mensagem: ${error.message}`,
+      );
+      return;
+    }
     setNovaMensagem('');
+    await carregarMensagensCliente(trabalhoAtivo.id);
   }
 
   async function registrarNovoTrabalho() {
