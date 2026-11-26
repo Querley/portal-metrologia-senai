@@ -9,11 +9,7 @@ import {
 } from 'react-native';
 import type { PerfilInterno } from '@lib/contratos';
 import type { ContextoCliente } from '@lib/portal-cliente';
-import {
-  CONTAS_HOMOLOGACAO_DEMO,
-  obterSupabaseMobile,
-  type ContaHomologacaoDemo,
-} from '../supabase';
+import { obterSupabaseMobile } from '../supabase';
 import { CORES, estilosComuns } from '../theme';
 
 export type SessaoMobile =
@@ -42,12 +38,12 @@ export function LoginScreen({
   const [erro, setErro] = useState('');
   const [aviso, setAviso] = useState('');
 
-  async function realizarLogin(contaSugerida?: ContaHomologacaoDemo) {
-    const emailUsado = (contaSugerida?.email ?? email).trim();
-    const senhaUsada = contaSugerida?.senha ?? senha;
+  async function realizarLogin() {
+    const emailUsado = email.trim();
+    const senhaUsada = senha;
 
     if (!emailUsado || !senhaUsada) {
-      setErro('Preencha e-mail e senha ou selecione uma conta de homologação abaixo.');
+      setErro('Informe seu e-mail corporativo e sua senha.');
       return;
     }
 
@@ -57,76 +53,60 @@ export function LoginScreen({
 
     try {
       const supabase = obterSupabaseMobile();
-      if (supabase) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: emailUsado,
-          password: senhaUsada,
-        });
-
-        if (!error && data.user) {
-          const { data: ctxCliente } = await supabase.rpc('obter_contexto_cliente');
-          if (ctxCliente && typeof ctxCliente === 'object') {
-            aoAutenticar({
-              tipo: 'cliente',
-              contexto: ctxCliente as ContextoCliente,
-            });
-            return;
-          }
-
-          const { data: perfilDb } = await supabase
-            .from('perfis')
-            .select('usuario_id,nome,perfil_interno,origem_ativa')
-            .eq('usuario_id', data.user.id)
-            .maybeSingle();
-
-          if (perfilDb?.perfil_interno) {
-            aoAutenticar({
-              tipo: 'equipe',
-              nome: perfilDb.nome || emailUsado,
-              email: emailUsado,
-              perfilInterno: perfilDb.perfil_interno as PerfilInterno,
-            });
-            return;
-          }
-        }
+      if (!supabase) {
+        setErro('Configuração do Supabase ausente no aplicativo.');
+        return;
       }
 
-      // Fallback para as credenciais oficiais de homologação (documentadas no README)
-      const contaDemo =
-        contaSugerida ??
-        CONTAS_HOMOLOGACAO_DEMO.find(
-          (c) => c.email.toLowerCase() === emailUsado.toLowerCase() && c.senha === senhaUsada,
-        );
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailUsado,
+        password: senhaUsada,
+      });
 
-      if (contaDemo) {
-        if (contaDemo.tipo === 'equipe' && contaDemo.perfilInterno) {
-          aoAutenticar({
-            tipo: 'equipe',
-            nome: contaDemo.nome,
-            email: contaDemo.email,
-            perfilInterno: contaDemo.perfilInterno,
-          });
-          return;
+      if (error) {
+        if (/failed to fetch|network|fetch/i.test(error.message)) {
+          setErro(
+            'Não foi possível conectar ao servidor Supabase. Verifique sua internet ou se o projeto está ativo.',
+          );
+        } else {
+          setErro('E-mail ou senha inválidos.');
         }
+        return;
+      }
+
+      if (!data.user) {
+        setErro('Não foi possível autenticar sua conta.');
+        return;
+      }
+
+      const { data: ctxCliente } = await supabase.rpc('obter_contexto_cliente');
+      if (ctxCliente && typeof ctxCliente === 'object') {
         aoAutenticar({
           tipo: 'cliente',
-          contexto: {
-            vinculo_id: `vinc-${contaDemo.id}`,
-            empresa_id: `emp-${contaDemo.id}`,
-            empresa_nome: contaDemo.empresa ?? 'Metalforte Indústria',
-            perfil: 'gestor_empresa',
-            cargo: contaDemo.cargo ?? 'Gestor(a) de Projetos',
-            origem: 'demonstracao',
-            usuario_nome: contaDemo.nome,
-            usuario_email: contaDemo.email,
-            aceite_privacidade_em: new Date().toISOString(),
-            versao_aviso_privacidade: '2026-08-28-v1',
-          },
+          contexto: ctxCliente as ContextoCliente,
         });
         return;
       }
 
-      setErro('Credenciais inválidas. Verifique o e-mail/senha ou escolha uma conta de homologação.');
+      const { data: perfilDb } = await supabase
+        .from('perfis')
+        .select('usuario_id,nome,perfil_interno,origem_ativa')
+        .eq('usuario_id', data.user.id)
+        .maybeSingle();
+
+      if (perfilDb?.perfil_interno) {
+        aoAutenticar({
+          tipo: 'equipe',
+          nome: perfilDb.nome || emailUsado,
+          email: emailUsado,
+          perfilInterno: perfilDb.perfil_interno as PerfilInterno,
+        });
+        return;
+      }
+
+      setErro('Usuário autenticado, mas sem perfil vinculado no portal.');
+    } catch {
+      setErro('Falha de conexão com o servidor Supabase. Tente novamente.');
     } finally {
       setCarregando(false);
     }
@@ -161,17 +141,17 @@ export function LoginScreen({
       <View style={estilosComuns.cartao}>
         <View style={[estilosComuns.badge, { backgroundColor: CORES.verdeClaro }]}>
           <Text style={[estilosComuns.badgeTexto, { color: CORES.verde }]}>
-            🔒 ACESSO PROTEGIDO · HOMOLOGAÇÃO
+            🔒 ACESSO AO PORTAL
           </Text>
         </View>
 
         <Text style={estilosComuns.tituloSecao}>
-          {modoRecuperacao ? 'Recuperar senha' : 'Entrar no Portal de Metrologia'}
+          {modoRecuperacao ? 'Recuperar senha' : 'Entrar'}
         </Text>
         <Text style={[estilosComuns.paragrafo, { marginBottom: 14 }]}>
           {modoRecuperacao
-            ? 'Informe seu e-mail para receber um link seguro de redefinição.'
-            : 'Clientes acompanham propostas, etapas e mensagens. A equipe interna opera solicitações, orçamentos, execução, conhecimento e o Chatbot Interno.'}
+            ? 'Informe seu e-mail para receber o link de redefinição.'
+            : 'Acesse com seu e-mail e senha cadastrados.'}
         </Text>
 
         {erro ? (
@@ -256,59 +236,6 @@ export function LoginScreen({
             </TouchableOpacity>
           </>
         )}
-      </View>
-
-      {/* Contas Rápidas de Homologação (Documentadas no README) */}
-      <View style={estilosComuns.cartao}>
-        <Text style={estilosComuns.sobrelinha}>AVALIAÇÃO RÁPIDA · 1 TOQUE</Text>
-        <Text style={estilosComuns.tituloSecao}>Contas de Homologação</Text>
-        <Text style={[estilosComuns.paragrafo, { marginBottom: 12 }]}>
-          Toque em um perfil abaixo para entrar imediatamente e avaliar as permissões de Equipe ou Cliente:
-        </Text>
-
-        <Text style={[estilosComuns.label, { marginBottom: 6 }]}>Equipe do Laboratório SENAI:</Text>
-        {CONTAS_HOMOLOGACAO_DEMO.filter((c) => c.tipo === 'equipe').map((conta) => (
-          <TouchableOpacity
-            key={conta.id}
-            style={styles.contaCard}
-            onPress={() => {
-              setEmail(conta.email);
-              setSenha(conta.senha);
-              void realizarLogin(conta);
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.contaNome}>
-                {conta.nome} · <Text style={{ color: CORES.azulPrincipal }}>{conta.papelRotulo}</Text>
-              </Text>
-              <Text style={styles.contaEmail}>{conta.email}</Text>
-            </View>
-            <Text style={styles.entrarSeta}>Entrar →</Text>
-          </TouchableOpacity>
-        ))}
-
-        <Text style={[estilosComuns.label, { marginTop: 12, marginBottom: 6 }]}>
-          Contas de Clientes (Empresas):
-        </Text>
-        {CONTAS_HOMOLOGACAO_DEMO.filter((c) => c.tipo === 'cliente').map((conta) => (
-          <TouchableOpacity
-            key={conta.id}
-            style={styles.contaCard}
-            onPress={() => {
-              setEmail(conta.email);
-              setSenha(conta.senha);
-              void realizarLogin(conta);
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.contaNome}>
-                {conta.nome} · <Text style={{ color: CORES.verde }}>{conta.papelRotulo}</Text>
-              </Text>
-              <Text style={styles.contaEmail}>{conta.email}</Text>
-            </View>
-            <Text style={styles.entrarSeta}>Entrar →</Text>
-          </TouchableOpacity>
-        ))}
       </View>
     </ScrollView>
   );

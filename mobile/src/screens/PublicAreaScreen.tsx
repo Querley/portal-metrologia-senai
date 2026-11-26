@@ -328,11 +328,6 @@ export function PublicAreaScreen({ aoIrParaLogin }: { aoIrParaLogin: () => void 
               <Text style={estilosComuns.tituloSecao}>
                 {t('Um centro de excelência preparado para medir o que importa.')}
               </Text>
-              <Text style={[estilosComuns.paragrafo, { marginBottom: 8 }]}>
-                {t(
-                  'O laboratório reúne medição por coordenadas, inspeção por raios X e digitalização óptica em um ambiente dedicado à precisão.',
-                )}
-              </Text>
               <CarrosselMidiaMobile midias={MIDIAS_LABORATORIO} idioma={idioma} />
               <TouchableOpacity
                 style={{ marginTop: 6 }}
@@ -369,7 +364,6 @@ export function PublicAreaScreen({ aoIrParaLogin }: { aoIrParaLogin: () => void 
               </ScrollView>
               <View style={styles.boxSetorDetalhe}>
                 <Text style={styles.setorTitulo}>{t(setorSelecionado.titulo)}</Text>
-                <Text style={estilosComuns.paragrafo}>{t(setorSelecionado.resumo)}</Text>
                 <Text style={styles.setorExemplos}>
                   {t('Exemplos:')} {t(setorSelecionado.exemplos)}
                 </Text>

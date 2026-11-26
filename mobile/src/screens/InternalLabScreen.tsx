@@ -61,7 +61,7 @@ export function InternalLabScreen({
   perfilInicial: PerfilInterno;
   aoSair: () => void;
 }) {
-  const [perfil, setPerfil] = useState<PerfilInterno>(perfilInicial);
+  const [perfil] = useState<PerfilInterno>(perfilInicial);
   const [aba, setAba] = useState<AbaInterna>('chatbot-ia');
   const [contexto, setContexto] = useState<ContextoOperacionalLaboratorio>(() =>
     criarContextoDemonstrativoFallback(perfilInicial),
@@ -191,7 +191,25 @@ export function InternalLabScreen({
   async function alternarEtapaExecucao(execucaoId: string, ordemEtapa: number) {
     const execAlvo = contexto.execucoes.find((e) => e.execucao_id === execucaoId);
     const etapaAlvo = execAlvo?.etapas.find((et) => et.ordem === ordemEtapa);
-    if (!etapaAlvo) return;
+    if (!execAlvo || !etapaAlvo) return;
+
+    const pendenteAnterior = execAlvo.etapas.some(
+      (et) => et.ordem < ordemEtapa && et.estado !== 'concluida',
+    );
+    if (pendenteAnterior) {
+      setAvisoOperacional('Conclua as etapas anteriores antes de avançar esta fase.');
+      return;
+    }
+
+    const posteriorIniciada = execAlvo.etapas.some(
+      (et) => et.ordem > ordemEtapa && et.estado !== 'a_fazer',
+    );
+    if (etapaAlvo.estado === 'concluida' && posteriorIniciada) {
+      setAvisoOperacional(
+        'Não é possível reiniciar esta etapa porque a fase seguinte já foi iniciada.',
+      );
+      return;
+    }
 
     const proximoEstado: EstadoEtapaExecucao =
       etapaAlvo.estado === 'a_fazer'
@@ -201,6 +219,33 @@ export function InternalLabScreen({
           : 'a_fazer';
     const proximoProgresso =
       proximoEstado === 'concluida' ? 100 : proximoEstado === 'em_andamento' ? 50 : 0;
+
+    const supabase = obterSupabaseMobile();
+    if (supabase && etapaAlvo.id) {
+      try {
+        const { error } = await supabase.rpc('atualizar_etapa_execucao_demonstrativa', {
+          etapa: etapaAlvo.id,
+          novo_estado: proximoEstado,
+          novo_progresso: proximoProgresso,
+        });
+        if (!error) {
+          await recarregarContexto(perfil);
+          setAvisoOperacional('Etapa atualizada no sistema.');
+          return;
+        }
+        setAvisoOperacional(
+          error.code === '42501'
+            ? 'Seu perfil não tem permissão para alterar esta etapa.'
+            : /failed to fetch|network/i.test(error.message)
+              ? 'Sem conexão com o Supabase (verifique se o projeto está ativo).'
+              : error.message,
+        );
+        return;
+      } catch {
+        setAvisoOperacional('Sem conexão com o Supabase para salvar a etapa.');
+        return;
+      }
+    }
 
     setContexto((atual) => ({
       ...atual,
@@ -216,27 +261,7 @@ export function InternalLabScreen({
         };
       }),
     }));
-
-    const supabase = obterSupabaseMobile();
-    if (supabase && etapaAlvo.id) {
-      const { error } = await supabase.rpc('atualizar_etapa_execucao_demonstrativa', {
-        etapa: etapaAlvo.id,
-        novo_estado: proximoEstado,
-        novo_progresso: proximoProgresso,
-      });
-      if (!error) {
-        await recarregarContexto(perfil);
-        setAvisoOperacional('Progresso da etapa salvo no banco e visível para o cliente.');
-        return;
-      }
-      setAvisoOperacional(
-        error.code === '42501'
-          ? 'Seu perfil não tem permissão para alterar esta etapa no banco.'
-          : `Etapa atualizada na tela (banco: ${error.message}).`,
-      );
-      return;
-    }
-    setAvisoOperacional('Progresso da etapa técnica atualizado na bancada (modo local).');
+    setAvisoOperacional('Etapa atualizada.');
   }
 
   async function registrarProblemaExecucao(execucaoId: string) {
@@ -287,18 +312,27 @@ export function InternalLabScreen({
 
     const supabase = obterSupabaseMobile();
     if (supabase) {
-      const { error } = await supabase.rpc('enviar_mensagem_interna_demonstrativa', {
-        solicitacao: idAlvo,
-        conteudo: texto,
-      });
-      if (!error) {
-        setTextoNovaMensagemInterna('');
-        await recarregarContexto(perfil);
-        setAvisoOperacional('Mensagem enviada e salva no protocolo do cliente.');
+      try {
+        const { error } = await supabase.rpc('enviar_mensagem_interna_demonstrativa', {
+          solicitacao: idAlvo,
+          conteudo: texto,
+        });
+        if (!error) {
+          setTextoNovaMensagemInterna('');
+          await recarregarContexto(perfil);
+          setAvisoOperacional('Mensagem enviada ao cliente.');
+          return;
+        }
+        setAvisoOperacional(
+          /failed to fetch|network/i.test(error.message)
+            ? 'Sem conexão com o Supabase (verifique se o projeto está ativo no painel).'
+            : `Não foi possível enviar: ${error.message}`,
+        );
+        return;
+      } catch {
+        setAvisoOperacional('Sem conexão com o Supabase para enviar a mensagem.');
         return;
       }
-      setAvisoOperacional(`Erro ao enviar ao Supabase: ${error.message}`);
-      return;
     }
 
     setContexto((atual) => ({
@@ -335,24 +369,30 @@ export function InternalLabScreen({
     }
     const rpcNome =
       orc.estado === 'aprovado' ? 'publicar_orcamento_demonstrativo' : 'aprovar_orcamento_demonstrativo';
-    const { error } = await supabase.rpc(rpcNome, { versao: orc.versao_id });
-    if (error) {
+    try {
+      const { error } = await supabase.rpc(rpcNome, { versao: orc.versao_id });
+      if (error) {
+        setAvisoOperacional(
+          error.code === '42501'
+            ? 'Seu perfil não tem autorização para aprovar/publicar esta versão.'
+            : /failed to fetch|network/i.test(error.message)
+              ? 'Sem conexão com o Supabase (verifique se o projeto está ativo no painel).'
+              : `Não foi possível concluir: ${error.message}`,
+        );
+        return;
+      }
+      await recarregarContexto(perfil);
       setAvisoOperacional(
-        error.code === '42501'
-          ? 'Seu perfil não tem autorização para aprovar/publicar esta versão.'
-          : `Não foi possível concluir no Supabase: ${error.message}`,
+        `Versão V${orc.numero} do protocolo #${orc.solicitacao_codigo} atualizada!`,
       );
-      return;
+    } catch {
+      setAvisoOperacional('Sem conexão com o Supabase para aprovar o orçamento.');
     }
-    await recarregarContexto(perfil);
-    setAvisoOperacional(
-      `Versão V${orc.numero} do protocolo #${orc.solicitacao_codigo} atualizada no Supabase!`,
-    );
   }
 
   async function abrirAnexoStorage(bucket: 'solicitacoes' | 'mensagens', caminho: string, nome: string) {
     if (!caminho) {
-      setAvisoOperacional(`Anexo "${nome}" disponível apenas em demonstração local.`);
+      setAvisoOperacional(`Arquivo "${nome}" sem caminho de armazenamento vinculado.`);
       return;
     }
     const supabase = obterSupabaseMobile();
@@ -360,12 +400,21 @@ export function InternalLabScreen({
       setAvisoOperacional(`Conecte-se ao Supabase para baixar "${nome}".`);
       return;
     }
-    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(caminho, 300);
-    if (error || !data?.signedUrl) {
-      setAvisoOperacional(`Não foi possível abrir "${nome}": ${error?.message ?? 'erro no Storage'}.`);
-      return;
+    try {
+      const { data, error } = await supabase.storage.from(bucket).createSignedUrl(caminho, 300);
+      if (error || !data?.signedUrl) {
+        const msg = error?.message ?? 'arquivo indisponível';
+        setAvisoOperacional(
+          /failed to fetch|network/i.test(msg)
+            ? `Sem conexão com o Supabase para abrir "${nome}".`
+            : `Não foi possível abrir "${nome}": ${msg}.`,
+        );
+        return;
+      }
+      await Linking.openURL(data.signedUrl);
+    } catch {
+      setAvisoOperacional(`Sem conexão com o Supabase para abrir "${nome}".`);
     }
-    await Linking.openURL(data.signedUrl);
   }
 
   const conversaAtiva =
@@ -377,36 +426,22 @@ export function InternalLabScreen({
       {/* Barra de Identificação do Membro do Laboratório */}
       <View style={styles.topoInterno}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.topoSubtitulo}>PORTAL OPERACIONAL INTERNO • SENAI / ZEISS</Text>
+          <Text style={styles.topoSubtitulo}>
+            PORTAL INTERNO • {perfil.toUpperCase()}
+          </Text>
           <Text style={styles.topoNome}>
-            {nomeUsuario} ({emailUsuario})
+            {nomeUsuario}
           </Text>
         </View>
         <TouchableOpacity
           style={styles.botaoSanitizado}
           onPress={() => setModalSanitizadoAberto(true)}
         >
-          <Text style={styles.botaoSanitizadoTexto}>Assistente Sanitizado</Text>
+          <Text style={styles.botaoSanitizadoTexto}>Assistente</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.botaoSair} onPress={aoSair}>
           <Text style={styles.botaoSairTexto}>Sair</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* Seletor rápido de perfil para demonstração de permissões */}
-      <View style={styles.barraPerfil}>
-        <Text style={styles.barraPerfilRotulo}>Perfil ativo:</Text>
-        {(['tecnico', 'validador', 'administrador'] as PerfilInterno[]).map((p) => (
-          <TouchableOpacity
-            key={p}
-            style={[styles.chipPerfil, perfil === p && styles.chipPerfilAtivo]}
-            onPress={() => setPerfil(p)}
-          >
-            <Text style={[styles.chipPerfilTexto, perfil === p && styles.chipPerfilTextoAtivo]}>
-              {p.toUpperCase()}
-            </Text>
-          </TouchableOpacity>
-        ))}
       </View>
 
       {avisoOperacional ? (
@@ -967,12 +1002,9 @@ export function InternalLabScreen({
         {aba === 'execucao' && (
           <View>
             <View style={estilosComuns.card}>
-              <Text style={estilosComuns.badge}>BANCADA METROLÓGICA • PASSO A PASSO E OCORRÊNCIAS</Text>
+              <Text style={estilosComuns.badge}>EXECUÇÕES TÉCNICAS</Text>
               <Text style={estilosComuns.tituloSecao}>
-                Execuções Técnicas e Problemas ({contexto.execucoes.length})
-              </Text>
-              <Text style={estilosComuns.subtituloSecao}>
-                Acompanhe as etapas de cada serviço, consulte instruções de bancada e registre problemas ou retrabalhos.
+                Execuções e Ocorrências ({contexto.execucoes.length})
               </Text>
             </View>
 
@@ -1082,12 +1114,9 @@ export function InternalLabScreen({
         {aba === 'conhecimento' && (
           <View>
             <View style={estilosComuns.card}>
-              <Text style={estilosComuns.badge}>ASSERTIVIDADE E MEMÓRIA TÉCNICA</Text>
+              <Text style={estilosComuns.badge}>MEMÓRIA TÉCNICA</Text>
               <Text style={estilosComuns.tituloSecao}>
-                Comparativo Planejado vs Realizado ({contexto.indicadores.length})
-              </Text>
-              <Text style={estilosComuns.subtituloSecao}>
-                Histórico consolidado de desvios de esforço, duração e lições aprendidas por serviço.
+                Planejado vs Realizado ({contexto.indicadores.length})
               </Text>
             </View>
 
