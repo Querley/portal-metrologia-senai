@@ -49,6 +49,7 @@ export function ClientAreaScreen({
   const [novaQtd, setNovaQtd] = useState('2');
   const [novoPrazoPagto, setNovoPrazoPagto] = useState('30');
   const [novaDescricao, setNovaDescricao] = useState('');
+  const [arquivosNovoTrabalho, setArquivosNovoTrabalho] = useState<File[]>([]);
   const [aviso, setAviso] = useState('');
   const [erro, setErro] = useState('');
 
@@ -165,6 +166,22 @@ export function ClientAreaScreen({
     await carregarMensagensCliente(trabalhoAtivo.id);
   }
 
+  function selecionarArquivosWeb() {
+    if (typeof document === 'undefined') {
+      setAviso('Seleção de arquivos disponível no navegador (no Android nativo usará o seletor do sistema).');
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.pdf,.step,.stp,.iges,.igs,.png,.jpg,.jpeg';
+    input.onchange = () => {
+      const lista = Array.from(input.files ?? []);
+      if (lista.length > 0) setArquivosNovoTrabalho((atuais) => [...atuais, ...lista]);
+    };
+    input.click();
+  }
+
   async function registrarNovoTrabalho() {
     if (novaDescricao.trim().length < 10) {
       setErro('Descreva o desafio técnico em pelo menos 10 caracteres.');
@@ -172,41 +189,51 @@ export function ClientAreaScreen({
     }
     setErro('');
     const supabase = obterSupabaseMobile();
-    if (supabase) {
-      await supabase.rpc('criar_solicitacao_cliente_autenticado', {
-        necessidade_principal: novaNecessidade,
-        material_peca: novoMaterial,
-        dimensoes_aproximadas: 'Conforme descrição',
-        quantidade_pecas: Math.max(1, Number(novaQtd) || 1),
-        prazo_desejado: null,
-        prazo_pagamento_dias: Math.max(1, Number(novoPrazoPagto) || 30),
-        possui_modelo_cad: 'sim',
-        descricao_desafio: novaDescricao.trim(),
-      });
+    if (!supabase) {
+      setErro('Sem conexão com o Supabase.');
+      return;
     }
-    const novoCodigo = 285 + trabalhos.length;
-    const novo: SolicitacaoCliente = {
-      id: `sol-cli-${novoCodigo}`,
-      codigo: novoCodigo,
-      protocolo: `DEM-SOL-0${novoCodigo}`,
-      estado: 'em_analise',
-      criada_em: new Date().toISOString(),
-      servico: novaNecessidade,
-      descricao: novaDescricao.trim(),
+    const payload = {
+      necessidade: novaNecessidade,
       material: novoMaterial,
-      quantidade: novaQtd,
-      proposta_estado: null,
-      valor_pre_proposta: null,
-      prazo_pagamento_dias: Number(novoPrazoPagto) || 30,
-      aceita_em: null,
-      execucao_estado: null,
-      etapas: [],
+      dimensoes: 'Conforme descrição',
+      quantidade: Math.max(1, Number(novaQtd) || 1),
+      prazo_pagamento_dias: Math.max(1, Number(novoPrazoPagto) || 30),
+      possui_cad: 'sim',
+      descricao: novaDescricao.trim(),
     };
-    setTrabalhos((atuais) => [novo, ...atuais]);
-    setSelecionadoId(novo.id);
+    const { data, error } = await supabase.rpc('criar_solicitacao_cliente_demonstrativa', {
+      payload,
+    });
+    const resultado = data as { solicitacao_id?: string; codigo?: number; protocolo?: string } | null;
+    if (error || !resultado?.solicitacao_id) {
+      setErro(error?.message ?? 'Não foi possível registrar o novo trabalho.');
+      return;
+    }
+
+    for (const arquivo of arquivosNovoTrabalho) {
+      const limpo = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const caminho = `${resultado.solicitacao_id}/${Date.now()}-${limpo}`;
+      const tipo = arquivo.type || 'application/octet-stream';
+      const up = await supabase.storage
+        .from('solicitacoes')
+        .upload(caminho, arquivo, { contentType: tipo, upsert: false });
+      if (!up.error) {
+        await supabase.rpc('registrar_anexo_solicitacao_cliente_demonstrativa', {
+          solicitacao: resultado.solicitacao_id,
+          caminho,
+          nome_original: arquivo.name,
+          tipo_mime: tipo,
+          tamanho_bytes: arquivo.size,
+        });
+      }
+    }
+
+    setArquivosNovoTrabalho([]);
     setNovaDescricao('');
     setModalNovoAberto(false);
-    setAviso(`Nova solicitação ${novo.protocolo} registrada e vinculada à empresa ${contexto.empresa_nome}.`);
+    await carregarDadosCliente();
+    setAviso(`Solicitação ${resultado.protocolo ?? ''} registrada com sucesso!`);
   }
 
   const situacaoEtapas = trabalhoAtivo
@@ -554,6 +581,20 @@ export function ClientAreaScreen({
                 multiline
                 placeholder="Descreva a peça, tolerâncias e objetivo..."
               />
+
+              <TouchableOpacity
+                style={[estilosComuns.botaoSecundario, { marginBottom: 10 }]}
+                onPress={selecionarArquivosWeb}
+              >
+                <Text style={estilosComuns.botaoSecundarioTexto}>
+                  📎 Anexar PDF / CAD ({arquivosNovoTrabalho.length})
+                </Text>
+              </TouchableOpacity>
+              {arquivosNovoTrabalho.map((arq, i) => (
+                <Text key={`${arq.name}-${i}`} style={{ fontSize: 11.5, color: CORES.textoSecundario, marginBottom: 4 }}>
+                  • {arq.name} ({(arq.size / 1024).toFixed(0)} KB)
+                </Text>
+              ))}
 
               <TouchableOpacity
                 style={estilosComuns.botaoPrimario}
