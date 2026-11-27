@@ -48,6 +48,7 @@ export function ClientAreaScreen({
   const [novoMaterial, setNovoMaterial] = useState<string>(MATERIAIS_PECA[0]);
   const [novaQtd, setNovaQtd] = useState('2');
   const [novoPrazoPagto, setNovoPrazoPagto] = useState('30');
+  const [novoPrazoServico, setNovoPrazoServico] = useState('15 dias');
   const [novaDescricao, setNovaDescricao] = useState('');
   const [arquivosNovoTrabalho, setArquivosNovoTrabalho] = useState<File[]>([]);
   const [aviso, setAviso] = useState('');
@@ -194,12 +195,13 @@ export function ClientAreaScreen({
       return;
     }
     const payload = {
+      telefone: '',
       necessidade: novaNecessidade,
+      necessidade_personalizada: '',
       material: novoMaterial,
-      dimensoes: 'Conforme descrição',
       quantidade: Math.max(1, Number(novaQtd) || 1),
+      prazo_servico: novoPrazoServico.trim() || 'A combinar',
       prazo_pagamento_dias: Math.max(1, Number(novoPrazoPagto) || 30),
-      possui_cad: 'sim',
       descricao: novaDescricao.trim(),
     };
     const { data, error } = await supabase.rpc('criar_solicitacao_cliente_demonstrativa', {
@@ -572,6 +574,14 @@ export function ClientAreaScreen({
                   />
                 </View>
               </View>
+
+              <Text style={estilosComuns.label}>Prazo desejado do serviço</Text>
+              <TextInput
+                style={estilosComuns.input}
+                value={novoPrazoServico}
+                onChangeText={setNovoPrazoServico}
+                placeholder="Ex: 15 dias ou A combinar"
+              />
 
               <Text style={estilosComuns.label}>Descreva o desafio técnico</Text>
               <TextInput
