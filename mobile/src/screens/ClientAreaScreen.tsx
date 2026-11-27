@@ -29,6 +29,18 @@ import { necessidadesCliente } from '@lib/solicitacao';
 import { obterSupabaseMobile } from '../supabase';
 import { CORES, estilosComuns } from '../theme';
 
+function normalizarPrazoServicoParaDataIso(valor: string): string {
+  const limpo = valor.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(limpo)) return limpo;
+  const br = limpo.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+  const dias = Number(limpo);
+  if (Number.isFinite(dias) && dias >= 0 && dias <= 3650 && limpo !== '') {
+    return new Date(Date.now() + Math.round(dias) * 86_400_000).toISOString().slice(0, 10);
+  }
+  return new Date(Date.now() + 15 * 86_400_000).toISOString().slice(0, 10);
+}
+
 export function ClientAreaScreen({
   contexto,
   aoSair,
@@ -54,7 +66,9 @@ export function ClientAreaScreen({
   const [novoMaterial, setNovoMaterial] = useState<string>(MATERIAIS_PECA[0]);
   const [novaQtd, setNovaQtd] = useState('2');
   const [novoPrazoPagto, setNovoPrazoPagto] = useState('30');
-  const [novoPrazoServico, setNovoPrazoServico] = useState('15 dias');
+  const [novoPrazoServico, setNovoPrazoServico] = useState(() =>
+    new Date(Date.now() + 15 * 86_400_000).toISOString().slice(0, 10),
+  );
   const [novaDescricao, setNovaDescricao] = useState('');
   const [arquivosNovoTrabalho, setArquivosNovoTrabalho] = useState<File[]>([]);
   const [aviso, setAviso] = useState('');
@@ -242,7 +256,7 @@ export function ClientAreaScreen({
       necessidade_personalizada: '',
       material: novoMaterial,
       quantidade: Math.max(1, Number(novaQtd) || 1),
-      prazo_servico: novoPrazoServico.trim() || 'A combinar',
+      prazo_servico: normalizarPrazoServicoParaDataIso(novoPrazoServico),
       prazo_pagamento_dias: Math.max(1, Number(novoPrazoPagto) || 30),
       descricao: novaDescricao.trim(),
     };
@@ -685,12 +699,12 @@ export function ClientAreaScreen({
                 </View>
               </View>
 
-              <Text style={estilosComuns.label}>Prazo desejado do serviço</Text>
+              <Text style={estilosComuns.label}>Prazo desejado (AAAA-MM-DD ou nº de dias)</Text>
               <TextInput
                 style={estilosComuns.input}
                 value={novoPrazoServico}
                 onChangeText={setNovoPrazoServico}
-                placeholder="Ex: 15 dias ou A combinar"
+                placeholder="Ex: 2026-12-15 ou 15"
               />
 
               <Text style={estilosComuns.label}>Descreva o desafio técnico</Text>
