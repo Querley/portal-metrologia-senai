@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   ScrollView,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { correspondeBusca, formatosDataParaBusca } from '@lib/busca-e-filtros';
 import { formatarDinheiro } from '@lib/calculos';
 import { MATERIAIS_PECA } from '@lib/campos-padronizados';
 import {
@@ -43,6 +44,11 @@ export function ClientAreaScreen({
   const [novaMensagem, setNovaMensagem] = useState('');
   const [recusando, setRecusando] = useState(false);
   const [motivoRecusa, setMotivoRecusa] = useState('');
+  const [buscaTrabalho, setBuscaTrabalho] = useState('');
+  const [filtroTrabalho, setFiltroTrabalho] = useState<
+    'todos' | 'publicada' | 'em_execucao' | 'concluido' | 'em_analise'
+  >('todos');
+  const [ordenacaoTrabalho, setOrdenacaoTrabalho] = useState<'recentes' | 'antigas'>('recentes');
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
   const [novaNecessidade, setNovaNecessidade] = useState<string>(necessidadesCliente[0].valor);
   const [novoMaterial, setNovoMaterial] = useState<string>(MATERIAIS_PECA[0]);
@@ -69,7 +75,43 @@ export function ClientAreaScreen({
     void carregarDadosCliente();
   }, [carregarDadosCliente]);
 
-  const trabalhoAtivo = trabalhos.find((t) => t.id === selecionadoId) ?? trabalhos[0];
+  const trabalhosVisiveis = useMemo(() => {
+    return trabalhos
+      .filter((t) => {
+        if (filtroTrabalho === 'publicada' && t.proposta_estado !== 'publicada') return false;
+        if (filtroTrabalho === 'em_execucao' && t.execucao_estado !== 'em_execucao') return false;
+        if (filtroTrabalho === 'concluido' && t.execucao_estado !== 'concluido') return false;
+        if (
+          filtroTrabalho === 'em_analise' &&
+          (t.proposta_estado === 'publicada' || t.execucao_estado === 'em_execucao' || t.execucao_estado === 'concluido')
+        ) {
+          return false;
+        }
+        const nomesEtapas = (t.etapas ?? []).map((et) => et.titulo).join(' ');
+        return correspondeBusca(
+          buscaTrabalho,
+          protocoloSolicitacaoCliente(t),
+          t.codigo,
+          tituloServicoCliente(t.servico),
+          t.servico,
+          t.material,
+          t.descricao,
+          t.estado,
+          t.proposta_estado,
+          t.execucao_estado,
+          nomesEtapas,
+          formatosDataParaBusca(t.criada_em),
+        );
+      })
+      .sort((a, b) =>
+        ordenacaoTrabalho === 'antigas'
+          ? +new Date(a.criada_em) - +new Date(b.criada_em)
+          : +new Date(b.criada_em) - +new Date(a.criada_em),
+      );
+  }, [buscaTrabalho, filtroTrabalho, ordenacaoTrabalho, trabalhos]);
+
+  const trabalhoAtivo =
+    trabalhosVisiveis.find((t) => t.id === selecionadoId) ?? trabalhosVisiveis[0] ?? trabalhos[0];
 
   const carregarMensagensCliente = useCallback(async (solicitacaoId: string) => {
     const supabase = obterSupabaseMobile();
@@ -270,18 +312,33 @@ export function ClientAreaScreen({
         </View>
       ) : null}
 
-      {/* Indicadores do Cliente + Botão Novo Trabalho */}
+      {/* Indicadores Clicáveis (aplicam filtro) + Botão Novo Trabalho */}
       <View style={styles.kpisRow}>
-        <View style={styles.kpiItem}>
+        <TouchableOpacity
+          style={[styles.kpiItem, filtroTrabalho === 'todos' && { borderColor: CORES.azulPrincipal, borderWidth: 2 }]}
+          onPress={() => setFiltroTrabalho('todos')}
+        >
           <Text style={styles.kpiNumero}>{trabalhos.length}</Text>
-          <Text style={styles.kpiRotulo}>Trabalhos vinculados</Text>
-        </View>
-        <View style={styles.kpiItem}>
+          <Text style={styles.kpiRotulo}>Todos</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.kpiItem, filtroTrabalho === 'publicada' && { borderColor: CORES.azulPrincipal, borderWidth: 2 }]}
+          onPress={() => setFiltroTrabalho('publicada')}
+        >
           <Text style={styles.kpiNumero}>
             {trabalhos.filter((t) => t.proposta_estado === 'publicada').length}
           </Text>
-          <Text style={styles.kpiRotulo}>Aguardando decisão</Text>
-        </View>
+          <Text style={styles.kpiRotulo}>Aguardando aceite</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.kpiItem, filtroTrabalho === 'em_execucao' && { borderColor: CORES.azulPrincipal, borderWidth: 2 }]}
+          onPress={() => setFiltroTrabalho('em_execucao')}
+        >
+          <Text style={styles.kpiNumero}>
+            {trabalhos.filter((t) => t.execucao_estado === 'em_execucao').length}
+          </Text>
+          <Text style={styles.kpiRotulo}>Em execução</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.kpiItem, { backgroundColor: CORES.azulPrincipal }]}
           onPress={() => setModalNovoAberto(true)}
@@ -291,11 +348,64 @@ export function ClientAreaScreen({
         </TouchableOpacity>
       </View>
 
-      {/* Seletor de Trabalhos da Empresa */}
+      {/* Busca, Filtros e Seletor de Trabalhos da Empresa */}
       <View style={estilosComuns.cartao}>
-        <Text style={estilosComuns.sobrelinha}>SELECIONE O TRABALHO</Text>
+        <View style={estilosComuns.linhaEntre}>
+          <Text style={estilosComuns.sobrelinha}>
+            TRABALHOS ({trabalhosVisiveis.length}/{trabalhos.length})
+          </Text>
+          {(buscaTrabalho || filtroTrabalho !== 'todos') && (
+            <TouchableOpacity
+              onPress={() => {
+                setBuscaTrabalho('');
+                setFiltroTrabalho('todos');
+              }}
+            >
+              <Text style={{ fontSize: 11.5, fontWeight: '800', color: CORES.vermelho }}>
+                Limpar filtros
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <TextInput
+          style={[estilosComuns.input, { marginTop: 6 }]}
+          value={buscaTrabalho}
+          onChangeText={setBuscaTrabalho}
+          placeholder="Buscar protocolo, serviço, material, etapa ou data..."
+          placeholderTextColor={CORES.textoSuave}
+        />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
-          {trabalhos.map((item) => {
+          {[
+            { id: 'todos', label: 'Todos' },
+            { id: 'publicada', label: 'Aguardando aceite' },
+            { id: 'em_execucao', label: 'Em execução' },
+            { id: 'concluido', label: 'Concluídos' },
+            { id: 'em_analise', label: 'Em análise' },
+          ].map((f) => (
+            <TouchableOpacity
+              key={f.id}
+              style={[styles.chipOpcao, filtroTrabalho === f.id && styles.chipOpcaoAtiva]}
+              onPress={() => setFiltroTrabalho(f.id as typeof filtroTrabalho)}
+            >
+              <Text style={[styles.chipOpcaoTexto, filtroTrabalho === f.id && { color: '#fff' }]}>
+                {f.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.chipOpcao}
+            onPress={() =>
+              setOrdenacaoTrabalho((o) => (o === 'recentes' ? 'antigas' : 'recentes'))
+            }
+          >
+            <Text style={styles.chipOpcaoTexto}>
+              {ordenacaoTrabalho === 'recentes' ? '↓ Mais novos' : '↑ Mais antigos'}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+          {trabalhosVisiveis.map((item) => {
             const ativo = item.id === trabalhoAtivo?.id;
             return (
               <TouchableOpacity
