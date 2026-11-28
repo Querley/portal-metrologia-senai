@@ -12,10 +12,10 @@ import {
 import { formatarDinheiro } from '@lib/calculos';
 import {
   carregarContextoOperacionalLaboratorio,
+  consultarChatbotInternoComIa,
   criarContextoDemonstrativoFallback,
   criarMensagemChatIa,
   obterSugestoesChatbotInterno,
-  responderChatbotInternoLaboratorio,
   type ContextoOperacionalLaboratorio,
   type MensagemChatIa,
 } from '@lib/chatbot-metrologia';
@@ -189,7 +189,11 @@ export function InternalLabScreen({
     if (!textoExplicito) setPerguntaChat('');
     setCarregandoChat(true);
     try {
-      const resposta = await responderChatbotInternoLaboratorio(texto, contexto);
+      const resposta = await consultarChatbotInternoComIa({
+        pergunta: texto,
+        contexto,
+        historico: mensagensChat.map((m) => ({ autor: m.autor, texto: m.texto })),
+      });
       setMensagensChat((atual) => [
         ...atual,
         criarMensagemChatIa('assistente', resposta.texto, 'pt-BR', resposta.fontes),

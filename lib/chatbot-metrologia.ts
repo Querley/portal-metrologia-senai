@@ -2067,3 +2067,84 @@ async function chamarGeminiTexto(apiKey: string, instrucaoSistema: string, pergu
   };
   return json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? null;
 }
+
+function resolverUrlApiChatbot(): string | null {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/api/chatbot`;
+  }
+  const baseEnv =
+    typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_PORTAL_URL?.trim() : '';
+  if (baseEnv) return `${baseEnv.replace(/\/$/, '')}/api/chatbot`;
+  return null;
+}
+
+export async function consultarChatbotPublicoComIa(params: {
+  pergunta: string;
+  idioma: 'pt-BR' | 'en' | 'de';
+  historico: Array<{ autor: 'usuario' | 'assistente'; texto: string }>;
+}): Promise<{ texto: string; fontes: string[] }> {
+  const url = resolverUrlApiChatbot();
+  if (url) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modo: 'publico',
+          idioma: params.idioma,
+          pergunta: params.pergunta,
+          historico: params.historico.slice(-8),
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          modoResposta?: string;
+          texto?: string;
+          fontes?: string[];
+        };
+        if (data.modoResposta === 'gemini' && data.texto) {
+          return { texto: data.texto, fontes: data.fontes ?? ['IA Gemini 2.5'] };
+        }
+      }
+    } catch {
+      // Fallback transparente para o motor determinístico local
+    }
+  }
+  return responderChatbotPublico(params.pergunta, params.idioma);
+}
+
+export async function consultarChatbotInternoComIa(params: {
+  pergunta: string;
+  contexto: ContextoOperacionalLaboratorio;
+  historico: Array<{ autor: 'usuario' | 'assistente'; texto: string }>;
+}): Promise<{ texto: string; fontes: string[] }> {
+  const url = resolverUrlApiChatbot();
+  if (url) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modo: 'interno',
+          idioma: 'pt-BR',
+          pergunta: params.pergunta,
+          historico: params.historico.slice(-8),
+          contextoInterno: params.contexto,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          modoResposta?: string;
+          texto?: string;
+          fontes?: string[];
+        };
+        if (data.modoResposta === 'gemini' && data.texto) {
+          return { texto: data.texto, fontes: data.fontes ?? ['IA Gemini 2.5'] };
+        }
+      }
+    } catch {
+      // Fallback transparente para o motor determinístico local
+    }
+  }
+  return responderChatbotInternoLaboratorio(params.pergunta, params.contexto);
+}

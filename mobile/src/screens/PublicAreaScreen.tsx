@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { MATERIAIS_PECA } from '@lib/campos-padronizados';
 import {
+  consultarChatbotPublicoComIa,
   criarMensagemChatIa,
   EVENTOS_PADRAO_LABORATORIO,
   obterSugestoesChatbotPublico,
-  responderChatbotPublico,
   type MensagemChatIa,
 } from '@lib/chatbot-metrologia';
 import {
@@ -198,7 +198,11 @@ export function PublicAreaScreen({ aoIrParaLogin }: { aoIrParaLogin: () => void 
     setCarregandoChat(true);
 
     try {
-      const resp = await responderChatbotPublico(limpa, idioma);
+      const resp = await consultarChatbotPublicoComIa({
+        pergunta: limpa,
+        idioma,
+        historico: mensagensChat.map((m) => ({ autor: m.autor, texto: m.texto })),
+      });
       const msgBot = criarMensagemChatIa('assistente', resp.texto, idioma, resp.fontes);
       setMensagensChat((atuais) => [...atuais, msgBot]);
     } finally {

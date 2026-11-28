@@ -14,6 +14,94 @@ import { servicosOficiais } from '@lib/servicos';
 import { CORES, estilosComuns } from '../../theme';
 import type { ServicoCatalogoDb } from './OrcamentosTab';
 
+function MiniPizzaConhecimento({
+  titulo,
+  centroValor,
+  centroRotulo,
+  fatias,
+}: {
+  titulo: string;
+  centroValor: string;
+  centroRotulo: string;
+  fatias: Array<{ rotulo: string; valor: number; cor: string; aoTocar: () => void }>;
+}) {
+  const total = fatias.reduce((acc, f) => acc + f.valor, 0);
+  const raio = 36;
+  const circ = 2 * Math.PI * raio;
+  let acumulado = 0;
+
+  return (
+    <View style={estilosComuns.card}>
+      <Text style={estilosComuns.tituloSecao}>{titulo}</Text>
+      <View style={styles.linhaPizza}>
+        {typeof document !== 'undefined' ? (
+          <View style={styles.svgContainer}>
+            {React.createElement(
+              'svg',
+              { width: 108, height: 108, viewBox: '0 0 100 100' },
+              React.createElement('circle', {
+                cx: 50,
+                cy: 50,
+                r: raio,
+                fill: 'transparent',
+                stroke: '#E2E8F0',
+                strokeWidth: 15,
+              }),
+              ...(total > 0
+                ? fatias
+                    .filter((f) => f.valor > 0)
+                    .map((f) => {
+                      const frac = f.valor / total;
+                      const dash = frac * circ;
+                      const offset = -acumulado * circ;
+                      acumulado += frac;
+                      return React.createElement('circle', {
+                        key: f.rotulo,
+                        cx: 50,
+                        cy: 50,
+                        r: raio,
+                        fill: 'transparent',
+                        stroke: f.cor,
+                        strokeWidth: 15,
+                        strokeDasharray: `${dash} ${circ}`,
+                        strokeDashoffset: offset,
+                        transform: 'rotate(-90 50 50)',
+                      });
+                    })
+                : []),
+            )}
+            <View style={styles.centroPizza}>
+              <Text style={styles.centroValor}>{centroValor}</Text>
+              <Text style={styles.centroRotulo}>{centroRotulo}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.anelNativo}>
+            <Text style={styles.centroValor}>{centroValor}</Text>
+            <Text style={styles.centroRotulo}>{centroRotulo}</Text>
+          </View>
+        )}
+        <View style={{ flex: 1, gap: 6 }}>
+          {fatias.map((f) => {
+            const pct = total > 0 ? Math.round((f.valor / total) * 100) : 0;
+            return (
+              <TouchableOpacity key={f.rotulo} style={styles.itemLegenda} onPress={f.aoTocar}>
+                <View style={[styles.pontoCor, { backgroundColor: f.cor }]} />
+                <Text style={styles.legendaTexto} numberOfLines={1}>
+                  {f.rotulo}
+                </Text>
+                <Text style={styles.legendaValor}>
+                  {f.valor} ({pct}%)
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export function ConhecimentoTab({
   contexto,
   perfil,
@@ -35,13 +123,47 @@ export function ConhecimentoTab({
   const [resumos, setResumos] = useState<Record<string, string>>({});
   const [assuntos, setAssuntos] = useState<Record<string, string>>({});
 
-  // Recomendador Q1–Q3
+  // Recomendador Q1–Q3 (colapsável)
+  const [simuladorAberto, setSimuladorAberto] = useState(false);
   const [servicoRecId, setServicoRecId] = useState(servicosDb[0]?.id ?? '');
   const [qtdRec, setQtdRec] = useState('10');
   const [resultadoRec, setResultadoRec] = useState('');
 
   const exibeCustos = podeConsultarCustos(perfil);
   const podeFormalizar = podeFormalizarLicao(perfil);
+
+  const semLicao = contexto.indicadores.filter((i) => !i.licao_id).length;
+  const emValidacao = contexto.indicadores.filter((i) => i.licao_estado === 'em_validacao').length;
+  const formalizadas = contexto.indicadores.filter((i) => i.licao_estado === 'formalizada').length;
+  const comparaveis = contexto.indicadores.filter((i) => i.esforco_assertivo !== null);
+  const assertivos = comparaveis.filter((i) => i.esforco_assertivo).length;
+  const comDesvio = comparaveis.length - assertivos;
+  const assertividadePct =
+    comparaveis.length > 0 ? Math.round((assertivos / comparaveis.length) * 100) : 0;
+
+  // Top assuntos mais recorrentes nas lições
+  const topAssuntos = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const ind of contexto.indicadores) {
+      for (const a of ind.licao_assuntos ?? []) {
+        const tag = a.trim();
+        if (tag) mapa.set(tag, (mapa.get(tag) ?? 0) + 1);
+      }
+    }
+    return Array.from(mapa.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }, [contexto.indicadores]);
+  const maxAssunto = Math.max(1, ...topAssuntos.map(([, v]) => v));
+
+  const comparativoHoras = contexto.indicadores.slice(0, 5);
+  const maxHoras = Math.max(
+    1,
+    ...comparativoHoras.flatMap((i) => [
+      Number(i.horas_estimadas ?? 0),
+      Number(i.horas_realizadas ?? 0),
+    ]),
+  );
 
   const indicadoresVisiveis = useMemo(() => {
     return contexto.indicadores
@@ -75,10 +197,10 @@ export function ConhecimentoTab({
       {/* KPIs clicáveis */}
       <View style={styles.gradeKpis}>
         {[
-          { rotulo: 'Sem lição', valor: contexto.indicadores.filter((i) => !i.licao_id).length, id: 'sem_licao' as const },
-          { rotulo: 'Em validação', valor: contexto.indicadores.filter((i) => i.licao_estado === 'em_validacao').length, id: 'em_validacao' as const },
-          { rotulo: 'Formalizadas', valor: contexto.indicadores.filter((i) => i.licao_estado === 'formalizada').length, id: 'formalizada' as const },
-          { rotulo: 'Assertivos', valor: contexto.indicadores.filter((i) => Boolean(i.esforco_assertivo)).length, id: 'assertivo' as const },
+          { rotulo: 'Sem lição', valor: semLicao, id: 'sem_licao' as const },
+          { rotulo: 'Em validação', valor: emValidacao, id: 'em_validacao' as const },
+          { rotulo: 'Formalizadas', valor: formalizadas, id: 'formalizada' as const },
+          { rotulo: 'Assertivos', valor: assertivos, id: 'assertivo' as const },
         ].map((k) => (
           <TouchableOpacity
             key={k.rotulo}
@@ -94,55 +216,150 @@ export function ConhecimentoTab({
         ))}
       </View>
 
-      {/* Simulador de Recomendação Q1–Q3 */}
-      <View style={estilosComuns.card}>
-        <Text style={estilosComuns.badge}>RECOMENDAÇÃO ESTATÍSTICA</Text>
-        <Text style={estilosComuns.tituloSecao}>Consultar Faixa Q1–Q3</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
-          {servicosDb.map((srv) => {
-            const info = servicosOficiais.find((o) => o.slug === srv.slug);
-            const ativo = (servicoRecId || servicosDb[0]?.id) === srv.id;
-            return (
-              <TouchableOpacity
-                key={srv.id}
-                style={[estilosComuns.chip, ativo && estilosComuns.chipAtivo, { marginRight: 6 }]}
-                onPress={() => setServicoRecId(srv.id)}
-              >
-                <Text style={[estilosComuns.chipTexto, ativo && estilosComuns.chipTextoAtivo]}>
-                  {info?.titulo ?? srv.slug}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-        <View style={estilosComuns.linha}>
-          <TextInput
-            style={[estilosComuns.input, { flex: 1 }]}
-            keyboardType="numeric"
-            value={qtdRec}
-            onChangeText={setQtdRec}
-            placeholder="Qtd peças"
-          />
-          <TouchableOpacity
-            style={estilosComuns.botaoPrimario}
-            onPress={async () => {
-              const id = servicoRecId || servicosDb[0]?.id || '';
-              if (!id) return;
-              const msg = await aoConsultarRecomendacao(id, Number(qtdRec) || 1);
-              setResultadoRec(msg);
-            }}
-          >
-            <Text style={estilosComuns.textoBotaoPrimario}>Recomendar</Text>
-          </TouchableOpacity>
+      {/* Painéis Visuais BI de Lições e Assertividade */}
+      <MiniPizzaConhecimento
+        titulo="Assertividade das Estimativas (Q1–Q3)"
+        centroValor={`${assertividadePct}%`}
+        centroRotulo="assertivo"
+        fatias={[
+          { rotulo: 'Dentro da faixa', valor: assertivos, cor: '#059669', aoTocar: () => setFiltro('assertivo') },
+          { rotulo: 'Com desvio', valor: comDesvio, cor: '#DC2626', aoTocar: () => setFiltro('todos') },
+        ]}
+      />
+
+      <MiniPizzaConhecimento
+        titulo="Cobertura de Lições Aprendidas"
+        centroValor={String(formalizadas)}
+        centroRotulo="formaliz."
+        fatias={[
+          { rotulo: 'Formalizadas', valor: formalizadas, cor: '#0284C7', aoTocar: () => setFiltro('formalizada') },
+          { rotulo: 'Em validação', valor: emValidacao, cor: '#7C3AED', aoTocar: () => setFiltro('em_validacao') },
+          { rotulo: 'Sem lição', valor: semLicao, cor: '#F59E0B', aoTocar: () => setFiltro('sem_licao') },
+        ]}
+      />
+
+      {/* Gráfico de Barras Duplas: Horas Estimadas vs Realizadas */}
+      {comparativoHoras.length > 0 && (
+        <View style={estilosComuns.card}>
+          <Text style={estilosComuns.tituloSecao}>Esforço: Estimado × Realizado</Text>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 4, marginBottom: 8 }}>
+            <Text style={styles.legendaMini}>🟦 Estimado</Text>
+            <Text style={styles.legendaMini}>🟩 No prazo</Text>
+            <Text style={styles.legendaMini}>🟥 Acima</Text>
+          </View>
+          <View style={styles.areaColunas}>
+            {comparativoHoras.map((ind) => {
+              const est = Number(ind.horas_estimadas ?? 0);
+              const real = Number(ind.horas_realizadas ?? 0);
+              const altEst = Math.max(8, Math.round((est / maxHoras) * 86));
+              const altReal = Math.max(8, Math.round((real / maxHoras) * 86));
+              const corReal = real > est ? '#DC2626' : '#059669';
+              return (
+                <View key={ind.execucao_id} style={styles.colunaItem}>
+                  <Text style={styles.valorTopoColuna}>
+                    {est}h/{real}h
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3 }}>
+                    <View style={[styles.barraDupla, { height: altEst, backgroundColor: '#0284C7' }]} />
+                    <View style={[styles.barraDupla, { height: altReal, backgroundColor: corReal }]} />
+                  </View>
+                  <Text style={styles.rotuloBaseColuna} numberOfLines={1}>
+                    #{ind.solicitacao_codigo}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
-        {resultadoRec ? <Text style={styles.resultadoRec}>{resultadoRec}</Text> : null}
+      )}
+
+      {/* Ranking de Temas / Causas mais recorrentes */}
+      {topAssuntos.length > 0 && (
+        <View style={estilosComuns.card}>
+          <Text style={estilosComuns.tituloSecao}>Temas Mais Recorrentes</Text>
+          <View style={{ marginTop: 8, gap: 8 }}>
+            {topAssuntos.map(([tag, qtd], idx) => (
+              <View key={tag}>
+                <View style={estilosComuns.linhaEntre}>
+                  <Text style={[styles.legendaTexto, { flex: 1 }]}>
+                    {idx + 1}. {tag}
+                  </Text>
+                  <Text style={styles.legendaValor}>{qtd}</Text>
+                </View>
+                <View style={styles.trilhoBarra}>
+                  <View
+                    style={[
+                      styles.preenchimentoBarra,
+                      { width: `${Math.max(10, Math.round((qtd / maxAssunto) * 100))}%` },
+                    ]}
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Simulador de Recomendação Q1–Q3 (Colapsável) */}
+      <View style={estilosComuns.card}>
+        <TouchableOpacity
+          style={estilosComuns.linhaEntre}
+          onPress={() => setSimuladorAberto((a) => !a)}
+        >
+          <Text style={estilosComuns.tituloSecao}>Simulador Faixa Q1–Q3</Text>
+          <Text style={{ fontSize: 12, fontWeight: '800', color: CORES.azulPrincipal }}>
+            {simuladorAberto ? '▾ Fechar' : '▸ Abrir'}
+          </Text>
+        </TouchableOpacity>
+        {simuladorAberto && (
+          <View style={{ marginTop: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
+              {servicosDb.map((srv) => {
+                const info = servicosOficiais.find((o) => o.slug === srv.slug);
+                const ativo = (servicoRecId || servicosDb[0]?.id) === srv.id;
+                return (
+                  <TouchableOpacity
+                    key={srv.id}
+                    style={[estilosComuns.chip, ativo && estilosComuns.chipAtivo, { marginRight: 6 }]}
+                    onPress={() => setServicoRecId(srv.id)}
+                  >
+                    <Text style={[estilosComuns.chipTexto, ativo && estilosComuns.chipTextoAtivo]}>
+                      {info?.titulo ?? srv.slug}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <View style={estilosComuns.linha}>
+              <TextInput
+                style={[estilosComuns.input, { flex: 1 }]}
+                keyboardType="numeric"
+                value={qtdRec}
+                onChangeText={setQtdRec}
+                placeholder="Qtd peças"
+              />
+              <TouchableOpacity
+                style={estilosComuns.botaoPrimario}
+                onPress={async () => {
+                  const id = servicoRecId || servicosDb[0]?.id || '';
+                  if (!id) return;
+                  const msg = await aoConsultarRecomendacao(id, Number(qtdRec) || 1);
+                  setResultadoRec(msg);
+                }}
+              >
+                <Text style={estilosComuns.textoBotaoPrimario}>Recomendar</Text>
+              </TouchableOpacity>
+            </View>
+            {resultadoRec ? <Text style={styles.resultadoRec}>{resultadoRec}</Text> : null}
+          </View>
+        )}
       </View>
 
       {/* Filtros dos indicadores */}
       <View style={estilosComuns.card}>
         <View style={estilosComuns.linhaEntre}>
           <Text style={estilosComuns.tituloSecao}>
-            Lições e Indicadores ({indicadoresVisiveis.length}/{contexto.indicadores.length})
+            Lições ({indicadoresVisiveis.length}/{contexto.indicadores.length})
           </Text>
           {(busca || filtro !== 'todos') && (
             <TouchableOpacity
@@ -298,6 +515,48 @@ const styles = StyleSheet.create({
   },
   kpiValor: { fontSize: 18, fontWeight: '900', color: CORES.azulEscuro },
   kpiRotulo: { fontSize: 11, fontWeight: '700', color: CORES.textoSecundario, marginTop: 2 },
+  linhaPizza: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
+  svgContainer: {
+    width: 108,
+    height: 108,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  centroPizza: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  anelNativo: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    borderWidth: 7,
+    borderColor: CORES.azulPrincipal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: CORES.fundoClaro,
+  },
+  centroValor: { fontSize: 16, fontWeight: '900', color: CORES.azulEscuro },
+  centroRotulo: { fontSize: 9.5, fontWeight: '700', color: CORES.textoSecundario },
+  itemLegenda: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pontoCor: { width: 9, height: 9, borderRadius: 5 },
+  legendaTexto: { flex: 1, fontSize: 11.5, color: CORES.textoPrincipal, fontWeight: '700' },
+  legendaValor: { fontSize: 11.5, color: CORES.azulEscuro, fontWeight: '800' },
+  areaColunas: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    height: 132,
+    paddingTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: CORES.borda,
+    gap: 6,
+  },
+  colunaItem: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
+  valorTopoColuna: { fontSize: 9.5, fontWeight: '800', color: CORES.azulEscuro, marginBottom: 4 },
+  barraDupla: { width: 12, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
+  rotuloBaseColuna: { fontSize: 9.5, fontWeight: '700', color: CORES.textoSecundario, marginTop: 4 },
+  legendaMini: { fontSize: 10.5, fontWeight: '700', color: CORES.textoSecundario },
+  trilhoBarra: { height: 8, backgroundColor: '#E2E8F0', borderRadius: 999, overflow: 'hidden', marginTop: 4 },
+  preenchimentoBarra: { height: '100%', borderRadius: 999, backgroundColor: CORES.azulPrincipal },
   linkLimpar: { fontSize: 12, fontWeight: '800', color: CORES.vermelho },
   tagEstado: {
     fontSize: 10.5,
