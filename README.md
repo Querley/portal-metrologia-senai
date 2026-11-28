@@ -1,6 +1,6 @@
-# Portal de Metrologia SENAI
+# Portal e App Mobile de Metrologia SENAI / ZEISS
 
-Plataforma web para solicitação, orçamento, execução e acompanhamento de serviços de metrologia. O sistema conecta clientes e equipe do laboratório, mantém o histórico técnico dos trabalhos e transforma resultados concluídos em lições aprendidas e recomendações estatísticas auditáveis.
+Plataforma **Web e Mobile (React Native / Expo)** para solicitação, orçamento, execução e acompanhamento de serviços de metrologia avançada. O sistema conecta clientes e a equipe do laboratório sobre um backend unificado (Supabase PostgreSQL, Auth, Storage, RLS e RPCs), mantém o histórico técnico e transforma execuções concluídas em lições aprendidas, indicadores de Business Intelligence (BI) e recomendações estatísticas auditáveis.
 
 ## Acesso à homologação
 
@@ -143,20 +143,39 @@ Os valores são determinísticos. O assistente textual não calcula preços, qua
 | Qualidade | ESLint, TypeScript e GitHub Actions |
 | Hospedagem | Sites sobre runtime compatível com Cloudflare Workers |
 
-## Aplicativo Mobile (React Native / Expo) e Chatbots de IA
+## Aplicativo Mobile (React Native / Expo), Simulador e Chatbots
 
-O repositório inclui o aplicativo mobile nativo em `mobile/`, construído em **React Native (Expo)** e integrado diretamente ao mesmo backend Supabase e ao núcleo compartilhado `lib/`:
+O repositório inclui o aplicativo mobile completo em `mobile/`, construído em **React Native (Expo)** sobre o mesmo backend Supabase e regras de domínio compartilhadas em `lib/`, além de um **Simulador Mobile interativo em proporção real `9:19.5` (`375×812`)** acessível diretamente em `/app-mobile`:
 
-1. **Área Pública (Visitante — PT-BR, EN, DE):**
-   - Vitrine do laboratório, Novidades/Eventos, Catálogo dos 10 serviços e 6 máquinas ZEISS, Formulário público de solicitação de orçamento e **Chatbot Público do Laboratório**.
-   - **Chatbot Público (Externo):** exclusivo da área pública; responde dúvidas sobre o Centro de Excelência em Metrologia SENAI / ZEISS, eventos/novidades (Congresso SINDAG, ExpoPeças 2026, Acreditação INMETRO), equipamentos, serviços e setores.
-2. **Área Autenticada do Cliente (Sem Chatbot):**
-   - Acompanhamento de múltiplos trabalhos por empresa, aceite ou recusa justificada de pré-proposta, linha do tempo de etapas de execução, abertura de nova solicitação e mensagens diretas com a equipe humana do laboratório (sem chatbot na área interna do cliente).
-3. **Portal Operacional Interno do Laboratório (Técnico, Validador e Administrador):**
-   - Visão Geral (KPIs), Solicitações & Anexos (PDFs/CADs), Calculadora de Orçamentos (`Decimal.js` + recomendação estatística `Q1–Q3`), Execução & Registro de Problemas/Retrabalho, Conhecimento & Lições Aprendidas, Mensagens com Clientes, **Assistente Sanitizado (LGPD)** (mantido intacto) e o novo **Chatbot Interno do Laboratório**.
-   - **Chatbot Interno do Laboratório:** permite que membros do laboratório digitem ou toquem no **nome de um serviço** (ou protocolo/empresa/tema) e recebam imediatamente o dossiê completo com o que os clientes pediram, arquivos e PDFs anexados, instruções técnicas das etapas, problemas/retrabalhos ocorridos, mensagens de clientes e lições aprendidas (respeitando o ocultamento de preços comerciais para o perfil `tecnico`).
+1. **Área Pública (`PublicAreaScreen` — PT-BR, EN e DE):**
+   - Vitrine do laboratório com vídeos `16:9` (`autoPlay` silencioso) e carrossel da estrutura real;
+   - Setores atendidos, eventos/novidades, catálogo dos 10 serviços e 6 máquinas ZEISS (com ficha técnica em modal);
+   - Formulário público de solicitação de orçamento e **Chatbot Público do Laboratório**.
+2. **Login em Produção (`LoginScreen`):**
+   - Autenticação real via Supabase (`signInWithPassword` + recuperação de senha), identificando automaticamente se o usuário pertence ao Portal do Cliente ou à Equipe Interna (`tecnico`, `validador` ou `administrador`).
+3. **Área Autenticada do Cliente (`ClientAreaScreen` — sem Chatbot):**
+   - Widgets KPI clicáveis, busca por protocolo/serviço/material/etapa/data, filtros e ordenação completa;
+   - Acompanhamento de múltiplos trabalhos, visualização/download do PDF oficial da pré-proposta, aceite/recusa persistente, abertura de novo trabalho com **upload real de PDF/CAD** no Storage e mensagens com envio via `Enter`.
+4. **Portal Operacional Interno (`InternalLabScreen` + módulos em `mobile/src/components/interno/`):**
+   - **Visão Geral (BI):** KPIs clicáveis, gráficos de pizza (Ciclo de Valor e Pipeline de Propostas), Ranking de Demanda por Serviço, gráfico comparativo de horas (Planejado × Realizado) e indicadores executivos;
+   - **Solicitações & PDFs (`SolicitacoesTab`):** KPIs clicáveis, filtros avançados, vinculação ao cliente, abertura de PDFs assinados e atalho para elaborar pré-proposta;
+   - **Orçamentos & Propostas (`OrcamentosTab`):** criação vinculada com custo-hora automático por máquina, revisão de devolvidas, aprovação, devolução/rejeição, geração de PDF com SHA-256 e publicação (exclusivo Admin), confirmação de início de trabalho e restrição de valores/PDFs ao Técnico;
+   - **Execuções (`ExecucoesTab` + `SliderProgressoEtapa`):** etapas colapsáveis com ordem sequencial obrigatória, slider tátil (`0%`–`100%`) estilo brilho de tela, retorno justificado de etapa, atribuição de técnico, fechamento técnico e aprovação/devolução;
+   - **Conhecimento (`ConhecimentoTab`):** criação e formalização de lições aprendidas + recomendador `Q1–Q3`;
+   - **Mensagens (`InternalLabScreen`):** histórico por protocolo com abertura de anexos e envio via `Enter`;
+   - **Custos por Máquina (`CustosTab`):** edição inline logo abaixo de cada máquina e controle exclusivo do Administrador para ativar/desativar equipamentos (ex.: `CONTURA`);
+   - **CMS (`CmsTab`):** editor de conteúdo público para Validador/Administrador;
+   - **Chatbot Interno + Assistente Sanitizado:** dossiê rápido por serviço/protocolo e prévia de sanitização LGPD.
 
-### Como executar o App Mobile (React Native / Expo)
+### Próximas etapas planejadas (Roadmap)
+- Upgrade dos Chatbots Público e Interno para **IA generativa conversacional** integrada aos dados do sistema;
+- Empacotamento e geração de build **Android nativo instalável (`.apk`)** via Expo / Android Studio;
+- **Integração MCP (Model Context Protocol) com Google Calendar** para consulta de disponibilidade e gestão de agendamentos do laboratório.
+
+### Como executar o App Mobile (React Native / Expo) e o Simulador Web
+
+- **Simulador Mobile no navegador:** suba o servidor raiz (`npm run dev`) e acesse `http://localhost:3000/app-mobile`.
+- **App Nativo (Expo Go / Android Studio):**
 
 ```bash
 cd mobile
@@ -222,8 +241,9 @@ O workflow em `.github/workflows/qualidade.yml` também executa as verificaçõe
 
 ## Estrutura do repositório
 
-- `app/`: páginas públicas e rotas do portal;
-- `componentes/`: módulos de interface e fluxos autenticados;
+- `app/`: páginas públicas, rotas do portal web e simulador mobile (`/app-mobile`);
+- `mobile/`: aplicativo React Native (Expo) com telas pública, login, cliente e portal interno;
+- `componentes/`: módulos de interface web e fluxos autenticados;
 - `lib/`: contratos, cálculos, validações e regras de domínio;
 - `supabase/migrations/`: evolução versionada do banco;
 - `supabase/functions/`: funções administrativas e operações protegidas;
