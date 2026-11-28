@@ -10,6 +10,7 @@ import {
   podeDecidirFechamento,
 } from '@lib/execucoes-persistentes';
 import { CORES, estilosComuns } from '../../theme';
+import { SliderProgressoEtapa } from './SliderProgressoEtapa';
 
 export type ResponsavelDb = { usuario_id: string; nome: string; perfil_interno: string };
 
@@ -50,7 +51,6 @@ export function ExecucoesTab({
   const [filtroTecnico, setFiltroTecnico] = useState('todos');
   const [ordenacao, setOrdenacao] = useState<'recentes' | 'antigas' | 'empresa' | 'progresso'>('recentes');
   const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
-  const [percentuaisInput, setPercentuaisInput] = useState<Record<string, string>>({});
   const [retornoAberto, setRetornoAberto] = useState<string>('');
   const [motivoRetorno, setMotivoRetorno] = useState('');
   const [fechamentoAbertoId, setFechamentoAbertoId] = useState('');
@@ -366,66 +366,30 @@ export function ExecucoesTab({
             {expandidos[`etapas-${exec.execucao_id}`] ? (
               <View style={{ marginTop: 4 }}>
                 {exec.etapas.map((etapa) => {
-              const chave = `${exec.execucao_id}-${etapa.ordem}`;
-              const val = percentuaisInput[chave] ?? String(etapa.progresso);
-              return (
-                <View key={etapa.ordem} style={styles.etapaLinha}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={styles.etapaNome}>
-                      {etapa.estado === 'concluida' ? '✅' : etapa.estado === 'em_andamento' ? '🔄' : '⏳'}{' '}
-                      {etapa.ordem}. {etapa.titulo} ({etapa.progresso}%)
-                    </Text>
-                    {etapa.id && etapa.estado !== 'a_fazer' ? (
-                      <TouchableOpacity
-                        onPress={() =>
-                          setRetornoAberto((r) => (r === `${exec.execucao_id}:${etapa.id}` ? '' : `${exec.execucao_id}:${etapa.id}`))
-                        }
-                      >
-                        <Text style={styles.linkRetorno}>↺ Retornar</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                    {[0, 25, 50, 75, 100].map((pct) => (
-                      <TouchableOpacity
-                        key={pct}
-                        style={[
-                          estilosComuns.chip,
-                          etapa.progresso === pct && estilosComuns.chipAtivo,
-                          { paddingHorizontal: 8, paddingVertical: 4, marginRight: 0 },
-                        ]}
-                        onPress={() => void aoDefinirProgressoEtapa(exec.execucao_id, etapa.ordem, pct)}
-                      >
-                        <Text
-                          style={[
-                            estilosComuns.chipTexto,
-                            etapa.progresso === pct && estilosComuns.chipTextoAtivo,
-                            { fontSize: 11 },
-                          ]}
-                        >
-                          {pct}%
+                  return (
+                    <View key={etapa.ordem} style={styles.etapaLinha}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={styles.etapaNome}>
+                          {etapa.estado === 'concluida' ? '✅' : etapa.estado === 'em_andamento' ? '🔄' : '⏳'}{' '}
+                          {etapa.ordem}. {etapa.titulo} ({etapa.progresso}%)
                         </Text>
-                      </TouchableOpacity>
-                    ))}
-                    <TextInput
-                      style={[
-                        estilosComuns.input,
-                        { width: 54, paddingVertical: 4, marginTop: 0, marginBottom: 0, textAlign: 'center' },
-                      ]}
-                      keyboardType="numeric"
-                      value={val}
-                      onChangeText={(txt) => setPercentuaisInput((a) => ({ ...a, [chave]: txt }))}
-                    />
-                    <TouchableOpacity
-                      style={[estilosComuns.botaoSecundario, { paddingVertical: 5, paddingHorizontal: 10 }]}
-                      onPress={() =>
-                        void aoDefinirProgressoEtapa(exec.execucao_id, etapa.ordem, Number(val) || 0)
-                      }
-                    >
-                      <Text style={[estilosComuns.textoBotaoSecundario, { fontSize: 11 }]}>Aplicar %</Text>
-                    </TouchableOpacity>
-                  </View>
+                        {etapa.id && etapa.estado !== 'a_fazer' ? (
+                          <TouchableOpacity
+                            onPress={() =>
+                              setRetornoAberto((r) => (r === `${exec.execucao_id}:${etapa.id}` ? '' : `${exec.execucao_id}:${etapa.id}`))
+                            }
+                          >
+                            <Text style={styles.linkRetorno}>↺ Retornar</Text>
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+
+                      <SliderProgressoEtapa
+                        valor={etapa.progresso}
+                        aoConfirmar={(novoPct) =>
+                          void aoDefinirProgressoEtapa(exec.execucao_id, etapa.ordem, novoPct)
+                        }
+                      />
 
                   {retornoAberto === `${exec.execucao_id}:${etapa.id}` && etapa.id ? (
                     <View style={{ marginTop: 8 }}>
