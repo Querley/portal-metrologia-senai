@@ -204,9 +204,25 @@ export function ExecucoesTab({
               </View>
             )}
 
-            {/* Etapas Sequenciais com % */}
-            <Text style={styles.subtituloBloco}>Etapas (ordem sequencial):</Text>
-            {exec.etapas.map((etapa) => {
+            {/* Etapas Sequenciais com % (Colapsável) */}
+            <TouchableOpacity
+              style={{ marginVertical: 4 }}
+              onPress={() =>
+                setExpandidos((a) => ({
+                  ...a,
+                  [`etapas-${exec.execucao_id}`]: !a[`etapas-${exec.execucao_id}`],
+                }))
+              }
+            >
+              <Text style={styles.linkExpandir}>
+                {expandidos[`etapas-${exec.execucao_id}`]
+                  ? '▾ Ocultar etapas'
+                  : `▸ Etapas (${exec.etapas.filter((et) => et.estado === 'concluida').length}/${exec.etapas.length} concluídas)`}
+              </Text>
+            </TouchableOpacity>
+            {expandidos[`etapas-${exec.execucao_id}`] ? (
+              <View style={{ marginTop: 4 }}>
+                {exec.etapas.map((etapa) => {
               const chave = `${exec.execucao_id}-${etapa.ordem}`;
               const val = percentuaisInput[chave] ?? String(etapa.progresso);
               return (
@@ -293,6 +309,8 @@ export function ExecucoesTab({
                 </View>
               );
             })}
+              </View>
+            ) : null}
 
             {/* Fechamento técnico quando todas etapas = 100% */}
             {todasConcluidas && exec.estado !== 'concluido' && exec.fechamento_estado !== 'em_validacao' && (
