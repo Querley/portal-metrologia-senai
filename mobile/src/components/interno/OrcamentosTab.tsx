@@ -601,6 +601,9 @@ export function OrcamentosTab({
 
       {orcamentosVisiveis.map((orc) => {
         const decidindo = decisaoAbertaId === orc.versao_id;
+        const execucaoExistente = contexto.execucoes.find(
+          (e) => e.solicitacao_codigo === orc.solicitacao_codigo,
+        );
         return (
           <View key={orc.versao_id} style={estilosComuns.card}>
             <View style={estilosComuns.linhaEntre}>
@@ -704,13 +707,21 @@ export function OrcamentosTab({
                 </TouchableOpacity>
               )}
 
-              {orc.estado === 'aceita' && podePublicar && (
+              {orc.estado === 'aceita' && podePublicar && !execucaoExistente && (
                 <TouchableOpacity
                   style={estilosComuns.botaoPrimario}
                   onPress={() => void aoConfirmarInicioTrabalho(orc.versao_id)}
                 >
                   <Text style={estilosComuns.textoBotaoPrimario}>Confirmar Início do Trabalho</Text>
                 </TouchableOpacity>
+              )}
+
+              {execucaoExistente && (
+                <View style={styles.badgeExecucaoIniciada}>
+                  <Text style={styles.badgeExecucaoTexto}>
+                    ✓ Execução ({execucaoExistente.estado})
+                  </Text>
+                </View>
               )}
             </View>
 
@@ -793,5 +804,14 @@ const styles = StyleSheet.create({
   },
   precoFinal: { fontSize: 14, fontWeight: '900', color: CORES.azulEscuro },
   boxDecisao: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: CORES.borda },
+  badgeExecucaoIniciada: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  badgeExecucaoTexto: { fontSize: 12, fontWeight: '800', color: '#065F46' },
   textoVazio: { fontSize: 12.5, color: CORES.textoSuave, fontStyle: 'italic' },
 });
