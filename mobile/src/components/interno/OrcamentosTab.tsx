@@ -90,8 +90,12 @@ export function OrcamentosTab({
   const podeDecidir = podeDecidirOrcamento(perfil);
   const podePublicar = podePublicarOrcamento(perfil);
 
+  const equipamentosAtivos = useMemo(
+    () => equipamentosDb.filter((e) => e.ativo),
+    [equipamentosDb],
+  );
   const servicoEfetivoId = servicoId || servicosDb[0]?.id || '';
-  const equipamentoEfetivoId = equipamentoId || equipamentosDb[0]?.id || '';
+  const equipamentoEfetivoId = equipamentoId || equipamentosAtivos[0]?.id || '';
 
   const custosVigentes = useMemo(() => {
     const mapa = new Map<string, CustoEquipamentoDb>();
@@ -220,7 +224,7 @@ export function OrcamentosTab({
 
             <Text style={estilosComuns.rotuloCampo}>Equipamento ZEISS</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-              {equipamentosDb.map((eq) => {
+              {equipamentosAtivos.map((eq) => {
                 const ativo = equipamentoEfetivoId === eq.id;
                 return (
                   <TouchableOpacity

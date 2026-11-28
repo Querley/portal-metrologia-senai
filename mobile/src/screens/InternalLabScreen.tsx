@@ -255,7 +255,7 @@ export function InternalLabScreen({
       servico: payload.servicoId,
       equipamentos_horas: [
         {
-          equipamento: payload.equipamentoId,
+          equipamento_id: payload.equipamentoId,
           horas: Number(payload.horas.replace(',', '.')) || 8,
         },
       ],
