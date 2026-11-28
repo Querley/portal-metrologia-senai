@@ -4,6 +4,7 @@ import { formatarDinheiro } from '@lib/calculos';
 import type { ContextoOperacionalLaboratorio } from '@lib/chatbot-metrologia';
 import type { PerfilInterno } from '@lib/contratos';
 import { podeConsultarCustos } from '@lib/custos-equipamento';
+import { rotuloNecessidadeCliente } from '@lib/solicitacao';
 import { CORES, estilosComuns } from '../../theme';
 
 type FatiaPizza = {
@@ -181,16 +182,17 @@ export function GraficosVisaoMobile({
         )
       : 0;
 
-  // BI 2: Barras Verticais — Top 5 Serviços por Demanda
+  // BI 2: Ranking por Serviço (Top 5) com rótulo legível
   const contagemServicos = new Map<string, number>();
   for (const s of contexto.solicitacoes) {
-    const nome = s.necessidade.replaceAll('-', ' ');
+    const nome = rotuloNecessidadeCliente(s.necessidade);
     contagemServicos.set(nome, (contagemServicos.get(nome) ?? 0) + 1);
   }
   const topServicos = Array.from(contagemServicos.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
   const maxServico = Math.max(1, ...topServicos.map(([, v]) => v));
+  const totalSolicitacoes = Math.max(1, contexto.solicitacoes.length);
 
   // BI 3: Barras Verticais Agrupadas — Planejado vs Realizado (Horas)
   const comparativoHoras = contexto.indicadores.slice(0, 5);
@@ -230,20 +232,33 @@ export function GraficosVisaoMobile({
         </View>
       </View>
 
-      {/* Gráfico de Barras Verticais: Demanda por Serviço */}
+      {/* Ranking BI de Barras Horizontais: Demanda por Serviço */}
       {topServicos.length > 0 && (
         <View style={estilosComuns.card}>
           <Text style={estilosComuns.tituloSecao}>Demanda por Serviço (Top 5)</Text>
-          <View style={styles.areaColunas}>
-            {topServicos.map(([nome, qtd]) => {
-              const altura = Math.max(12, Math.round((qtd / maxServico) * 92));
+          <View style={{ marginTop: 10, gap: 10 }}>
+            {topServicos.map(([nome, qtd], idx) => {
+              const largura = Math.max(8, Math.round((qtd / maxServico) * 100));
+              const pct = Math.round((qtd / totalSolicitacoes) * 100);
+              const coresRanking = ['#0284C7', '#0891B2', '#0D9488', '#2563EB', '#4F46E5'];
               return (
-                <View key={nome} style={styles.colunaItem}>
-                  <Text style={styles.valorTopoColuna}>{qtd}</Text>
-                  <View style={[styles.barraVertical, { height: altura, backgroundColor: '#0284C7' }]} />
-                  <Text style={styles.rotuloBaseColuna} numberOfLines={2}>
-                    {nome}
-                  </Text>
+                <View key={nome}>
+                  <View style={estilosComuns.linhaEntre}>
+                    <Text style={[styles.barraRotulo, { flex: 1, color: CORES.azulEscuro }]} numberOfLines={1}>
+                      {idx + 1}. {nome}
+                    </Text>
+                    <Text style={styles.barraValor}>
+                      {qtd} ({pct}%)
+                    </Text>
+                  </View>
+                  <View style={[styles.trilhoBarra, { height: 10 }]}>
+                    <View
+                      style={[
+                        styles.preenchimentoBarra,
+                        { width: `${largura}%`, backgroundColor: coresRanking[idx] ?? '#0284C7' },
+                      ]}
+                    />
+                  </View>
                 </View>
               );
             })}
