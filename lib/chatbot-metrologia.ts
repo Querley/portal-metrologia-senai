@@ -1062,13 +1062,13 @@ export async function carregarContextoOperacionalLaboratorio(
       custo_congelado: perfil === 'tecnico' ? null : orc.custo_congelado,
     }));
 
-    // Busca anexos das solicitações ativadas e anexos das conversas (em paralelo, até 12 solicitações mais recentes)
+    // Busca anexos das solicitações ativadas e anexos das conversas (em paralelo, até 50 mais recentes)
     const idsSolicitacoes = [
       ...new Set(
         [
           ...solicitacoes.map((s) => s.solicitacao_id).filter((id): id is string => Boolean(id)),
           ...conversasBase.map((c) => c.solicitacao_id).filter(Boolean),
-        ].slice(0, 12),
+        ].slice(0, 50),
       ),
     ];
 

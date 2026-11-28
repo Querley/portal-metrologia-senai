@@ -8,6 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {
+  caminhoAnexoSolicitacao,
+  tipoMimeArmazenado,
+  validarAnexosSolicitacao,
+} from '@lib/anexos-solicitacao';
 import { correspondeBusca, formatosDataParaBusca } from '@lib/busca-e-filtros';
 import { formatarDinheiro } from '@lib/calculos';
 import { MATERIAIS_PECA } from '@lib/campos-padronizados';
@@ -250,6 +255,12 @@ export function ClientAreaScreen({
       setErro('Sem conexão com o Supabase.');
       return;
     }
+    const falhaArquivos = validarAnexosSolicitacao(arquivosNovoTrabalho);
+    if (falhaArquivos) {
+      setErro(falhaArquivos);
+      return;
+    }
+
     const payload = {
       telefone: '',
       necessidade: novaNecessidade,
@@ -269,21 +280,31 @@ export function ClientAreaScreen({
       return;
     }
 
+    const falharam: string[] = [];
     for (const arquivo of arquivosNovoTrabalho) {
-      const limpo = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const caminho = `${resultado.solicitacao_id}/${Date.now()}-${limpo}`;
-      const tipo = arquivo.type || 'application/octet-stream';
+      const tipo = tipoMimeArmazenado(arquivo);
+      if (!tipo) {
+        falharam.push(arquivo.name);
+        continue;
+      }
+      const caminho = caminhoAnexoSolicitacao(resultado.solicitacao_id, arquivo);
       const up = await supabase.storage
         .from('solicitacoes')
         .upload(caminho, arquivo, { contentType: tipo, upsert: false });
-      if (!up.error) {
-        await supabase.rpc('registrar_anexo_solicitacao_cliente_demonstrativa', {
-          solicitacao: resultado.solicitacao_id,
-          caminho,
-          nome_original: arquivo.name,
-          tipo_mime: tipo,
-          tamanho_bytes: arquivo.size,
-        });
+      if (up.error) {
+        falharam.push(arquivo.name);
+        continue;
+      }
+      const reg = await supabase.rpc('registrar_anexo_solicitacao_cliente_demonstrativa', {
+        solicitacao: resultado.solicitacao_id,
+        caminho,
+        nome_original: arquivo.name,
+        tipo_mime: tipo,
+        tamanho_bytes: arquivo.size,
+      });
+      if (reg.error) {
+        await supabase.storage.from('solicitacoes').remove([caminho]);
+        falharam.push(arquivo.name);
       }
     }
 
@@ -291,7 +312,13 @@ export function ClientAreaScreen({
     setNovaDescricao('');
     setModalNovoAberto(false);
     await carregarDadosCliente();
-    setAviso(`Solicitação ${resultado.protocolo ?? ''} registrada com sucesso!`);
+    if (falharam.length > 0) {
+      setAviso(
+        `Solicitação ${resultado.protocolo ?? ''} criada, mas ${falharam.length} arquivo(s) falharam no envio: ${falharam.join(', ')}.`,
+      );
+    } else {
+      setAviso(`Solicitação ${resultado.protocolo ?? ''} registrada com sucesso!`);
+    }
   }
 
   const situacaoEtapas = trabalhoAtivo
