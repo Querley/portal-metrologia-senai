@@ -374,7 +374,7 @@ export function ExecucoesTab({
                     <View key={etapa.ordem} style={styles.etapaLinha}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text style={styles.etapaNome}>
-                          {etapa.estado === 'concluida' ? '✅' : etapa.estado === 'em_andamento' ? '🔄' : '⏳'}{' '}
+                          {etapa.estado === 'concluida' ? '✅' : etapa.estado === 'em_andamento' ? '🔵' : '⚪'}{' '}
                           {etapa.ordem}. {etapa.titulo} ({etapa.progresso}%)
                         </Text>
                         {etapa.id && etapa.estado !== 'a_fazer' ? (
