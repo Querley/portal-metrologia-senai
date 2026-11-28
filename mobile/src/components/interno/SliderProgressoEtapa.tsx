@@ -8,9 +8,11 @@ import { CORES } from '../../theme';
  */
 export function SliderProgressoEtapa({
   valor,
+  bloqueado = false,
   aoConfirmar,
 }: {
   valor: number;
+  bloqueado?: boolean;
   aoConfirmar: (novoPercentual: number) => void;
 }) {
   const [valorLocal, setValorLocal] = useState(valor);
@@ -41,7 +43,7 @@ export function SliderProgressoEtapa({
 
   if (typeof document !== 'undefined') {
     return (
-      <View style={styles.linha}>
+      <View style={[styles.linha, bloqueado && { opacity: 0.45 }]}>
         <div
           ref={divTrilhoRef}
           role="slider"
@@ -49,18 +51,20 @@ export function SliderProgressoEtapa({
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={valorLocal}
-          tabIndex={0}
+          aria-disabled={bloqueado}
+          tabIndex={bloqueado ? -1 : 0}
           onPointerDown={(e) => {
+            if (bloqueado) return;
             arrastandoRef.current = true;
             e.currentTarget.setPointerCapture(e.pointerId);
             atualizarLocal(calcularPctPorClientX(e.clientX));
           }}
           onPointerMove={(e) => {
-            if (!arrastandoRef.current) return;
+            if (bloqueado || !arrastandoRef.current) return;
             atualizarLocal(calcularPctPorClientX(e.clientX));
           }}
           onPointerUp={() => {
-            if (!arrastandoRef.current) return;
+            if (bloqueado || !arrastandoRef.current) return;
             arrastandoRef.current = false;
             aoConfirmar(valorLocalRef.current);
           }}
@@ -73,7 +77,7 @@ export function SliderProgressoEtapa({
             borderRadius: 999,
             backgroundColor: '#E2E8F0',
             position: 'relative',
-            cursor: 'pointer',
+            cursor: bloqueado ? 'not-allowed' : 'pointer',
             userSelect: 'none',
             touchAction: 'none',
             display: 'flex',
@@ -110,7 +114,7 @@ export function SliderProgressoEtapa({
   }
 
   return (
-    <View style={styles.linha}>
+    <View style={[styles.linha, bloqueado && { opacity: 0.45 }]}>
       <View
         style={styles.trilhoNativo}
         onLayout={(e: { nativeEvent: { layout: { width: number } } }) => {
@@ -118,8 +122,8 @@ export function SliderProgressoEtapa({
             larguraTrilhoRef.current = e.nativeEvent.layout.width;
           }
         }}
-        onStartShouldSetResponder={() => true}
-        onMoveShouldSetResponder={() => true}
+        onStartShouldSetResponder={() => !bloqueado}
+        onMoveShouldSetResponder={() => !bloqueado}
         onResponderGrant={(e: { nativeEvent: { locationX: number } }) => {
           atualizarLocal((e.nativeEvent.locationX / larguraTrilhoRef.current) * 100);
         }}

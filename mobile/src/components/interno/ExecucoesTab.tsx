@@ -370,6 +370,14 @@ export function ExecucoesTab({
             {expandidos[`etapas-${exec.execucao_id}`] ? (
               <View style={{ marginTop: 4 }}>
                 {exec.etapas.map((etapa) => {
+                  const anteriorPendente = exec.etapas.some(
+                    (et) => et.ordem < etapa.ordem && et.estado !== 'concluida',
+                  );
+                  const posteriorIniciada = exec.etapas.some(
+                    (et) => et.ordem > etapa.ordem && et.estado !== 'a_fazer',
+                  );
+                  const etapaBloqueada =
+                    anteriorPendente || (etapa.estado === 'concluida' && posteriorIniciada);
                   return (
                     <View key={etapa.ordem} style={styles.etapaLinha}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -390,6 +398,7 @@ export function ExecucoesTab({
 
                       <SliderProgressoEtapa
                         valor={etapa.progresso}
+                        bloqueado={etapaBloqueada}
                         aoConfirmar={(novoPct) =>
                           void aoDefinirProgressoEtapa(exec.execucao_id, etapa.ordem, novoPct)
                         }
