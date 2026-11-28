@@ -694,7 +694,8 @@ export function OrcamentosTab({
                 </TouchableOpacity>
               )}
 
-              {(orc.publicacao_pronta || ['publicada', 'aceita', 'recusada'].includes(orc.estado)) && (
+              {exibeCustos &&
+                (orc.publicacao_pronta || ['publicada', 'aceita', 'recusada'].includes(orc.estado)) && (
                 <TouchableOpacity
                   style={estilosComuns.botaoSecundario}
                   onPress={() => void aoVisualizarPdf(orc.versao_id)}
