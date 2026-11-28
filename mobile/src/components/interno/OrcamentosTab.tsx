@@ -95,6 +95,8 @@ export function OrcamentosTab({
 
   const [busca, setBusca] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [filtroMaquina, setFiltroMaquina] = useState('todas');
+  const [ordenacao, setOrdenacao] = useState<'recentes' | 'antigas' | 'empresa' | 'horas'>('recentes');
   const [decisaoAbertaId, setDecisaoAbertaId] = useState('');
   const [decisaoTipo, setDecisaoTipo] = useState<'devolver' | 'rejeitar'>('devolver');
   const [justificativaDecisao, setJustificativaDecisao] = useState('');
@@ -154,24 +156,81 @@ export function OrcamentosTab({
   );
 
   const orcamentosVisiveis = useMemo(() => {
-    return contexto.orcamentos.filter((orc) => {
-      if (filtroEstado !== 'todos' && orc.estado !== filtroEstado) return false;
-      return correspondeBusca(
-        busca,
-        orc.solicitacao_codigo,
-        `DEM-SOL-${String(orc.solicitacao_codigo).padStart(4, '0')}`,
-        orc.empresa_nome,
-        orc.descricao,
-        orc.equipamento_nome,
-        orc.estado,
-        orc.destinatario,
-        formatosDataParaBusca(orc.entrega_estimada),
-      );
-    });
-  }, [busca, contexto.orcamentos, filtroEstado]);
+    return contexto.orcamentos
+      .filter((orc) => {
+        if (filtroEstado === 'rascunho_devolvida') {
+          if (orc.estado !== 'rascunho' && orc.estado !== 'devolvida') return false;
+        } else if (filtroEstado === 'aprovada_publicada') {
+          if (orc.estado !== 'aprovada' && orc.estado !== 'publicada') return false;
+        } else if (filtroEstado !== 'todos' && orc.estado !== filtroEstado) {
+          return false;
+        }
+        if (filtroMaquina !== 'todas' && orc.equipamento_nome !== filtroMaquina) return false;
+        return correspondeBusca(
+          busca,
+          orc.solicitacao_codigo,
+          `DEM-SOL-${String(orc.solicitacao_codigo).padStart(4, '0')}`,
+          orc.empresa_nome,
+          orc.descricao,
+          orc.equipamento_nome,
+          orc.estado,
+          orc.destinatario,
+          formatosDataParaBusca(orc.entrega_estimada),
+        );
+      })
+      .sort((a, b) => {
+        if (ordenacao === 'antigas') return Number(a.solicitacao_codigo) - Number(b.solicitacao_codigo);
+        if (ordenacao === 'empresa') return a.empresa_nome.localeCompare(b.empresa_nome, 'pt-BR');
+        if (ordenacao === 'horas') return Number(b.horas || 0) - Number(a.horas || 0);
+        return Number(b.solicitacao_codigo) - Number(a.solicitacao_codigo);
+      });
+  }, [busca, contexto.orcamentos, filtroEstado, filtroMaquina, ordenacao]);
+
+  const maquinasNosOrcamentos = useMemo(
+    () => Array.from(new Set(contexto.orcamentos.map((o) => o.equipamento_nome).filter(Boolean))),
+    [contexto.orcamentos],
+  );
 
   return (
     <View>
+      {/* KPIs clicáveis na aba Orçamentos */}
+      <View style={styles.gradeKpis}>
+        {[
+          {
+            rotulo: 'Rascunho / Devolv.',
+            valor: contexto.orcamentos.filter((o) => o.estado === 'rascunho' || o.estado === 'devolvida').length,
+            filtro: 'rascunho_devolvida',
+          },
+          {
+            rotulo: 'Em validação',
+            valor: contexto.orcamentos.filter((o) => o.estado === 'em_validacao').length,
+            filtro: 'em_validacao',
+          },
+          {
+            rotulo: 'Aprov. / Publicadas',
+            valor: contexto.orcamentos.filter((o) => o.estado === 'aprovada' || o.estado === 'publicada').length,
+            filtro: 'aprovada_publicada',
+          },
+          {
+            rotulo: 'Aceitas',
+            valor: contexto.orcamentos.filter((o) => o.estado === 'aceita').length,
+            filtro: 'aceita',
+          },
+        ].map((k) => (
+          <TouchableOpacity
+            key={k.rotulo}
+            style={[
+              styles.cardKpi,
+              filtroEstado === k.filtro && { borderColor: CORES.azulPrincipal, borderWidth: 2 },
+            ]}
+            onPress={() => setFiltroEstado((atual) => (atual === k.filtro ? 'todos' : k.filtro))}
+          >
+            <Text style={styles.kpiValor}>{k.valor}</Text>
+            <Text style={styles.kpiRotulo}>{k.rotulo}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* Nova Pré-proposta (Colapsável para manter UI limpa) */}
       <View style={estilosComuns.card}>
         <TouchableOpacity
@@ -406,9 +465,22 @@ export function OrcamentosTab({
 
       {/* Busca e Filtros */}
       <View style={estilosComuns.card}>
-        <Text style={estilosComuns.tituloSecao}>
-          Pré-propostas ({orcamentosVisiveis.length}/{contexto.orcamentos.length})
-        </Text>
+        <View style={estilosComuns.linhaEntre}>
+          <Text style={estilosComuns.tituloSecao}>
+            Pré-propostas ({orcamentosVisiveis.length}/{contexto.orcamentos.length})
+          </Text>
+          {(busca || filtroEstado !== 'todos' || filtroMaquina !== 'todas') && (
+            <TouchableOpacity
+              onPress={() => {
+                setBusca('');
+                setFiltroEstado('todos');
+                setFiltroMaquina('todas');
+              }}
+            >
+              <Text style={styles.linkLimpar}>Limpar filtros</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <TextInput
           style={[estilosComuns.input, { marginTop: 8 }]}
           value={busca}
@@ -416,7 +488,8 @@ export function OrcamentosTab({
           placeholder="Buscar protocolo, empresa, máquina, status ou data..."
           placeholderTextColor={CORES.textoSuave}
         />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+        <Text style={styles.rotuloFiltro}>Estado:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {[
             { id: 'todos', label: 'Todos' },
             { id: 'rascunho', label: 'Rascunho' },
@@ -426,6 +499,7 @@ export function OrcamentosTab({
             { id: 'publicada', label: 'Publicada' },
             { id: 'aceita', label: 'Aceita' },
             { id: 'recusada', label: 'Recusada' },
+            { id: 'rejeitada', label: 'Rejeitada' },
           ].map((f) => (
             <TouchableOpacity
               key={f.id}
@@ -443,6 +517,80 @@ export function OrcamentosTab({
                 ]}
               >
                 {f.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {maquinasNosOrcamentos.length > 0 && (
+          <>
+            <Text style={styles.rotuloFiltro}>Máquina:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TouchableOpacity
+                style={[
+                  estilosComuns.chip,
+                  filtroMaquina === 'todas' && estilosComuns.chipAtivo,
+                  { marginRight: 6 },
+                ]}
+                onPress={() => setFiltroMaquina('todas')}
+              >
+                <Text
+                  style={[
+                    estilosComuns.chipTexto,
+                    filtroMaquina === 'todas' && estilosComuns.chipTextoAtivo,
+                  ]}
+                >
+                  Todas
+                </Text>
+              </TouchableOpacity>
+              {maquinasNosOrcamentos.map((maq) => (
+                <TouchableOpacity
+                  key={maq}
+                  style={[
+                    estilosComuns.chip,
+                    filtroMaquina === maq && estilosComuns.chipAtivo,
+                    { marginRight: 6 },
+                  ]}
+                  onPress={() => setFiltroMaquina(maq)}
+                >
+                  <Text
+                    style={[
+                      estilosComuns.chipTexto,
+                      filtroMaquina === maq && estilosComuns.chipTextoAtivo,
+                    ]}
+                  >
+                    {maq}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
+
+        <Text style={styles.rotuloFiltro}>Ordenação:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {[
+            { id: 'recentes', label: '↓ Mais recentes' },
+            { id: 'antigas', label: '↑ Mais antigas' },
+            { id: 'empresa', label: 'A–Z Empresa' },
+            { id: 'horas', label: 'Maior horas' },
+          ].map((ord) => (
+            <TouchableOpacity
+              key={ord.id}
+              style={[
+                estilosComuns.chip,
+                ordenacao === ord.id && estilosComuns.chipAtivo,
+                { marginRight: 6 },
+              ]}
+              onPress={() => setOrdenacao(ord.id as typeof ordenacao)}
+            >
+              <Text
+                style={[
+                  estilosComuns.chipTexto,
+                  ordenacao === ord.id && estilosComuns.chipTextoAtivo,
+                ]}
+              >
+                {ord.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -595,6 +743,19 @@ export function OrcamentosTab({
 }
 
 const styles = StyleSheet.create({
+  gradeKpis: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
+  cardKpi: {
+    width: '48%',
+    backgroundColor: CORES.branco,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: CORES.borda,
+  },
+  kpiValor: { fontSize: 18, fontWeight: '900', color: CORES.azulEscuro },
+  kpiRotulo: { fontSize: 11, fontWeight: '700', color: CORES.textoSecundario, marginTop: 2 },
+  rotuloFiltro: { fontSize: 11, fontWeight: '800', color: CORES.textoSecundario, marginTop: 8, marginBottom: 4 },
+  linkLimpar: { fontSize: 12, fontWeight: '800', color: CORES.vermelho },
   linkExpandir: { fontSize: 12, fontWeight: '800', color: CORES.azulPrincipal },
   tagEstado: {
     fontSize: 10.5,
