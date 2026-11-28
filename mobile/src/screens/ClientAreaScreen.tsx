@@ -66,7 +66,9 @@ export function ClientAreaScreen({
   const [filtroTrabalho, setFiltroTrabalho] = useState<
     'todos' | 'publicada' | 'em_execucao' | 'concluido' | 'em_analise'
   >('todos');
-  const [ordenacaoTrabalho, setOrdenacaoTrabalho] = useState<'recentes' | 'antigas'>('recentes');
+  const [ordenacaoTrabalho, setOrdenacaoTrabalho] = useState<
+    'recentes' | 'antigas' | 'servico' | 'quantidade'
+  >('recentes');
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
   const [novaNecessidade, setNovaNecessidade] = useState<string>(necessidadesCliente[0].valor);
   const [novoMaterial, setNovoMaterial] = useState<string>(MATERIAIS_PECA[0]);
@@ -123,11 +125,19 @@ export function ClientAreaScreen({
           formatosDataParaBusca(t.criada_em),
         );
       })
-      .sort((a, b) =>
-        ordenacaoTrabalho === 'antigas'
-          ? +new Date(a.criada_em) - +new Date(b.criada_em)
-          : +new Date(b.criada_em) - +new Date(a.criada_em),
-      );
+      .sort((a, b) => {
+        if (ordenacaoTrabalho === 'antigas') return +new Date(a.criada_em) - +new Date(b.criada_em);
+        if (ordenacaoTrabalho === 'servico') {
+          return tituloServicoCliente(a.servico).localeCompare(
+            tituloServicoCliente(b.servico),
+            'pt-BR',
+          );
+        }
+        if (ordenacaoTrabalho === 'quantidade') {
+          return Number(b.quantidade || 0) - Number(a.quantidade || 0);
+        }
+        return +new Date(b.criada_em) - +new Date(a.criada_em);
+      });
   }, [buscaTrabalho, filtroTrabalho, ordenacaoTrabalho, trabalhos]);
 
   const trabalhoAtivo =
@@ -460,16 +470,27 @@ export function ClientAreaScreen({
               </Text>
             </TouchableOpacity>
           ))}
-          <TouchableOpacity
-            style={styles.chipOpcao}
-            onPress={() =>
-              setOrdenacaoTrabalho((o) => (o === 'recentes' ? 'antigas' : 'recentes'))
-            }
-          >
-            <Text style={styles.chipOpcaoTexto}>
-              {ordenacaoTrabalho === 'recentes' ? '↓ Mais novos' : '↑ Mais antigos'}
-            </Text>
-          </TouchableOpacity>
+          {[
+            { id: 'recentes', label: '↓ Mais novos' },
+            { id: 'antigas', label: '↑ Mais antigos' },
+            { id: 'servico', label: 'A–Z Serviço' },
+            { id: 'quantidade', label: 'Maior qtd' },
+          ].map((ord) => (
+            <TouchableOpacity
+              key={ord.id}
+              style={[styles.chipOpcao, ordenacaoTrabalho === ord.id && styles.chipOpcaoAtiva]}
+              onPress={() => setOrdenacaoTrabalho(ord.id as typeof ordenacaoTrabalho)}
+            >
+              <Text
+                style={[
+                  styles.chipOpcaoTexto,
+                  ordenacaoTrabalho === ord.id && { color: '#fff' },
+                ]}
+              >
+                {ord.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>

@@ -47,6 +47,8 @@ export function ExecucoesTab({
   const [filtro, setFiltro] = useState<'todos' | 'em_execucao' | 'fechamento_pendente' | 'concluido' | 'retrabalho'>(
     filtroInicial === 'retrabalho' ? 'retrabalho' : 'todos',
   );
+  const [filtroTecnico, setFiltroTecnico] = useState('todos');
+  const [ordenacao, setOrdenacao] = useState<'recentes' | 'antigas' | 'empresa' | 'progresso'>('recentes');
   const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
   const [percentuaisInput, setPercentuaisInput] = useState<Record<string, string>>({});
   const [retornoAberto, setRetornoAberto] = useState<string>('');
@@ -64,36 +66,102 @@ export function ExecucoesTab({
   const podeAtribuir = podeAtribuirResponsavel(perfil);
   const podeValidarFechamento = podeDecidirFechamento(perfil);
 
+  const tecnicosPresentes = useMemo(
+    () => Array.from(new Set(contexto.execucoes.map((e) => e.responsavel_nome).filter(Boolean))),
+    [contexto.execucoes],
+  );
+
   const execucoesVisiveis = useMemo(() => {
-    return contexto.execucoes.filter((exec) => {
-      if (filtro === 'retrabalho' && !exec.retrabalho) return false;
-      if (filtro === 'em_execucao' && exec.estado !== 'em_execucao') return false;
-      if (filtro === 'fechamento_pendente' && exec.fechamento_estado !== 'em_validacao') return false;
-      if (filtro === 'concluido' && exec.estado !== 'concluido') return false;
-      const nomesEtapas = exec.etapas.map((et) => `${et.titulo} ${et.estado}`).join(' ');
-      const nomesMaquinas = exec.equipamentos.map((eq) => eq.nome).join(' ');
-      return correspondeBusca(
-        busca,
-        exec.solicitacao_codigo,
-        `DEM-SOL-${String(exec.solicitacao_codigo).padStart(4, '0')}`,
-        exec.empresa_nome,
-        exec.descricao,
-        exec.responsavel_nome,
-        exec.servico_slug,
-        exec.estado,
-        nomesEtapas,
-        nomesMaquinas,
-        formatosDataParaBusca(exec.criada_em),
-      );
-    });
-  }, [busca, contexto.execucoes, filtro]);
+    return contexto.execucoes
+      .filter((exec) => {
+        if (filtro === 'retrabalho' && !exec.retrabalho) return false;
+        if (filtro === 'em_execucao' && exec.estado !== 'em_execucao') return false;
+        if (filtro === 'fechamento_pendente' && exec.fechamento_estado !== 'em_validacao') return false;
+        if (filtro === 'concluido' && exec.estado !== 'concluido') return false;
+        if (filtroTecnico !== 'todos' && exec.responsavel_nome !== filtroTecnico) return false;
+        const nomesEtapas = exec.etapas.map((et) => `${et.titulo} ${et.estado}`).join(' ');
+        const nomesMaquinas = exec.equipamentos.map((eq) => eq.nome).join(' ');
+        return correspondeBusca(
+          busca,
+          exec.solicitacao_codigo,
+          `DEM-SOL-${String(exec.solicitacao_codigo).padStart(4, '0')}`,
+          exec.empresa_nome,
+          exec.descricao,
+          exec.responsavel_nome,
+          exec.servico_slug,
+          exec.estado,
+          nomesEtapas,
+          nomesMaquinas,
+          formatosDataParaBusca(exec.criada_em),
+        );
+      })
+      .sort((a, b) => {
+        if (ordenacao === 'antigas') return +new Date(a.criada_em) - +new Date(b.criada_em);
+        if (ordenacao === 'empresa') return a.empresa_nome.localeCompare(b.empresa_nome, 'pt-BR');
+        if (ordenacao === 'progresso') {
+          return calcularProgressoExecucao(b.etapas) - calcularProgressoExecucao(a.etapas);
+        }
+        return +new Date(b.criada_em) - +new Date(a.criada_em);
+      });
+  }, [busca, contexto.execucoes, filtro, filtroTecnico, ordenacao]);
 
   return (
     <View>
+      {/* KPIs clicáveis na aba Execuções */}
+      <View style={styles.gradeKpis}>
+        {[
+          {
+            rotulo: 'Em execução',
+            valor: contexto.execucoes.filter((e) => e.estado === 'em_execucao').length,
+            id: 'em_execucao' as const,
+          },
+          {
+            rotulo: 'Fech. pendente',
+            valor: contexto.execucoes.filter((e) => e.fechamento_estado === 'em_validacao').length,
+            id: 'fechamento_pendente' as const,
+          },
+          {
+            rotulo: 'Concluídas',
+            valor: contexto.execucoes.filter((e) => e.estado === 'concluido').length,
+            id: 'concluido' as const,
+          },
+          {
+            rotulo: 'Com retrabalho',
+            valor: contexto.execucoes.filter((e) => Boolean(e.retrabalho)).length,
+            id: 'retrabalho' as const,
+          },
+        ].map((k) => (
+          <TouchableOpacity
+            key={k.rotulo}
+            style={[
+              styles.cardKpi,
+              filtro === k.id && { borderColor: CORES.azulPrincipal, borderWidth: 2 },
+            ]}
+            onPress={() => setFiltro((atual) => (atual === k.id ? 'todos' : k.id))}
+          >
+            <Text style={styles.kpiValor}>{k.valor}</Text>
+            <Text style={styles.kpiRotulo}>{k.rotulo}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <View style={estilosComuns.card}>
-        <Text style={estilosComuns.tituloSecao}>
-          Execuções ({execucoesVisiveis.length}/{contexto.execucoes.length})
-        </Text>
+        <View style={estilosComuns.linhaEntre}>
+          <Text style={estilosComuns.tituloSecao}>
+            Execuções ({execucoesVisiveis.length}/{contexto.execucoes.length})
+          </Text>
+          {(busca || filtro !== 'todos' || filtroTecnico !== 'todos') && (
+            <TouchableOpacity
+              onPress={() => {
+                setBusca('');
+                setFiltro('todos');
+                setFiltroTecnico('todos');
+              }}
+            >
+              <Text style={styles.linkLimpar}>Limpar filtros</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <TextInput
           style={[estilosComuns.input, { marginTop: 8 }]}
           value={busca}
@@ -101,7 +169,8 @@ export function ExecucoesTab({
           placeholder="Buscar protocolo, empresa, etapa, técnico ou data..."
           placeholderTextColor={CORES.textoSuave}
         />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+        <Text style={styles.rotuloFiltro}>Estado:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {[
             { id: 'todos', label: 'Todas' },
             { id: 'em_execucao', label: 'Em execução' },
@@ -125,6 +194,80 @@ export function ExecucoesTab({
                 ]}
               >
                 {f.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {tecnicosPresentes.length > 0 && (
+          <>
+            <Text style={styles.rotuloFiltro}>Responsável:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TouchableOpacity
+                style={[
+                  estilosComuns.chip,
+                  filtroTecnico === 'todos' && estilosComuns.chipAtivo,
+                  { marginRight: 6 },
+                ]}
+                onPress={() => setFiltroTecnico('todos')}
+              >
+                <Text
+                  style={[
+                    estilosComuns.chipTexto,
+                    filtroTecnico === 'todos' && estilosComuns.chipTextoAtivo,
+                  ]}
+                >
+                  Todos
+                </Text>
+              </TouchableOpacity>
+              {tecnicosPresentes.map((tec) => (
+                <TouchableOpacity
+                  key={tec}
+                  style={[
+                    estilosComuns.chip,
+                    filtroTecnico === tec && estilosComuns.chipAtivo,
+                    { marginRight: 6 },
+                  ]}
+                  onPress={() => setFiltroTecnico(tec)}
+                >
+                  <Text
+                    style={[
+                      estilosComuns.chipTexto,
+                      filtroTecnico === tec && estilosComuns.chipTextoAtivo,
+                    ]}
+                  >
+                    {tec}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
+
+        <Text style={styles.rotuloFiltro}>Ordenação:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {[
+            { id: 'recentes', label: '↓ Mais novas' },
+            { id: 'antigas', label: '↑ Mais antigas' },
+            { id: 'empresa', label: 'A–Z Empresa' },
+            { id: 'progresso', label: 'Maior %' },
+          ].map((ord) => (
+            <TouchableOpacity
+              key={ord.id}
+              style={[
+                estilosComuns.chip,
+                ordenacao === ord.id && estilosComuns.chipAtivo,
+                { marginRight: 6 },
+              ]}
+              onPress={() => setOrdenacao(ord.id as typeof ordenacao)}
+            >
+              <Text
+                style={[
+                  estilosComuns.chipTexto,
+                  ordenacao === ord.id && estilosComuns.chipTextoAtivo,
+                ]}
+              >
+                {ord.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -449,6 +592,19 @@ export function ExecucoesTab({
 }
 
 const styles = StyleSheet.create({
+  gradeKpis: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
+  cardKpi: {
+    width: '48%',
+    backgroundColor: CORES.branco,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: CORES.borda,
+  },
+  kpiValor: { fontSize: 18, fontWeight: '900', color: CORES.azulEscuro },
+  kpiRotulo: { fontSize: 11, fontWeight: '700', color: CORES.textoSecundario, marginTop: 2 },
+  rotuloFiltro: { fontSize: 11, fontWeight: '800', color: CORES.textoSecundario, marginTop: 8, marginBottom: 4 },
+  linkLimpar: { fontSize: 12, fontWeight: '800', color: CORES.vermelho },
   tagEstado: {
     fontSize: 10.5,
     fontWeight: '800',

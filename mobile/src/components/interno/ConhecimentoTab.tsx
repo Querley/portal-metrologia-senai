@@ -31,6 +31,7 @@ export function ConhecimentoTab({
 }) {
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState<'todos' | 'sem_licao' | 'em_validacao' | 'formalizada' | 'assertivo'>('todos');
+  const [ordenacao, setOrdenacao] = useState<'recentes' | 'antigas' | 'empresa' | 'desvio'>('recentes');
   const [resumos, setResumos] = useState<Record<string, string>>({});
   const [assuntos, setAssuntos] = useState<Record<string, string>>({});
 
@@ -43,24 +44,56 @@ export function ConhecimentoTab({
   const podeFormalizar = podeFormalizarLicao(perfil);
 
   const indicadoresVisiveis = useMemo(() => {
-    return contexto.indicadores.filter((ind) => {
-      if (filtro === 'sem_licao' && ind.licao_id) return false;
-      if (filtro === 'em_validacao' && ind.licao_estado !== 'em_validacao') return false;
-      if (filtro === 'formalizada' && ind.licao_estado !== 'formalizada') return false;
-      if (filtro === 'assertivo' && !ind.esforco_assertivo) return false;
-      return correspondeBusca(
-        busca,
-        ind.solicitacao_codigo,
-        ind.empresa_nome,
-        ind.servico_slug,
-        ind.licao_resumo,
-        ind.licao_assuntos.join(' '),
-      );
-    });
-  }, [busca, contexto.indicadores, filtro]);
+    return contexto.indicadores
+      .filter((ind) => {
+        if (filtro === 'sem_licao' && ind.licao_id) return false;
+        if (filtro === 'em_validacao' && ind.licao_estado !== 'em_validacao') return false;
+        if (filtro === 'formalizada' && ind.licao_estado !== 'formalizada') return false;
+        if (filtro === 'assertivo' && !ind.esforco_assertivo) return false;
+        return correspondeBusca(
+          busca,
+          ind.solicitacao_codigo,
+          `DEM-SOL-${String(ind.solicitacao_codigo).padStart(4, '0')}`,
+          ind.empresa_nome,
+          ind.servico_slug,
+          ind.licao_resumo,
+          ind.licao_assuntos.join(' '),
+        );
+      })
+      .sort((a, b) => {
+        if (ordenacao === 'antigas') return Number(a.solicitacao_codigo) - Number(b.solicitacao_codigo);
+        if (ordenacao === 'empresa') return a.empresa_nome.localeCompare(b.empresa_nome, 'pt-BR');
+        if (ordenacao === 'desvio') {
+          return Math.abs(Number(b.desvio_esforco ?? 0)) - Math.abs(Number(a.desvio_esforco ?? 0));
+        }
+        return Number(b.solicitacao_codigo) - Number(a.solicitacao_codigo);
+      });
+  }, [busca, contexto.indicadores, filtro, ordenacao]);
 
   return (
     <View>
+      {/* KPIs clicáveis */}
+      <View style={styles.gradeKpis}>
+        {[
+          { rotulo: 'Sem lição', valor: contexto.indicadores.filter((i) => !i.licao_id).length, id: 'sem_licao' as const },
+          { rotulo: 'Em validação', valor: contexto.indicadores.filter((i) => i.licao_estado === 'em_validacao').length, id: 'em_validacao' as const },
+          { rotulo: 'Formalizadas', valor: contexto.indicadores.filter((i) => i.licao_estado === 'formalizada').length, id: 'formalizada' as const },
+          { rotulo: 'Assertivos', valor: contexto.indicadores.filter((i) => Boolean(i.esforco_assertivo)).length, id: 'assertivo' as const },
+        ].map((k) => (
+          <TouchableOpacity
+            key={k.rotulo}
+            style={[
+              styles.cardKpi,
+              filtro === k.id && { borderColor: CORES.azulPrincipal, borderWidth: 2 },
+            ]}
+            onPress={() => setFiltro((atual) => (atual === k.id ? 'todos' : k.id))}
+          >
+            <Text style={styles.kpiValor}>{k.valor}</Text>
+            <Text style={styles.kpiRotulo}>{k.rotulo}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* Simulador de Recomendação Q1–Q3 */}
       <View style={estilosComuns.card}>
         <Text style={estilosComuns.badge}>RECOMENDAÇÃO ESTATÍSTICA</Text>
@@ -107,9 +140,21 @@ export function ConhecimentoTab({
 
       {/* Filtros dos indicadores */}
       <View style={estilosComuns.card}>
-        <Text style={estilosComuns.tituloSecao}>
-          Lições e Indicadores ({indicadoresVisiveis.length}/{contexto.indicadores.length})
-        </Text>
+        <View style={estilosComuns.linhaEntre}>
+          <Text style={estilosComuns.tituloSecao}>
+            Lições e Indicadores ({indicadoresVisiveis.length}/{contexto.indicadores.length})
+          </Text>
+          {(busca || filtro !== 'todos') && (
+            <TouchableOpacity
+              onPress={() => {
+                setBusca('');
+                setFiltro('todos');
+              }}
+            >
+              <Text style={styles.linkLimpar}>Limpar filtros</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <TextInput
           style={[estilosComuns.input, { marginTop: 8 }]}
           value={busca}
@@ -136,6 +181,28 @@ export function ConhecimentoTab({
             >
               <Text style={[estilosComuns.chipTexto, filtro === f.id && estilosComuns.chipTextoAtivo]}>
                 {f.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+          {[
+            { id: 'recentes', label: '↓ Mais novos' },
+            { id: 'antigas', label: '↑ Mais antigos' },
+            { id: 'empresa', label: 'A–Z Empresa' },
+            { id: 'desvio', label: 'Maior desvio' },
+          ].map((ord) => (
+            <TouchableOpacity
+              key={ord.id}
+              style={[
+                estilosComuns.chip,
+                ordenacao === ord.id && estilosComuns.chipAtivo,
+                { marginRight: 6 },
+              ]}
+              onPress={() => setOrdenacao(ord.id as typeof ordenacao)}
+            >
+              <Text style={[estilosComuns.chipTexto, ordenacao === ord.id && estilosComuns.chipTextoAtivo]}>
+                {ord.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -220,6 +287,18 @@ export function ConhecimentoTab({
 }
 
 const styles = StyleSheet.create({
+  gradeKpis: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
+  cardKpi: {
+    width: '48%',
+    backgroundColor: CORES.branco,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: CORES.borda,
+  },
+  kpiValor: { fontSize: 18, fontWeight: '900', color: CORES.azulEscuro },
+  kpiRotulo: { fontSize: 11, fontWeight: '700', color: CORES.textoSecundario, marginTop: 2 },
+  linkLimpar: { fontSize: 12, fontWeight: '800', color: CORES.vermelho },
   tagEstado: {
     fontSize: 10.5,
     fontWeight: '800',
