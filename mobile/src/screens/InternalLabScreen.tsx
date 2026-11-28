@@ -39,6 +39,7 @@ import {
   type EquipamentoDb,
 } from '../components/interno/CustosTab';
 import { ExecucoesTab, type ResponsavelDb } from '../components/interno/ExecucoesTab';
+import { GraficosVisaoMobile } from '../components/interno/GraficosVisaoMobile';
 import { OrcamentosTab, type ServicoCatalogoDb } from '../components/interno/OrcamentosTab';
 import { SolicitacoesTab } from '../components/interno/SolicitacoesTab';
 import { obterSupabaseMobile } from '../supabase';
@@ -839,6 +840,16 @@ export function InternalLabScreen({
                   </TouchableOpacity>
                 </View>
               </View>
+
+              <GraficosVisaoMobile
+                contexto={contexto}
+                aoNavegar={(destino, filtro) => {
+                  if (destino === 'solicitacoes' && filtro) {
+                    setFiltroSolicitacoesInicial(filtro);
+                  }
+                  setAba(destino);
+                }}
+              />
             </View>
           )}
 
