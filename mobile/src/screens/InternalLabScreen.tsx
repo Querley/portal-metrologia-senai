@@ -502,6 +502,15 @@ export function InternalLabScreen({
     const etapaAlvo = execAlvo?.etapas.find((et) => et.ordem === ordemEtapa);
     if (!execAlvo || !etapaAlvo) return;
 
+    if (
+      execAlvo.estado === 'concluido' ||
+      execAlvo.fechamento_estado === 'em_validacao' ||
+      execAlvo.fechamento_estado === 'aprovado'
+    ) {
+      setAvisoOperacional('Execução já encerrada/em validação e não pode mais ser alterada.');
+      return;
+    }
+
     const pendenteAnterior = execAlvo.etapas.some(
       (et) => et.ordem < ordemEtapa && et.estado !== 'concluida',
     );
@@ -536,6 +545,16 @@ export function InternalLabScreen({
   }
 
   async function retornarEtapa(execucaoId: string, etapaId: string, motivo: string): Promise<boolean> {
+    const execAlvo = contexto.execucoes.find((e) => e.execucao_id === execucaoId);
+    if (
+      execAlvo &&
+      (execAlvo.estado === 'concluido' ||
+        execAlvo.fechamento_estado === 'em_validacao' ||
+        execAlvo.fechamento_estado === 'aprovado')
+    ) {
+      setAvisoOperacional('Execução concluída é imutável e não permite retorno de etapa.');
+      return false;
+    }
     const supabase = obterSupabaseMobile();
     if (!supabase || motivo.trim().length < 10) {
       setAvisoOperacional('Explique o motivo do retorno em pelo menos 10 caracteres.');

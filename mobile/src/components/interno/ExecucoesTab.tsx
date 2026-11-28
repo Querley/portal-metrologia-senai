@@ -370,6 +370,10 @@ export function ExecucoesTab({
             {expandidos[`etapas-${exec.execucao_id}`] ? (
               <View style={{ marginTop: 4 }}>
                 {exec.etapas.map((etapa) => {
+                  const execucaoEncerrada =
+                    exec.estado === 'concluido' ||
+                    exec.fechamento_estado === 'em_validacao' ||
+                    exec.fechamento_estado === 'aprovado';
                   const anteriorPendente = exec.etapas.some(
                     (et) => et.ordem < etapa.ordem && et.estado !== 'concluida',
                   );
@@ -377,7 +381,9 @@ export function ExecucoesTab({
                     (et) => et.ordem > etapa.ordem && et.estado !== 'a_fazer',
                   );
                   const etapaBloqueada =
-                    anteriorPendente || (etapa.estado === 'concluida' && posteriorIniciada);
+                    execucaoEncerrada ||
+                    anteriorPendente ||
+                    (etapa.estado === 'concluida' && posteriorIniciada);
                   return (
                     <View key={etapa.ordem} style={styles.etapaLinha}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -385,7 +391,7 @@ export function ExecucoesTab({
                           {etapa.estado === 'concluida' ? '✅' : etapa.estado === 'em_andamento' ? '🔵' : '⚪'}{' '}
                           {etapa.ordem}. {etapa.titulo} ({etapa.progresso}%)
                         </Text>
-                        {etapa.id && etapa.estado !== 'a_fazer' ? (
+                        {!execucaoEncerrada && etapa.id && etapa.estado !== 'a_fazer' ? (
                           <TouchableOpacity
                             onPress={() =>
                               setRetornoAberto((r) => (r === `${exec.execucao_id}:${etapa.id}` ? '' : `${exec.execucao_id}:${etapa.id}`))
