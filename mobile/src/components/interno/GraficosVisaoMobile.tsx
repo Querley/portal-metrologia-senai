@@ -1,6 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { formatarDinheiro } from '@lib/calculos';
 import type { ContextoOperacionalLaboratorio } from '@lib/chatbot-metrologia';
+import type { PerfilInterno } from '@lib/contratos';
+import { podeConsultarCustos } from '@lib/custos-equipamento';
 import { CORES, estilosComuns } from '../../theme';
 
 type FatiaPizza = {
@@ -122,11 +125,14 @@ function GraficoPizza({
 
 export function GraficosVisaoMobile({
   contexto,
+  perfil,
   aoNavegar,
 }: {
   contexto: ContextoOperacionalLaboratorio;
+  perfil: PerfilInterno;
   aoNavegar: (destino: 'solicitacoes' | 'orcamentos' | 'execucao' | 'conhecimento', filtro?: string) => void;
 }) {
+  const exibeCustos = podeConsultarCustos(perfil);
   const semProposta = contexto.solicitacoes.filter((s) => s.estado === 'ativada' && !s.tem_pre_proposta).length;
   const emExecucao = contexto.execucoes.filter(
     (e) => e.estado === 'em_execucao' && e.fechamento_estado !== 'aprovado',
@@ -158,8 +164,129 @@ export function GraficosVisaoMobile({
   ];
   const maxBarra = Math.max(1, ...barrasSolicitacoes.map((b) => b.valor));
 
+  // BI 1: Indicadores Financeiros e de Conversão
+  const receitaAceitas = contexto.orcamentos
+    .filter((o) => o.estado === 'aceita' || o.estado === 'publicada')
+    .reduce((acc, o) => acc + Number(o.preco_final ?? 0), 0);
+  const taxaConversao =
+    contexto.orcamentos.length > 0
+      ? Math.round((orcAceita / contexto.orcamentos.length) * 100)
+      : 0;
+  const taxaRetrabalho =
+    contexto.execucoes.length > 0
+      ? Math.round(
+          (contexto.execucoes.filter((e) => Boolean(e.retrabalho)).length /
+            contexto.execucoes.length) *
+            100,
+        )
+      : 0;
+
+  // BI 2: Barras Verticais — Top 5 Serviços por Demanda
+  const contagemServicos = new Map<string, number>();
+  for (const s of contexto.solicitacoes) {
+    const nome = s.necessidade.replaceAll('-', ' ');
+    contagemServicos.set(nome, (contagemServicos.get(nome) ?? 0) + 1);
+  }
+  const topServicos = Array.from(contagemServicos.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  const maxServico = Math.max(1, ...topServicos.map(([, v]) => v));
+
+  // BI 3: Barras Verticais Agrupadas — Planejado vs Realizado (Horas)
+  const comparativoHoras = contexto.indicadores.slice(0, 5);
+  const maxHoras = Math.max(
+    1,
+    ...comparativoHoras.flatMap((i) => [
+      Number(i.horas_estimadas ?? 0),
+      Number(i.horas_realizadas ?? 0),
+    ]),
+  );
+
   return (
     <View>
+      {/* Painel Executivo BI */}
+      <View style={estilosComuns.card}>
+        <Text style={estilosComuns.badge}>BUSINESS INTELLIGENCE</Text>
+        <Text style={estilosComuns.tituloSecao}>Desempenho Executivo</Text>
+        <View style={styles.gradeBi}>
+          {exibeCustos && (
+            <View style={styles.cardBi}>
+              <Text style={styles.biRotulo}>Receita Aceita/Publ.</Text>
+              <Text style={[styles.biValor, { color: '#059669' }]}>
+                {formatarDinheiro(receitaAceitas)}
+              </Text>
+            </View>
+          )}
+          <View style={styles.cardBi}>
+            <Text style={styles.biRotulo}>Conversão Propostas</Text>
+            <Text style={styles.biValor}>{taxaConversao}%</Text>
+          </View>
+          <View style={styles.cardBi}>
+            <Text style={styles.biRotulo}>Taxa de Retrabalho</Text>
+            <Text style={[styles.biValor, { color: taxaRetrabalho > 20 ? '#DC2626' : CORES.azulEscuro }]}>
+              {taxaRetrabalho}%
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Gráfico de Barras Verticais: Demanda por Serviço */}
+      {topServicos.length > 0 && (
+        <View style={estilosComuns.card}>
+          <Text style={estilosComuns.tituloSecao}>Demanda por Serviço (Top 5)</Text>
+          <View style={styles.areaColunas}>
+            {topServicos.map(([nome, qtd]) => {
+              const altura = Math.max(12, Math.round((qtd / maxServico) * 92));
+              return (
+                <View key={nome} style={styles.colunaItem}>
+                  <Text style={styles.valorTopoColuna}>{qtd}</Text>
+                  <View style={[styles.barraVertical, { height: altura, backgroundColor: '#0284C7' }]} />
+                  <Text style={styles.rotuloBaseColuna} numberOfLines={2}>
+                    {nome}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
+
+      {/* Gráfico de Barras Verticais Agrupadas: Planejado vs Realizado (Horas) */}
+      {comparativoHoras.length > 0 && (
+        <View style={estilosComuns.card}>
+          <View style={estilosComuns.linhaEntre}>
+            <Text style={estilosComuns.tituloSecao}>Horas: Planejado × Realizado</Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 4, marginBottom: 8 }}>
+            <Text style={styles.legendaMini}>🟦 Estimado</Text>
+            <Text style={styles.legendaMini}>🟩 No prazo</Text>
+            <Text style={styles.legendaMini}>🟥 Acima</Text>
+          </View>
+          <View style={styles.areaColunas}>
+            {comparativoHoras.map((ind) => {
+              const est = Number(ind.horas_estimadas ?? 0);
+              const real = Number(ind.horas_realizadas ?? 0);
+              const altEst = Math.max(8, Math.round((est / maxHoras) * 90));
+              const altReal = Math.max(8, Math.round((real / maxHoras) * 90));
+              const corReal = real > est ? '#DC2626' : '#059669';
+              return (
+                <View key={ind.execucao_id} style={styles.colunaItem}>
+                  <Text style={styles.valorTopoColuna}>
+                    {est}h/{real}h
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3 }}>
+                    <View style={[styles.barraDupla, { height: altEst, backgroundColor: '#0284C7' }]} />
+                    <View style={[styles.barraDupla, { height: altReal, backgroundColor: corReal }]} />
+                  </View>
+                  <Text style={styles.rotuloBaseColuna} numberOfLines={1}>
+                    #{ind.solicitacao_codigo}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
       <GraficoPizza
         titulo="Ciclo de Valor do Laboratório"
         centroValor={`${pctConcluido}%`}
@@ -285,4 +412,39 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   preenchimentoBarra: { height: '100%', borderRadius: 999 },
+  gradeBi: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  cardBi: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: CORES.fundoClaro,
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: CORES.borda,
+  },
+  biRotulo: { fontSize: 11, fontWeight: '700', color: CORES.textoSecundario },
+  biValor: { fontSize: 16, fontWeight: '900', color: CORES.azulEscuro, marginTop: 2 },
+  areaColunas: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    height: 145,
+    paddingTop: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: CORES.borda,
+    gap: 6,
+  },
+  colunaItem: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
+  valorTopoColuna: { fontSize: 10, fontWeight: '800', color: CORES.azulEscuro, marginBottom: 4 },
+  barraVertical: { width: 24, borderTopLeftRadius: 6, borderTopRightRadius: 6 },
+  barraDupla: { width: 12, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
+  rotuloBaseColuna: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: CORES.textoSecundario,
+    textAlign: 'center',
+    marginTop: 5,
+    height: 24,
+  },
+  legendaMini: { fontSize: 10.5, fontWeight: '700', color: CORES.textoSecundario },
 });

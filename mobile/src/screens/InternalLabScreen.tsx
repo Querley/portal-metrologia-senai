@@ -843,6 +843,7 @@ export function InternalLabScreen({
 
               <GraficosVisaoMobile
                 contexto={contexto}
+                perfil={perfil}
                 aoNavegar={(destino, filtro) => {
                   if (destino === 'solicitacoes' && filtro) {
                     setFiltroSolicitacoesInicial(filtro);
