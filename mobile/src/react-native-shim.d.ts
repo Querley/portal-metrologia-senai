@@ -13,6 +13,12 @@ declare module 'react-native' {
     style?: StyleProp<Record<string, unknown>>;
     nativeID?: string;
     children?: React.ReactNode;
+    onLayout?: (e: { nativeEvent: { layout: { width: number; height: number } } }) => void;
+    onStartShouldSetResponder?: () => boolean;
+    onMoveShouldSetResponder?: () => boolean;
+    onResponderGrant?: (e: { nativeEvent: { locationX: number } }) => void;
+    onResponderMove?: (e: { nativeEvent: { locationX: number } }) => void;
+    onResponderRelease?: () => void;
   }
 
   export interface TextProps {

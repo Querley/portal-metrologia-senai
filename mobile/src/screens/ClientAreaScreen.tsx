@@ -695,6 +695,7 @@ export function ClientAreaScreen({
                 style={[estilosComuns.input, { flex: 1, marginTop: 0, marginBottom: 0 }]}
                 value={novaMensagem}
                 onChangeText={setNovaMensagem}
+                onSubmitEditing={() => void enviarMensagemCliente()}
                 placeholder="Escreva uma mensagem para a equipe técnica..."
               />
               <TouchableOpacity

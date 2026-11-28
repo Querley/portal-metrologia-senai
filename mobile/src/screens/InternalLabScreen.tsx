@@ -1008,6 +1008,7 @@ export function InternalLabScreen({
                       style={[estilosComuns.input, { flex: 1, marginTop: 0, marginBottom: 0 }]}
                       value={textoNovaMensagemInterna}
                       onChangeText={setTextoNovaMensagemInterna}
+                      onSubmitEditing={() => void enviarMensagemInternaParaCliente()}
                       placeholder="Responder ao cliente..."
                     />
                     <TouchableOpacity
