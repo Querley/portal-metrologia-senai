@@ -49,7 +49,7 @@ export function ExecucoesTab({
     filtroInicial === 'retrabalho' ? 'retrabalho' : 'todos',
   );
   const [filtroTecnico, setFiltroTecnico] = useState('todos');
-  const [ordenacao, setOrdenacao] = useState<'recentes' | 'antigas' | 'empresa' | 'progresso'>('recentes');
+  const [ordenacao, setOrdenacao] = useState<'recentes' | 'antigas' | 'empresa' | 'progresso' | 'menor_progresso'>('recentes');
   const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
   const [retornoAberto, setRetornoAberto] = useState<string>('');
   const [motivoRetorno, setMotivoRetorno] = useState('');
@@ -100,6 +100,9 @@ export function ExecucoesTab({
         if (ordenacao === 'empresa') return a.empresa_nome.localeCompare(b.empresa_nome, 'pt-BR');
         if (ordenacao === 'progresso') {
           return calcularProgressoExecucao(b.etapas) - calcularProgressoExecucao(a.etapas);
+        }
+        if (ordenacao === 'menor_progresso') {
+          return calcularProgressoExecucao(a.etapas) - calcularProgressoExecucao(b.etapas);
         }
         return +new Date(b.criada_em) - +new Date(a.criada_em);
       });
@@ -251,6 +254,7 @@ export function ExecucoesTab({
             { id: 'antigas', label: '↑ Mais antigas' },
             { id: 'empresa', label: 'A–Z Empresa' },
             { id: 'progresso', label: 'Maior %' },
+            { id: 'menor_progresso', label: 'Menor %' },
           ].map((ord) => (
             <TouchableOpacity
               key={ord.id}
