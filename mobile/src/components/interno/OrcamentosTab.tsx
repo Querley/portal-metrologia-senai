@@ -31,6 +31,7 @@ export function OrcamentosTab({
   custosDb,
   solicitacaoSelecionada,
   aoSelecionarSolicitacao,
+  aoCarregarParaEdicao,
   aoSalvarPreProposta,
   aoAlterarEstado,
   aoDecidirOrcamento,
@@ -44,7 +45,19 @@ export function OrcamentosTab({
   custosDb: CustoEquipamentoDb[];
   solicitacaoSelecionada: SolicitacaoParaPreProposta | null;
   aoSelecionarSolicitacao: (sol: SolicitacaoParaPreProposta | null) => void;
+  aoCarregarParaEdicao: (versaoId: string) => Promise<{
+    servicoId: string;
+    equipamentoId: string;
+    descricao: string;
+    quantidade: string;
+    horas: string;
+    custosExtras: string;
+    percentualLucro: string;
+    destinatario: string;
+    prazoPagamentoDias: number;
+  } | null>;
   aoSalvarPreProposta: (payload: {
+    versaoEmEdicao?: string;
     solicitacaoId: string;
     servicoId: string;
     equipamentoId: string;
@@ -64,6 +77,7 @@ export function OrcamentosTab({
   aoConfirmarInicioTrabalho: (versaoId: string) => Promise<void>;
 }) {
   const [formAberto, setFormAberto] = useState(Boolean(solicitacaoSelecionada));
+  const [versaoEmEdicao, setVersaoEmEdicao] = useState<string>('');
   const [servicoId, setServicoId] = useState(servicosDb[0]?.id ?? '');
   const [equipamentoId, setEquipamentoId] = useState(equipamentosDb[0]?.id ?? '');
   const [horas, setHoras] = useState('8');
@@ -347,13 +361,14 @@ export function OrcamentosTab({
 
             <TouchableOpacity
               style={[estilosComuns.botaoPrimario, { marginTop: 10 }]}
-              disabled={salvando || !solicitacaoSelecionada?.solicitacao_id}
+              disabled={salvando || (!versaoEmEdicao && !solicitacaoSelecionada?.solicitacao_id)}
               onPress={async () => {
-                if (!solicitacaoSelecionada?.solicitacao_id) return;
+                if (!versaoEmEdicao && !solicitacaoSelecionada?.solicitacao_id) return;
                 setSalvando(true);
                 try {
                   const ok = await aoSalvarPreProposta({
-                    solicitacaoId: solicitacaoSelecionada.solicitacao_id,
+                    versaoEmEdicao: versaoEmEdicao || undefined,
+                    solicitacaoId: solicitacaoSelecionada?.solicitacao_id ?? '',
                     servicoId: servicoEfetivoId,
                     equipamentoId: equipamentoEfetivoId,
                     descricao,
@@ -366,7 +381,10 @@ export function OrcamentosTab({
                     entregaEstimada,
                     justificativa,
                   });
-                  if (ok) setFormAberto(false);
+                  if (ok) {
+                    setVersaoEmEdicao('');
+                    setFormAberto(false);
+                  }
                 } finally {
                   setSalvando(false);
                 }
@@ -375,9 +393,11 @@ export function OrcamentosTab({
               <Text style={estilosComuns.textoBotaoPrimario}>
                 {salvando
                   ? 'Salvando...'
-                  : solicitacaoSelecionada?.solicitacao_id
-                    ? 'Salvar Pré-proposta no Banco'
-                    : 'Selecione uma solicitação vinculada acima'}
+                  : versaoEmEdicao
+                    ? 'Salvar Revisão da Pré-proposta'
+                    : solicitacaoSelecionada?.solicitacao_id
+                      ? 'Salvar Pré-proposta no Banco'
+                      : 'Selecione uma solicitação vinculada acima'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -459,13 +479,39 @@ export function OrcamentosTab({
 
             {/* Ações reais do workflow por estado e permissão */}
             <View style={[estilosComuns.linha, { marginTop: 10, flexWrap: 'wrap' }]}>
-              {orc.estado === 'rascunho' && (
-                <TouchableOpacity
-                  style={estilosComuns.botaoPrimario}
-                  onPress={() => void aoAlterarEstado(orc.versao_id, 'enviar')}
-                >
-                  <Text style={estilosComuns.textoBotaoPrimario}>Enviar p/ Validação</Text>
-                </TouchableOpacity>
+              {(orc.estado === 'rascunho' || orc.estado === 'devolvida') && (
+                <>
+                  <TouchableOpacity
+                    style={estilosComuns.botaoSecundario}
+                    onPress={async () => {
+                      const dados = await aoCarregarParaEdicao(orc.versao_id);
+                      if (!dados) return;
+                      aoSelecionarSolicitacao(null);
+                      setVersaoEmEdicao(orc.versao_id);
+                      setServicoId(dados.servicoId);
+                      setEquipamentoId(dados.equipamentoId);
+                      setDescricao(dados.descricao);
+                      setQuantidade(dados.quantidade);
+                      setHoras(dados.horas);
+                      setCustosExtras(dados.custosExtras);
+                      setMargem(dados.percentualLucro);
+                      setDestinatario(dados.destinatario);
+                      setPrazoPagto(String(dados.prazoPagamentoDias));
+                      setJustificativa(orc.justificativa_estimativa ?? '');
+                      setFormAberto(true);
+                    }}
+                  >
+                    <Text style={estilosComuns.textoBotaoSecundario}>Corrigir / Revisar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={estilosComuns.botaoPrimario}
+                    onPress={() => void aoAlterarEstado(orc.versao_id, 'enviar')}
+                  >
+                    <Text style={estilosComuns.textoBotaoPrimario}>
+                      {orc.estado === 'devolvida' ? 'Reenviar p/ Validação' : 'Enviar p/ Validação'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
               )}
 
               {orc.estado === 'em_validacao' && podeAprovar && (

@@ -234,7 +234,38 @@ export function InternalLabScreen({
     setAvisoOperacional('Solicitação vinculada à área do Cliente!');
   }
 
+  async function carregarOrcamentoParaEdicao(versaoId: string) {
+    const supabase = obterSupabaseMobile();
+    if (!supabase) return null;
+    const [{ data, error }, resPre] = await Promise.all([
+      supabase.rpc('obter_orcamento_demonstrativo_para_edicao', { versao: versaoId }),
+      supabase.rpc('obter_dados_pre_proposta_demonstrativa', { versao: versaoId }),
+    ]);
+    const campos = Array.isArray(data) ? data[0] : null;
+    const dados = Array.isArray(resPre.data) ? resPre.data[0] : null;
+    if (error || resPre.error || !campos || !dados) {
+      setAvisoOperacional(
+        error?.code === '42501'
+          ? 'Somente o autor pode revisar este orçamento.'
+          : 'Não foi possível carregar os campos para revisão.',
+      );
+      return null;
+    }
+    return {
+      servicoId: String(campos.servico_id),
+      equipamentoId: String(campos.equipamento_id),
+      descricao: String(campos.descricao ?? ''),
+      quantidade: String(campos.quantidade ?? 1),
+      horas: String(campos.horas ?? 8),
+      custosExtras: String(campos.custos_extras ?? 0),
+      percentualLucro: String(campos.percentual_lucro ?? 18),
+      destinatario: String(dados.destinatario ?? ''),
+      prazoPagamentoDias: Number(dados.prazo_pagamento_dias ?? 30),
+    };
+  }
+
   async function salvarPreProposta(payload: {
+    versaoEmEdicao?: string;
     solicitacaoId: string;
     servicoId: string;
     equipamentoId: string;
@@ -250,36 +281,54 @@ export function InternalLabScreen({
   }): Promise<boolean> {
     const supabase = obterSupabaseMobile();
     if (!supabase) return false;
-    const { data, error } = await supabase.rpc('criar_nova_pre_proposta_multiequipamento_demonstrativa', {
-      solicitacao: payload.solicitacaoId,
-      servico: payload.servicoId,
-      equipamentos_horas: [
-        {
-          equipamento_id: payload.equipamentoId,
+    const { data, error } = payload.versaoEmEdicao
+      ? await supabase.rpc('revisar_pre_proposta_demonstrativa', {
+          versao: payload.versaoEmEdicao,
+          servico: payload.servicoId,
+          equipamento: payload.equipamentoId,
+          descricao: payload.descricao.trim(),
+          quantidade: Number(payload.quantidade) || 1,
           horas: Number(payload.horas.replace(',', '.')) || 8,
-        },
-      ],
-      descricao: payload.descricao.trim(),
-      quantidade: Number(payload.quantidade) || 1,
-      custos_extras: Number(payload.custosExtras.replace(',', '.')) || 0,
-      percentual_lucro: Number(payload.percentualLucro.replace(',', '.')) || 18,
-      destinatario: payload.destinatario.trim(),
-      prazo_pagamento_dias: payload.prazoPagamentoDias,
-      entrega_estimada: payload.entregaEstimada,
-    });
+          custos_extras: Number(payload.custosExtras.replace(',', '.')) || 0,
+          percentual_lucro: Number(payload.percentualLucro.replace(',', '.')) || 18,
+          destinatario: payload.destinatario.trim(),
+          prazo_pagamento_dias: payload.prazoPagamentoDias,
+        })
+      : await supabase.rpc('criar_nova_pre_proposta_multiequipamento_demonstrativa', {
+          solicitacao: payload.solicitacaoId,
+          servico: payload.servicoId,
+          equipamentos_horas: [
+            {
+              equipamento_id: payload.equipamentoId,
+              horas: Number(payload.horas.replace(',', '.')) || 8,
+            },
+          ],
+          descricao: payload.descricao.trim(),
+          quantidade: Number(payload.quantidade) || 1,
+          custos_extras: Number(payload.custosExtras.replace(',', '.')) || 0,
+          percentual_lucro: Number(payload.percentualLucro.replace(',', '.')) || 18,
+          destinatario: payload.destinatario.trim(),
+          prazo_pagamento_dias: payload.prazoPagamentoDias,
+          entrega_estimada: payload.entregaEstimada,
+        });
     if (error) {
       setAvisoOperacional(error.message || 'Não foi possível salvar a pré-proposta.');
       return false;
     }
+    const versaoId = payload.versaoEmEdicao || (data ? String(data) : '');
     const just = payload.justificativa.trim();
-    if (just.length >= 5 && data) {
+    if (just.length >= 5 && versaoId) {
       await supabase.rpc('registrar_justificativa_estimativa_demonstrativa', {
-        versao: String(data),
+        versao: versaoId,
         justificativa: just,
       });
     }
     await recarregarContexto(perfil);
-    setAvisoOperacional('Pré-proposta salva no banco como rascunho!');
+    setAvisoOperacional(
+      payload.versaoEmEdicao
+        ? 'Revisão salva! Você já pode reenviar para validação.'
+        : 'Pré-proposta salva no banco como rascunho!',
+    );
     return true;
   }
 
@@ -820,6 +869,7 @@ export function InternalLabScreen({
               custosDb={custosDb}
               solicitacaoSelecionada={solicitacaoParaOrcamento}
               aoSelecionarSolicitacao={setSolicitacaoParaOrcamento}
+              aoCarregarParaEdicao={carregarOrcamentoParaEdicao}
               aoSalvarPreProposta={salvarPreProposta}
               aoAlterarEstado={alterarEstadoOrcamento}
               aoDecidirOrcamento={decidirOrcamento}
