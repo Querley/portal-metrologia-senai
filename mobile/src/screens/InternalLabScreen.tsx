@@ -791,9 +791,6 @@ export function InternalLabScreen({
             rotuloCompleto: 'Orçamentos & Propostas',
             badge: contexto.orcamentos.length,
           },
-          ...(exibeCustos
-            ? [{ id: 'custos', icone: '🏷️', rotuloCurto: 'Custos', rotuloCompleto: 'Custos por Máquina' }]
-            : []),
           {
             id: 'execucao',
             icone: '⚙️',
@@ -809,6 +806,9 @@ export function InternalLabScreen({
             rotuloCompleto: 'Mensagens Clientes',
             badge: contexto.conversas.length,
           },
+          ...(exibeCustos
+            ? [{ id: 'custos', icone: '🏷️', rotuloCurto: 'Custos', rotuloCompleto: 'Custos por Máquina' }]
+            : []),
           ...(podeCms
             ? [{ id: 'cms', icone: '📝', rotuloCurto: 'CMS', rotuloCompleto: 'Conteúdo Público' }]
             : []),
