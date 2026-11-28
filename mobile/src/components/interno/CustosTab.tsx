@@ -26,6 +26,7 @@ export function CustosTab({
   equipamentosDb,
   custosDb,
   aoSalvarNovoCusto,
+  aoAlternarAtivoEquipamento,
 }: {
   perfil: PerfilInterno;
   equipamentosDb: EquipamentoDb[];
@@ -36,9 +37,10 @@ export function CustosTab({
     vigencia: string;
     referencia: string;
   }) => Promise<boolean>;
+  aoAlternarAtivoEquipamento: (equipamentoId: string, novoAtivo: boolean) => Promise<void>;
 }) {
   const [busca, setBusca] = useState('');
-  const [filtroAtivo, setFiltroAtivo] = useState<'todos' | 'ativos'>('ativos');
+  const [filtroAtivo, setFiltroAtivo] = useState<'todos' | 'ativos'>('todos');
   const [abertoId, setAbertoId] = useState<string>('');
   const [novoCusto, setNovoCusto] = useState('');
   const [referencia, setReferencia] = useState('');
@@ -70,6 +72,7 @@ export function CustosTab({
   }, [busca, custosVigentes, equipamentosDb, filtroAtivo]);
 
   const podeEditar = podeVersionarCustos(perfil);
+  const ehAdmin = perfil === 'administrador';
 
   return (
     <View>
@@ -123,7 +126,9 @@ export function CustosTab({
             >
               <View style={estilosComuns.linhaEntre}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.nomeMaquina}>{eq.nome}</Text>
+                  <Text style={styles.nomeMaquina}>
+                    {eq.nome} {!eq.ativo ? '• (INATIVA)' : ''}
+                  </Text>
                   <Text style={styles.metaMaquina}>
                     {eq.codigo} {custo ? `• Vigente desde ${custo.vigente_desde}` : ''}
                   </Text>
@@ -201,6 +206,24 @@ export function CustosTab({
                     {salvando ? 'Salvando...' : 'Salvar Nova Vigência'}
                   </Text>
                 </TouchableOpacity>
+                {ehAdmin ? (
+                  <TouchableOpacity
+                    style={[estilosComuns.botaoSecundario, { marginTop: 8 }]}
+                    disabled={salvando}
+                    onPress={async () => {
+                      setSalvando(true);
+                      try {
+                        await aoAlternarAtivoEquipamento(eq.id, !eq.ativo);
+                      } finally {
+                        setSalvando(false);
+                      }
+                    }}
+                  >
+                    <Text style={estilosComuns.textoBotaoSecundario}>
+                      {eq.ativo ? 'Desativar Máquina' : 'Ativar Máquina'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             ) : null}
           </View>

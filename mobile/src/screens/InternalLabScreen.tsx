@@ -443,6 +443,21 @@ export function InternalLabScreen({
     setAvisoOperacional('Início do trabalho confirmado! Execução técnica criada.');
   }
 
+  async function alternarAtivoEquipamento(equipamentoId: string, novoAtivo: boolean) {
+    const supabase = obterSupabaseMobile();
+    if (!supabase) return;
+    const { error } = await supabase.rpc('alterar_ativo_equipamento_demonstrativo', {
+      equipamento: equipamentoId,
+      novo_ativo: novoAtivo,
+    });
+    if (error) {
+      setAvisoOperacional(error.message || 'Não foi possível alterar o status da máquina.');
+      return;
+    }
+    await recarregarContexto(perfil);
+    setAvisoOperacional(novoAtivo ? 'Máquina ativada com sucesso!' : 'Máquina desativada.');
+  }
+
   async function salvarNovoCusto(params: {
     equipamentoId: string;
     novoCusto: string;
@@ -896,6 +911,7 @@ export function InternalLabScreen({
               equipamentosDb={equipamentosDb}
               custosDb={custosDb}
               aoSalvarNovoCusto={salvarNovoCusto}
+              aoAlternarAtivoEquipamento={alternarAtivoEquipamento}
             />
           )}
 
