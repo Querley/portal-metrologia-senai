@@ -36,6 +36,7 @@ export function OrcamentosTab({
   aoAlterarEstado,
   aoDecidirOrcamento,
   aoPublicarComPdf,
+  aoVisualizarPdf,
   aoConfirmarInicioTrabalho,
 }: {
   contexto: ContextoOperacionalLaboratorio;
@@ -74,6 +75,7 @@ export function OrcamentosTab({
   aoAlterarEstado: (versaoId: string, acao: 'enviar' | 'aprovar') => Promise<void>;
   aoDecidirOrcamento: (versaoId: string, decisao: 'devolver' | 'rejeitar', justificativa: string) => Promise<void>;
   aoPublicarComPdf: (orc: ContextoOperacionalLaboratorio['orcamentos'][number]) => Promise<void>;
+  aoVisualizarPdf: (versaoId: string) => Promise<void>;
   aoConfirmarInicioTrabalho: (versaoId: string) => Promise<void>;
 }) {
   const [formAberto, setFormAberto] = useState(Boolean(solicitacaoSelecionada));
@@ -689,6 +691,15 @@ export function OrcamentosTab({
                   onPress={() => void aoPublicarComPdf(orc)}
                 >
                   <Text style={estilosComuns.textoBotaoPrimario}>Gerar PDF e Publicar</Text>
+                </TouchableOpacity>
+              )}
+
+              {(orc.publicacao_pronta || ['publicada', 'aceita', 'recusada'].includes(orc.estado)) && (
+                <TouchableOpacity
+                  style={estilosComuns.botaoSecundario}
+                  onPress={() => void aoVisualizarPdf(orc.versao_id)}
+                >
+                  <Text style={estilosComuns.textoBotaoSecundario}>📄 Ver PDF</Text>
                 </TouchableOpacity>
               )}
 

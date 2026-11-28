@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Linking,
   Modal,
   ScrollView,
   StyleSheet,
@@ -153,21 +154,53 @@ export function ClientAreaScreen({
     if (!trabalhoAtivo) return;
     setErro('');
     const supabase = obterSupabaseMobile();
-    if (supabase) {
-      await supabase.rpc('aceitar_pre_proposta_cliente', {
-        solicitacao: trabalhoAtivo.id,
-        versao_declaracao: VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA,
-      });
+    if (!supabase) {
+      setErro('Sem conexão com o Supabase.');
+      return;
     }
-    const agora = new Date().toISOString();
-    setTrabalhos((atuais) =>
-      atuais.map((item) =>
-        item.id === trabalhoAtivo.id
-          ? { ...item, proposta_estado: 'aceita', aceita_em: agora }
-          : item,
-      ),
-    );
+    const { error } = await supabase.rpc('aceitar_pre_proposta_cliente', {
+      solicitacao: trabalhoAtivo.id,
+      declaracao_versao: VERSAO_DECLARACAO_ACEITE_PRE_PROPOSTA,
+    });
+    if (error) {
+      setErro(
+        error.code === '23514'
+          ? 'Esta pré-proposta não pode mais ser aceita. Atualize a tela.'
+          : `Não foi possível registrar o aceite: ${error.message}`,
+      );
+      return;
+    }
+    await carregarDadosCliente();
     setAviso('Pré-proposta aceita! O Administrador foi notificado para iniciar a execução.');
+  }
+
+  async function baixarPdfPrePropostaCliente() {
+    if (!trabalhoAtivo) return;
+    setErro('');
+    const supabase = obterSupabaseMobile();
+    if (!supabase) {
+      setErro('Sem conexão com o Supabase.');
+      return;
+    }
+    const { data: referencias, error: erroRef } = await supabase.rpc(
+      'obter_pdf_pre_proposta_cliente',
+      { solicitacao: trabalhoAtivo.id },
+    );
+    const ref = Array.isArray(referencias)
+      ? (referencias[0] as { caminho?: string } | undefined)
+      : null;
+    if (erroRef || !ref?.caminho) {
+      setErro('O PDF oficial desta pré-proposta ainda não foi emitido.');
+      return;
+    }
+    const { data, error } = await supabase.storage
+      .from('pre-propostas')
+      .createSignedUrl(ref.caminho, 300);
+    if (error || !data?.signedUrl) {
+      setErro(`Não foi possível abrir o PDF: ${error?.message ?? 'erro no Storage'}`);
+      return;
+    }
+    await Linking.openURL(data.signedUrl);
   }
 
   async function confirmarRecusa() {
@@ -179,27 +212,21 @@ export function ClientAreaScreen({
     }
     setErro('');
     const supabase = obterSupabaseMobile();
-    if (supabase) {
-      await supabase.rpc('recusar_pre_proposta_cliente', {
-        solicitacao: trabalhoAtivo.id,
-        motivo: motivoNormalizado,
-      });
+    if (!supabase) {
+      setErro('Sem conexão com o Supabase.');
+      return;
     }
-    const agora = new Date().toISOString();
-    setTrabalhos((atuais) =>
-      atuais.map((item) =>
-        item.id === trabalhoAtivo.id
-          ? {
-              ...item,
-              proposta_estado: 'recusada',
-              recusada_em: agora,
-              recusa_motivo: motivoNormalizado,
-            }
-          : item,
-      ),
-    );
+    const { error } = await supabase.rpc('recusar_pre_proposta_cliente', {
+      solicitacao: trabalhoAtivo.id,
+      motivo: motivoNormalizado,
+    });
+    if (error) {
+      setErro(`Não foi possível registrar a recusa: ${error.message}`);
+      return;
+    }
     setRecusando(false);
     setMotivoRecusa('');
+    await carregarDadosCliente();
     setAviso('Revisão solicitada! A equipe do laboratório recebeu sua justificativa.');
   }
 
@@ -504,6 +531,17 @@ export function ClientAreaScreen({
                 <Text style={styles.detalheBox}>{situacaoEtapas?.descricao ?? ''}</Text>
               </View>
             </View>
+
+            {trabalhoAtivo.valor_pre_proposta !== null && (
+              <TouchableOpacity
+                style={[estilosComuns.botaoSecundario, { marginTop: 10 }]}
+                onPress={() => void baixarPdfPrePropostaCliente()}
+              >
+                <Text style={estilosComuns.botaoSecundarioTexto}>
+                  📄 Ver / Baixar PDF da Pré-proposta
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {podeAceitarPreProposta(trabalhoAtivo.proposta_estado) && (
               <View style={styles.decisaoBox}>

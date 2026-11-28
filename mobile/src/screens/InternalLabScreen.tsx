@@ -429,6 +429,18 @@ export function InternalLabScreen({
     }
   }
 
+  async function visualizarPdfPrePropostaInterno(versaoId: string) {
+    const supabase = obterSupabaseMobile();
+    if (!supabase) return;
+    const caminho = `demonstracao/${versaoId}.pdf`;
+    const { data, error } = await supabase.storage.from('pre-propostas').createSignedUrl(caminho, 300);
+    if (error || !data?.signedUrl) {
+      setAvisoOperacional('O PDF desta pré-proposta ainda não foi gerado.');
+      return;
+    }
+    await Linking.openURL(data.signedUrl);
+  }
+
   async function confirmarInicioTrabalho(versaoId: string) {
     const supabase = obterSupabaseMobile();
     if (!supabase) return;
@@ -901,6 +913,7 @@ export function InternalLabScreen({
               aoAlterarEstado={alterarEstadoOrcamento}
               aoDecidirOrcamento={decidirOrcamento}
               aoPublicarComPdf={publicarOrcamentoComPdf}
+              aoVisualizarPdf={visualizarPdfPrePropostaInterno}
               aoConfirmarInicioTrabalho={confirmarInicioTrabalho}
             />
           )}
